@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useMemo, useRef, useState } from "react";
-import {Chess} from "chess.js";
+import {BLACK, Chess} from "chess.js";
 import { Chessboard } from "react-chessboard";
 import { Piece, Square } from "react-chessboard/dist/chessboard/types";
 //import 'remote-web-worker';
@@ -8,6 +8,7 @@ import { Piece, Square } from "react-chessboard/dist/chessboard/types";
 
 const ChessPage = () => {
     const [game, setGame] = useState(new Chess());
+    const gameTest = new Chess();
     const [playerColor, setPlayerColor] = useState('w');
     const [ponderArrow, setPonderArrow] = useState<Square[][]>([]);
     const [positionEvaluation, setPositionEvalutation] = useState("");
@@ -26,38 +27,103 @@ const ChessPage = () => {
     });
     const [evaluation, setEvaluation] = useState('0.3');
     const [useStockfish, setUseStockfish] = useState(false);
-    const workRef = useRef();
+    const [stockfishReady, setStockfishReady] = useState(false);
+    const [bestMove, setBestMove] = useState('');
+    const [engineEval, setEngineEval] = useState('0.3');
+    const [lastRandomMove, setLastRandomMove] = useState(0);
+    const evalRef = useRef();
+    const engineRef = useRef();
+    const evalRegex = /cp\s-?[0-9]*|mate\s-?[0-9]*/;
+    const bestMoveRegex = /bestmove\s(\w*)/;
+    const firstEvalMoveRegex = /pv\s[a-h][1-8]/;
 
     useEffect(() => {
         //const buffer = new SharedArrayBuffer(4096);
         console.log(crossOriginIsolated);
         //@ts-ignore
-        workRef.current = new Worker('stockfish.js#stockfish.wasm');
+        evalRef.current = new Worker('stockfish.js#stockfish.wasm');
+        //@ts-ignore
+        engineRef.current = new Worker('stockfish.js#stockfish.wasm');
 
         //@ts-ignore
-        workRef.current.postMessage('uci');
+        evalRef.current.postMessage('uci');
+        //@ts-ignore
+        engineRef.current.postMessage('uci');
 
         //@ts-ignore
-        workRef.current.onmessage = function(event: any) {
+        evalRef.current.onmessage = function(event: any) {
+          //TODO: bug évaluation négative -> useEffect() -> playerColor pas à jour ?
+          //console.log('Stockfish message')
+          //console.log(event.data);
+    
+          if(event.data === 'uciok'){
+            console.log('Eval ok');
+            //@ts-ignore
+            evalRef.current.postMessage('setoption name MultiPV value 1');
+          }
+    
+          if((evalRegex.exec(event.data)) !== null){
+            //console.log(event.data);
+            //console.log(`Game Turn: ${game.turn()}, Player color: ${playerColor}`);
+            //@ts-ignore
+            let evaluationStr: string = (evalRegex.exec(event.data)).toString();
+            let firstMove = (event.data.match(firstEvalMoveRegex))[0].slice(-2);
+            //console.log(firstMove);
+            //console.log(game.get(firstMove));
+            let coeff = game.get(firstMove).color === 'w' ? 1 : -1;
+            const evaluationArr = evaluationStr.split(' ');
+            //TODO: corriger le signe négatif pour le nombre de coups avant echec et mat
+            if(evaluationArr[0] === 'mate') evaluationStr = '#' + evaluationArr[1];
+            if(evaluationArr[0] === 'cp') evaluationStr = (coeff*(eval(evaluationArr[1])/100)).toString();
+            //console.log('Evaluation : ' + evaluationStr);
+            setEngineEval(evaluationStr);
+          }
+        } 
+
+        //@ts-ignore
+        engineRef.current.onmessage = function(event: any) {
+          //TODO: bug bestMove introuvable quand échec et mat ?
+          if(event.data === 'uciok'){
+            console.log('Engine ok');
+            //@ts-ignore
+            evalRef.current.postMessage('setoption name MultiPV value 1');
+            setStockfishReady(true);
+          }
+
+          if((event.data.match(bestMoveRegex)) !== null){
             console.log(event.data);
+            console.log(event.data.match(bestMoveRegex)[1]);
+            const newBestMove = event.data.match(bestMoveRegex)[1];
+            if(game.turn() !== playerColor && newBestMove !== null){
+              //playMoveAtCertainLevel(databaseRating, newBestMove);
+              game.move(newBestMove);
+              setCurrentFen(game.fen());
+              setBestMove(newBestMove);
+            } 
+          }
         }
     }, []);
   
     useEffect( () => {
       getCloudEval(game.fen());
     }, [count]);
+
+    useEffect(() => {
+      console.log('New Level : ' + databaseRating);
+    }, [databaseRating]);
+
+    useEffect(() => {
+      //@ts-ignore
+      evalRef.current.postMessage('stop');
+      //@ts-ignore
+      evalRef.current.postMessage(`position fen ${game.fen()}`);
+      //@ts-ignore
+      evalRef.current.postMessage('go depth 18');
+    }, [currentFen]);
   
-    function safeGameMutate(modify: any) {
-      setGame((g: any) => {
-        const update = { ...g };
-        modify(update);
-        return update;
-      });
-    } 
-  
-    function checkGameOver(possibleMoves: string[]) {
+    function checkGameOver() {
       // exit if the game is over
-      if (game.isGameOver() || game.isDraw() || possibleMoves.length === 0){
+      if (game.isGameOver() || game.isDraw() || game.moves().length === 0){
         console.log('Game Over !');
         return ;
       }
@@ -78,18 +144,212 @@ const ChessPage = () => {
       return movesStr;
     }
   
-    function makeRandomMove() {
+    function makeRandomMove(filterLevel: number, safeMoves: boolean) {
+      // Minimise le risque que l'IA joue un coup aléatoire trop catastrophique en l'empechant de jouer certaines pièces
+      const filter = [
+        /noFilter/gm, // Beginner - Ban List [rien]
+        /[Q][a-z]*[1-9]/gm, // Casual - Ban List [Queen]
+        /[QK][a-z]*[1-9]/gm, // Intermediate - Ban List [Queen, King]
+        /[QKR][a-z]*[1-9]/gm, // Advanced - Ban List [Queen, King, Rook]
+        /[QKRNB][a-z]*[1-9]/gm, // Master - Ban List [Queen, King, Rook, Knight, Bishop]
+      ]
       const possibleMoves = game.moves();
-  
-      checkGameOver(possibleMoves);
-  
-      const randomIndex = Math.floor(Math.random() * possibleMoves.length);
       console.log(possibleMoves);
-      console.log(possibleMoves[randomIndex]);
+      let possiblesMovesFiltered = possibleMoves.filter(move => !move.match(filter[filterLevel]));
+
+      console.log(possiblesMovesFiltered);
+
+      if(possiblesMovesFiltered.length < 1) possiblesMovesFiltered = possibleMoves;
+
+      let safePossibleMoves = [possiblesMovesFiltered[0]];
+
+      if(safeMoves) {
+        const isPawn = (move: string) => !move.match(/[QKRNB][a-z]*[1-9]/gm);
+        const isDestinationDefended = (move: string) => {
+          //@ts-ignore
+          return game.isAttacked(getMoveDestination(move), playerColor);
+        }
+        
+        //@ts-ignore
+        safePossibleMoves = possiblesMovesFiltered.filter(pMove => isPawn(pMove) || !isDestinationDefended(pMove));
+        console.log(safePossibleMoves);
+        if(safePossibleMoves.length < 1) safePossibleMoves = possiblesMovesFiltered;
+      }
+  
+      checkGameOver();
+  
+      const randomIndex = Math.floor(Math.random() * safePossibleMoves.length);
+      console.log(safePossibleMoves[randomIndex]);
       //makeLichessMove();
-      if(possibleMoves.length <= 0) return;
-      game.move(possibleMoves[randomIndex]);
-      setCount(0);
+      if(safePossibleMoves.length <= 0) return;
+      game.move(safePossibleMoves[randomIndex]);
+      //setCount(0);
+      setCurrentFen(game.fen());
+    }
+
+    function getMoveDestination(move: string) {
+      //Qd4 -> d4, Ngf3 -> f3, exd4 -> d4, Bb5+ -> b5, Re8# -> e8, e4 -> e4
+      return move.replaceAll(/[+#]/gm, '').slice(-2);
+    }
+
+    function isLastMoveDangerous() {
+      const history = JSON.parse(JSON.stringify(game.history({verbose: true})));
+      const lastMove = history.pop();
+
+      if(lastMove === null || lastMove === undefined) return false;
+
+      //console.log(lastMove);
+
+      // Si le dernier coup est une capture, il faut obligatoirement réagir
+      if(lastMove.san.match(/[x]/gm)) return true;
+
+      const previousFen = lastMove.before;
+      const currentFen = lastMove.after;
+
+      gameTest.load(previousFen);
+      gameTest.remove(lastMove.from);
+      gameTest.put({type: lastMove.piece, color: lastMove.color}, lastMove.to);
+      const pieceMoves = gameTest.moves({square: lastMove.to});
+      //gameTest.load(currentFen);
+
+      //console.log(pieceMoves);
+
+      let danger = false;
+
+      pieceMoves.forEach(pieceMove => {
+        const attackedCase = getMoveDestination(pieceMove);
+        //console.log(attackedCase);
+        //@ts-ignore
+        const squareInfos = game.get(attackedCase);
+        //console.log(squareInfos);
+        if(squareInfos && squareInfos?.type !== 'p' && squareInfos?.color !== playerColor) {
+          danger = true;
+        }
+      });
+
+      console.log(`Is last move \x1B[34m(${lastMove.san})\x1B[0m dangerous: \x1B[31m` + danger);
+
+      return danger;
+    }
+
+    function makeStockfishMove(level: string) {
+      let randMoveChance = 0;
+      let skillValue = 0;
+      let depth = 5;
+      let filterLevel = 0;
+      let securityLvl = 0; // 0: Pas de sécurité, 1: Réagit dernier coup adversaire, 2: Coup aléatoire -> case non défendue
+
+      // Empeche d'avoir un deuxième coup aléatoire avant le Xème coup
+      let randMoveInterval = 5;
+
+      /* //@ts-ignore
+      evalRef.current.postMessage('stop');
+      //@ts-ignore
+      evalRef.current.postMessage(`position fen ${game.fen()}`);
+      //@ts-ignore
+      evalRef.current.postMessage('go depth 18'); */
+
+
+      //@ts-ignore
+      engineRef.current.postMessage(`position fen ${game.fen()}`);
+      console.log(databaseRating);
+
+      console.log(level);
+
+      switch (level) {
+        case 'Beginner':
+          // ~900 Elo (Bot chess.com)
+          randMoveChance = 20; 
+          randMoveInterval = 3; 
+          filterLevel = 0;
+          securityLvl = 0;
+          skillValue = 0;
+          depth = 10;
+          break;
+        case 'Casual':
+          // ~1300 Elo (Bot chess.com) (ancien)
+          randMoveChance = 10;
+          randMoveInterval = 5;
+          filterLevel = 1;
+          securityLvl = 1;
+          skillValue = 2;
+          depth = 10;
+          break;
+        case 'Intermediate':
+          // ~1600 Elo (Bot chess.com) (ancien)
+          randMoveChance = 5;
+          randMoveInterval = 10;
+          filterLevel = 2;
+          securityLvl = 1;
+          skillValue = 10;
+          depth = 12;
+          break;
+        case 'Advanced':
+          // Au moins 2000 Elo (Bot chess.com)
+          randMoveChance = 3;
+          randMoveInterval = 15;
+          filterLevel = 3;
+          securityLvl = 2;
+          skillValue = 13;
+          depth = 12;
+          break;
+        case 'Master':
+          randMoveChance = 1;
+          randMoveInterval = 15;
+          filterLevel = 4;
+          securityLvl = 2;
+          skillValue = 16;
+          depth = 16;
+          break;
+        case 'Maximum':
+          randMoveChance = 0;
+          randMoveInterval = 0;
+          filterLevel = 0;
+          securityLvl = 0;
+          skillValue = 20;
+          depth = 20;
+          break;
+        default:
+          randMoveChance = 10;
+          skillValue = 10;
+          depth = 10;
+          break;
+      }
+      let rand = Math.random()*100;
+
+      if(securityLvl > 0 && isLastMoveDangerous()){
+        console.log('Play Forced Stockfish Best Move !');
+        setLastRandomMove(lastRandomMove-1);
+        console.log(lastRandomMove);
+        //@ts-ignore
+        engineRef.current.postMessage(`setoption name Skill Level value ${skillValue}`);
+        //@ts-ignore
+        engineRef.current.postMessage(`go depth ${depth}`);
+        return;
+      }
+
+      if(lastRandomMove <= -randMoveInterval){
+        console.log('Play Forced Random Move !');
+        console.log(`Random Move Interval: ${randMoveInterval}, Last Random Move: ${lastRandomMove}`);
+        setLastRandomMove(randMoveInterval);
+        makeRandomMove(filterLevel, securityLvl > 1);
+        return;
+      }
+
+      if(rand <= randMoveChance && lastRandomMove < 1){
+        console.log('Play Random Move !');
+        console.log(`Random Move Interval: ${randMoveInterval}, Last Random Move: ${lastRandomMove}`);
+        setLastRandomMove(randMoveInterval);
+        makeRandomMove(filterLevel, securityLvl > 1);
+      }else{
+        console.log('Play Stockfish Best Move !');
+        setLastRandomMove(lastRandomMove-1);
+        console.log(lastRandomMove);
+        //@ts-ignore
+        engineRef.current.postMessage(`setoption name Skill Level value ${skillValue}`);
+        //@ts-ignore
+        engineRef.current.postMessage(`go depth ${depth}`);
+      }
     }
   
     async function makeLichessMove(fen = "") {
@@ -108,9 +368,17 @@ const ChessPage = () => {
         setUseStockfish(true);
         return;
       } */
+
+      checkGameOver();
       
       console.log("No more moves in the database !");
-      makeRandomMove();
+      if(stockfishReady) {
+        makeStockfishMove(databaseRating);
+      }else{
+        console.log('Make Random Move !');
+        makeRandomMove(0, false);
+      }
+      
     }
   
     async function getCloudEval(fen: string) {
@@ -133,7 +401,8 @@ const ChessPage = () => {
       });
   
       setGame(gameCopy);
-      setCount(count+1);
+      setCurrentFen(gameCopy.fen());
+      //setCount(count+1);
   
       // illegal move
       if (move === null) return false;
@@ -432,7 +701,9 @@ const ChessPage = () => {
         case 'Scandinavian Defense: (2...Nf6)':
           fen = 'rnbqkb1r/ppp1pppp/5n2/3P4/8/8/PPPP1PPP/RNBQKBNR w KQkq - 1 3';
           break;
-          
+        case 'Test King Attack':
+          fen = '1k6/8/8/4K1b1/6n1/8/8/8 w - - 0 1';
+          break;
         default:
           fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
           break;
@@ -456,12 +727,7 @@ const ChessPage = () => {
           </div>
           <div className=" h-20 w-full flex flex-col justify-center items-center">
             <div className=" text-white" >
-              {/* <TestEngine 
-                fen={game.fen()} 
-                whiteToMove={game.turn() === 'w'} 
-                useStockfish={useStockfish}
-                setUseStockfish={setUseStockfish}
-              /> */}
+              {engineEval}
             </div>
             <div className=" h-5 w-52 flex flex-row">
               <div className="bg-white h-5 flex justify-center" style={{width: `${winrate.white}%`}} >{
@@ -583,6 +849,7 @@ const ChessPage = () => {
               <option value="Scandinavian Defense" >Scandinavian Defense</option>
               <option value="Scandinavian Defense: (2...Qxd5)" >Scandinavian Defense: (2...Qxd5)</option>
               <option value="Scandinavian Defense: (2...Nf6)" >Scandinavian Defense: (2...Nf6)</option>
+              <option value="Test King Attack" >Test King Attack</option>
             </select>
             <button
               className=" m-4 p-1 bg-white border rounded cursor-pointer"

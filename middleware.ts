@@ -18,7 +18,6 @@ export function middleware(request: NextRequest) {
   // Set a new response header `x-hello-from-middleware2`
   response.headers.set('Cross-Origin-Embedder-Policy', 'require-corp');
   response.headers.set('Cross-Origin-Opener-Policy', 'same-origin');
-  console.log(response.headers);
   return response;
 }
  
