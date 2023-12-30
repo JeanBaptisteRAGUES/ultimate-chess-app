@@ -23,7 +23,7 @@ function calculateWinrate(data: any) {
 
 export async function fetchLichessDatabase(moves: Array<String>, level: string, fen = "") {
     if(!ratings.has(level)) level = 'Master';
-
+    console.log("Database Level: " + level);
     if(fen === "") {
         fen = "rnbqkbnr%2Fpppppppp%2F8%2F8%2F8%2F8%2FPPPPPPPP%2FRNBQKBNR+w+KQkq+-+0+1";
     } else{
