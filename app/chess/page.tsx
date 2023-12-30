@@ -73,7 +73,7 @@ const ChessPage = () => {
             let coeff = game.get(firstMove).color === 'w' ? 1 : -1;
             const evaluationArr = evaluationStr.split(' ');
             //TODO: corriger le signe négatif pour le nombre de coups avant echec et mat
-            if(evaluationArr[0] === 'mate') evaluationStr = '#' + evaluationArr[1];
+            if(evaluationArr[0] === 'mate') evaluationStr = '#' + coeff*(eval(evaluationArr[1]));
             if(evaluationArr[0] === 'cp') evaluationStr = (coeff*(eval(evaluationArr[1])/100)).toString();
             //console.log('Evaluation : ' + evaluationStr);
             setEngineEval(evaluationStr);
@@ -187,9 +187,31 @@ const ChessPage = () => {
       setCurrentFen(game.fen());
     }
 
+    function testF(functionName: string) {
+      switch (functionName) {
+        case 'getMoveDestination':
+          console.log('Test getMoveDestination(move: string): string');
+          console.log('Input (e4), Output expected (e4): ' + getMoveDestination('e4'));
+          console.log('Input (exd4), Output expected (d4): ' + getMoveDestination('exd4'));
+          console.log('Input (Qd4), Output expected (d4): ' + getMoveDestination('Qd4'));
+          console.log('Input (Ngf3), Output expected (f3): ' + getMoveDestination('Ngf3'));
+          console.log('Input (Bb5+), Output expected (b5): ' + getMoveDestination('Bb5+'));
+          console.log('Input (Re8#), Output expected (e8): ' + getMoveDestination('Re8#'));
+          console.log('Input (h8=N), Output expected (h8): ' + getMoveDestination('h8=N'));
+          console.log('Input (hxg8=N), Output expected (g8): ' + getMoveDestination('hxg8=N'));
+          console.log('Input (hxg8=R+), Output expected (g8): ' + getMoveDestination('hxg8=R+'));
+          console.log('Input (hxg8=Q#), Output expected (g8): ' + getMoveDestination('hxg8=Q#'));
+          break;
+      
+        default:
+          break;
+      }
+    }
+
     function getMoveDestination(move: string) {
       //Qd4 -> d4, Ngf3 -> f3, exd4 -> d4, Bb5+ -> b5, Re8# -> e8, e4 -> e4
-      return move.replaceAll(/[+#]/gm, '').slice(-2);
+      //return move.replaceAll(/[+#]/gm, '').slice(-2);
+      return move.match(/[a-h][1-8]/);
     }
 
     function isLastMoveDangerous() {
@@ -212,9 +234,11 @@ const ChessPage = () => {
       const pieceMoves = gameTest.moves({square: lastMove.to});
       //gameTest.load(currentFen);
 
-      //console.log(pieceMoves);
+      console.log(pieceMoves);
 
       let danger = false;
+
+      //testF('getMoveDestination');
 
       pieceMoves.forEach(pieceMove => {
         const attackedCase = getMoveDestination(pieceMove);
@@ -236,7 +260,7 @@ const ChessPage = () => {
       let randMoveChance = 0;
       let skillValue = 0;
       let depth = 5;
-      let filterLevel = 0;
+      let filterLevel = 0; // Empèche de jouer certaines pièces lors d'un coup aléatoire
       let securityLvl = 0; // 0: Pas de sécurité, 1: Réagit dernier coup adversaire, 2: Coup aléatoire -> case non défendue
 
       // Empeche d'avoir un deuxième coup aléatoire avant le Xème coup
@@ -276,7 +300,7 @@ const ChessPage = () => {
           depth = 10;
           break;
         case 'Intermediate':
-          // ~1600 Elo (Bot chess.com) (ancien)
+          // ~1800 Elo (Bot chess.com)
           randMoveChance = 5;
           randMoveInterval = 10;
           filterLevel = 2;
@@ -285,7 +309,7 @@ const ChessPage = () => {
           depth = 12;
           break;
         case 'Advanced':
-          // Au moins 2000 Elo (Bot chess.com)
+          // Au moins 2100 Elo (Bot chess.com)
           randMoveChance = 3;
           randMoveInterval = 15;
           filterLevel = 3;
@@ -704,6 +728,9 @@ const ChessPage = () => {
         case 'Test King Attack':
           fen = '1k6/8/8/4K1b1/6n1/8/8/8 w - - 0 1';
           break;
+        case 'Test Pawn Attack':
+          fen = '2B1k1r1/q2n1p2/2p1p2P/3pP3/P2P4/1p5Q/1P3PP1/R4KN1 w - - 0 1';
+          break;
         default:
           fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
           break;
@@ -850,6 +877,7 @@ const ChessPage = () => {
               <option value="Scandinavian Defense: (2...Qxd5)" >Scandinavian Defense: (2...Qxd5)</option>
               <option value="Scandinavian Defense: (2...Nf6)" >Scandinavian Defense: (2...Nf6)</option>
               <option value="Test King Attack" >Test King Attack</option>
+              <option value="Test Pawn Attack" >Test Pawn Attack</option>
             </select>
             <button
               className=" m-4 p-1 bg-white border rounded cursor-pointer"
