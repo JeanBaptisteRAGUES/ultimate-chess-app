@@ -35,6 +35,10 @@ const ChessPage = () => {
     const [lastRandomMove, setLastRandomMove] = useState(0);
     const evalRef = useRef();
     const engineRef = useRef();
+    const analysisRef = useRef();
+    const movesHistoryRef = useRef();
+    const colorRef = useRef('w');
+    const scoreHistory = useRef(new Array());
     const evalRegex = /cp\s-?[0-9]*|mate\s-?[0-9]*/;
     const bestMoveRegex = /bestmove\s(\w*)/;
     const firstEvalMoveRegex = /pv\s[a-h][1-8]/;
@@ -100,6 +104,8 @@ const ChessPage = () => {
             if(newBestMove !== null){
               //playMoveAtCertainLevel(databaseRating, newBestMove);
               game.move(newBestMove);
+              if(checkGameOver()) return;
+              console.log('Not Game Over');
               setCurrentFen(game.fen());
               setBestMove(newBestMove);
             } 
@@ -107,15 +113,16 @@ const ChessPage = () => {
         }
     }, []);
   
-    useEffect( () => {
+    /* useEffect( () => {
       getCloudEval(game.fen());
-    }, [count]);
+    }, [count]); */
 
     useEffect(() => {
       console.log('New Level : ' + databaseRating);
     }, [databaseRating]);
 
     useEffect(() => {
+      if(checkGameOver()) return;
       //@ts-ignore
       evalRef.current.postMessage('stop');
       //@ts-ignore
@@ -126,10 +133,17 @@ const ChessPage = () => {
   
     function checkGameOver() {
       // exit if the game is over
-      if (game.isGameOver() || game.isDraw() || game.moves().length === 0){
+      if (game.isGameOver()){
         console.log('Game Over !');
-        return ;
+        if(game.isDraw() || game.isInsufficientMaterial() || game.isStalemate() || game.isInsufficientMaterial()) {
+          setEngineEval('1/2 - 1/2');
+        }
+        if(game.isCheckmate()){
+          game.turn() === 'w' ? setEngineEval('0 - 1') : setEngineEval('1 - 0');
+        }
+        return true;
       }
+      return false;
     }
   
     function movesHistory() {
@@ -146,8 +160,78 @@ const ChessPage = () => {
   
       return movesStr;
     }
+
+    function launchStockfishAnalysis(depth: number) {
+      //@ts-ignore
+      analysisRef.current = new Worker('stockfish.js#stockfish.wasm');
+
+      //@ts-ignore
+      analysisRef.current.postMessage('uci');
+
+      //@ts-ignore
+      movesHistoryRef.current = game.history({verbose: true});
+
+      //@ts-ignore
+      analysisRef.current.onmessage = function(event: any) {
+        if(event.data === 'uciok'){
+          console.log('Analysis ok');
+          //@ts-ignore
+          analysisRef.current.postMessage('setoption name MultiPV value 1');
+          console.log(movesHistoryRef.current);
+          //@ts-ignore
+          analysisRef.current.postMessage(`position fen ${movesHistoryRef.current.pop().after}`);
+          //@ts-ignore
+          analysisRef.current.postMessage('go depth 12');
+        }
+
+        if(event.data.match(/\sdepth\s12.*cp\s(-?\d*)/gm)){
+          console.log(event.data);
+          console.log(event.data.match(/\sdepth\s12.*cp\s(-?\d*)/gm));
+          //@ts-ignore
+          let analysisEval = eval(((/\sdepth\s12.*cp\s(-?\d*)/gm).exec(event.data))[1])/100.0;
+          //const analysisColor = (/.*\s(b)|.*\s(w)/gm).exec(event.data);
+          if(colorRef.current === 'w') analysisEval =  (-1)*analysisEval;
+          console.log(analysisEval); 
+
+          scoreHistory.current.unshift(analysisEval);
+          //console.log(analysisColor);
+          //@ts-ignore
+          const lastMove = movesHistoryRef.current.pop();
+          if(lastMove){
+            const lastFen = lastMove.after;
+            colorRef.current = lastMove.color;
+            console.log(lastFen);
+            //@ts-ignore
+            analysisRef.current.postMessage(`position fen ${lastFen}`);
+            //@ts-ignore
+            analysisRef.current.postMessage('go depth 12');
+          }else{
+            console.log(scoreHistory.current);
+          }
+        }
+
+        /* if(event.data.match(bestMoveRegex)){
+          console.log(event.data);
+          console.log(event.data.match(bestMoveRegex)[1]);
+          const newBestMove = event.data.match(bestMoveRegex)[1];
+          console.log(`Game Turn: ${game.turn()}, Player Color: ${playerColor}`);
+          if(newBestMove !== null){
+            //playMoveAtCertainLevel(databaseRating, newBestMove);
+            game.move(newBestMove);
+            if(checkGameOver()) return;
+            console.log('Not Game Over');
+            setCurrentFen(game.fen());
+            setBestMove(newBestMove);
+          } 
+        } */
+      }
+
+
+    }
   
     function makeRandomMove(filterLevel: number, safeMoves: boolean) {
+      if(checkGameOver()) return;
+      console.log('Make Random Move');
       // Minimise le risque que l'IA joue un coup aléatoire trop catastrophique en l'empechant de jouer certaines pièces
       const filter = [
         /noFilter/gm, // Beginner - Ban List [rien]
@@ -178,8 +262,6 @@ const ChessPage = () => {
         console.log(safePossibleMoves);
         if(safePossibleMoves.length < 1) safePossibleMoves = possiblesMovesFiltered;
       }
-  
-      checkGameOver();
   
       const randomIndex = Math.floor(Math.random() * safePossibleMoves.length);
       console.log(safePossibleMoves[randomIndex]);
@@ -260,6 +342,8 @@ const ChessPage = () => {
     }
 
     function makeStockfishMove(level: string) {
+      if(checkGameOver()) return;
+      console.log('Make Stockfish Move');
       let randMoveChance = 0;
       let skillValue = 0;
       let depth = 5;
@@ -380,6 +464,8 @@ const ChessPage = () => {
     }
   
     async function makeLichessMove(fen = "") {
+      if(checkGameOver()) return;
+      console.log('Make Lichess Move');
       let lichessMove = {san: "", uci: "", winrate: {white: 33, draws: 33, black: 33}};
   
       lichessMove = fen === "" ? await fetchLichessDatabase(movesHistory(), databaseRating, startingFen) : await fetchLichessDatabase(movesHistory(), databaseRating, fen);
@@ -393,11 +479,10 @@ const ChessPage = () => {
         console.log(lichessMove.winrate);
         setCurrentFen(game.fen());
         setBestMove(lichessMove.san);
+        if(checkGameOver()) return;
         //setUseStockfish(true);
         return;
       }
-
-      checkGameOver();
       
       console.log("No more moves in the database !");
       if(stockfishReady) {
@@ -554,10 +639,10 @@ const ChessPage = () => {
             <button
               className=" m-4 p-1 bg-white border rounded cursor-pointer"
               onClick={() => {
-                getCloudEval(game.fen())
+                launchStockfishAnalysis(12);
               }}
             >
-              Eval
+              Analysis
             </button>
             {/* <button
               className=" m-4 p-1 bg-white border rounded cursor-pointer"
