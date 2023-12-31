@@ -4,6 +4,8 @@ import {BLACK, Chess} from "chess.js";
 import { Chessboard } from "react-chessboard";
 import { Piece, Square } from "react-chessboard/dist/chessboard/types";
 import { fetchLichessDatabase } from "./libs/fetchLichess";
+import { Chart } from "chart.js";
+import { AnalysisChart } from "./components/AnalysisChart";
 //import 'remote-web-worker';
 
 
@@ -39,9 +41,12 @@ const ChessPage = () => {
     const movesHistoryRef = useRef();
     const colorRef = useRef('w');
     const scoreHistory = useRef(new Array());
+    const analysisChart = useRef();
+    const ctxRef = useRef(null);
     const evalRegex = /cp\s-?[0-9]*|mate\s-?[0-9]*/;
     const bestMoveRegex = /bestmove\s(\w*)/;
     const firstEvalMoveRegex = /pv\s[a-h][1-8]/;
+    const [chartHistoryData, setChartHistoryData] = useState([]);
 
     useEffect(() => {
         //const buffer = new SharedArrayBuffer(4096);
@@ -207,6 +212,33 @@ const ChessPage = () => {
             analysisRef.current.postMessage('go depth 12');
           }else{
             console.log(scoreHistory.current);
+            //@ts-ignore
+            setChartHistoryData(scoreHistory.current);
+
+            /* const data = {
+              labels: ['J', 'F', 'M', 'A', 'M', 'J', 'J'],
+              datasets: [{
+                label: 'My First Dataset',
+                data: [65, 59, 80, 81, 56, 55, 40],
+                fill: false,
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.1
+              }]
+            };
+
+            //@ts-ignore
+            analysisChart.current = new Chart(ctxRef.current, {
+                type: 'line',
+                data: data,
+                options: {
+                    scales: {
+                        y: {
+                            stacked: true
+                        }
+                    }
+                }
+            });
+            setCount(666); */
           }
         }
 
@@ -654,6 +686,9 @@ const ChessPage = () => {
             >
               undo
             </button> */}
+          </div>
+          <div className=" flex justify-center items-center w-full h-fit" >
+            <AnalysisChart/>
           </div>
       </div>
     )
