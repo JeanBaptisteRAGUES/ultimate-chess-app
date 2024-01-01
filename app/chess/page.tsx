@@ -189,6 +189,11 @@ const ChessPage = () => {
           analysisRef.current.postMessage('go depth 12');
         }
 
+        //TODO: Mettre un timer (début-fin) d'analyse pour en estimer le temps, + tester multi-threads et stockfish en mode analyse
+        //TODO: Gérer les scores lorsqu'il s'agit d'un mat en x coups
+        //TODO: Ordonnée max et ordonnée min
+        //TODO: Le score ne doit pas directement être celui de stockfish mais doit avoir un max (ex: 8/-8 max et 10/-10 pour les mats)
+        //TODO: Problème lors de l'analyse quand le dernier coup est joué par les noirs, ex: 1. e4 e5 2. Qh5 g6 3. Qxe5+ Qe7 4. Qxh8 Bg7 5. Nf3 Bxh8 -> [0.17, 0.22, -0.45, 4.74, 4.83, 4.96, 4.53, 7.61, -3.35, 3.11] (3.11 au lieu de -3.11)
         if(event.data.match(/\sdepth\s12.*cp\s(-?\d*)/gm)){
           console.log(event.data);
           console.log(event.data.match(/\sdepth\s12.*cp\s(-?\d*)/gm));
@@ -214,48 +219,8 @@ const ChessPage = () => {
             console.log(scoreHistory.current);
             //@ts-ignore
             setChartHistoryData(scoreHistory.current);
-
-            /* const data = {
-              labels: ['J', 'F', 'M', 'A', 'M', 'J', 'J'],
-              datasets: [{
-                label: 'My First Dataset',
-                data: [65, 59, 80, 81, 56, 55, 40],
-                fill: false,
-                borderColor: 'rgb(75, 192, 192)',
-                tension: 0.1
-              }]
-            };
-
-            //@ts-ignore
-            analysisChart.current = new Chart(ctxRef.current, {
-                type: 'line',
-                data: data,
-                options: {
-                    scales: {
-                        y: {
-                            stacked: true
-                        }
-                    }
-                }
-            });
-            setCount(666); */
           }
         }
-
-        /* if(event.data.match(bestMoveRegex)){
-          console.log(event.data);
-          console.log(event.data.match(bestMoveRegex)[1]);
-          const newBestMove = event.data.match(bestMoveRegex)[1];
-          console.log(`Game Turn: ${game.turn()}, Player Color: ${playerColor}`);
-          if(newBestMove !== null){
-            //playMoveAtCertainLevel(databaseRating, newBestMove);
-            game.move(newBestMove);
-            if(checkGameOver()) return;
-            console.log('Not Game Over');
-            setCurrentFen(game.fen());
-            setBestMove(newBestMove);
-          } 
-        } */
       }
 
 
@@ -688,7 +653,7 @@ const ChessPage = () => {
             </button> */}
           </div>
           <div className=" flex justify-center items-center w-full h-fit" >
-            <AnalysisChart/>
+            {chartHistoryData.length > 0 ? <AnalysisChart historyData={chartHistoryData} /> : null}
           </div>
       </div>
     )
