@@ -36,6 +36,12 @@ export function AnalysisChart(historyData: any) {
             text: 'Chart.js Line Chart',
             },
         },
+        scales: {
+            y: {
+                suggestedMin: 0,
+                suggestedMax: 100
+            }
+        }
     };
       
     //const labels = ['January', 'February', 'March', 'April', 'May', 'June', 'July'];
@@ -43,22 +49,26 @@ export function AnalysisChart(historyData: any) {
     console.log(historyData.historyData);
     const labels = historyData.historyData.map(() => '');
     console.log(labels);
+    //TODO: Essayer de faire en sorte que les labels donnent le score: chartjs doc -> Axes -> Labeling Axes -> Creating Custom Tick Formats
       
     const data = {
         labels,
         datasets: [
             {
                 fill: {
-                    target: {value: 0}, // 3. Set the fill options
+                    target: {value: 50}, // 3. Set the fill options
                     above: "rgba(255, 255, 255, 1)",
                     below: "rgba(0,0,0,1)"
                 },
                 label: '',
                 data: historyData.historyData,
-                borderColor: 'rgba(255, 255, 255,0)',
+                borderColor: 'rgba(255, 100, 255, 1)',
                 backgroundColor: 'rgba(255, 255, 255, 0)',
+                pointStyle: false,
+                borderWidth: 1,
             },
         ],
     };
-    return <Line options={options} data={data} />;
+    //@ts-ignore
+    return <Line options={options} data={data} className=' bg-zinc-700' />;
 }

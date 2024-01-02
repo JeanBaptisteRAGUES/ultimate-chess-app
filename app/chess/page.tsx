@@ -47,6 +47,8 @@ const ChessPage = () => {
     const bestMoveRegex = /bestmove\s(\w*)/;
     const firstEvalMoveRegex = /pv\s[a-h][1-8]/;
     const [chartHistoryData, setChartHistoryData] = useState([]);
+    const timestampStart = useRef(0);
+    const timestampEnd = useRef(0);
 
     useEffect(() => {
         //const buffer = new SharedArrayBuffer(4096);
@@ -63,7 +65,6 @@ const ChessPage = () => {
 
         //@ts-ignore
         evalRef.current.onmessage = function(event: any) {
-          //TODO: bug évaluation négative -> useEffect() -> playerColor pas à jour ?
           //console.log('Stockfish message')
           //console.log(event.data);
     
@@ -83,7 +84,6 @@ const ChessPage = () => {
             //console.log(game.get(firstMove));
             let coeff = game.get(firstMove).color === 'w' ? 1 : -1;
             const evaluationArr = evaluationStr.split(' ');
-            //TODO: corriger le signe négatif pour le nombre de coups avant echec et mat
             if(evaluationArr[0] === 'mate') evaluationStr = '#' + coeff*(eval(evaluationArr[1]));
             if(evaluationArr[0] === 'cp') evaluationStr = (coeff*(eval(evaluationArr[1])/100)).toString();
             //console.log('Evaluation : ' + evaluationStr);
@@ -93,7 +93,6 @@ const ChessPage = () => {
 
         //@ts-ignore
         engineRef.current.onmessage = function(event: any) {
-          //TODO: bug bestMove introuvable quand échec et mat ?
           if(event.data === 'uciok'){
             console.log('Engine ok');
             //@ts-ignore
@@ -166,7 +165,24 @@ const ChessPage = () => {
       return movesStr;
     }
 
+    function scoreToPercentage(score: number, isMate: boolean) {
+      if(isMate){
+        if(score < 0) return 0;
+        return 100;
+      } 
+      const scoreLimit = Math.min(4.5,(Math.max(-4.5,score)));
+      console.log(`Score: ${score}, Score Limit: ${scoreLimit}`);
+      return (5+scoreLimit)/0.1;
+    }
+
     function launchStockfishAnalysis(depth: number) {
+      //1. e4 c6 2. d4 d5 3. e5 c5 4. dxc5 Nc6 5. Nf3 Bg4 6. c3 e6 7. Be3 Nxe5 8. Qa4+ Nc6 9. Qxg4 Nf6 10. Be2
+      //Temps d'analyse sans avoir rien modifié: 3.5s
+      //Temps d'analyse en mode analyse: 3.5s
+      //Temps d'analyse en mode analyse et 2 threads: ~4s
+      //Temps d'analyse en mode analyse et 4 threads: ~4.2s
+      const score12CpRegex = /\sdepth\s12.*cp\s(-?\d*)/gm;
+      const score12MateRegex = /\sdepth\s12.*mate\s(-?\d*)|mate\s(0)/gm;
       //@ts-ignore
       analysisRef.current = new Worker('stockfish.js#stockfish.wasm');
 
@@ -178,32 +194,39 @@ const ChessPage = () => {
 
       //@ts-ignore
       analysisRef.current.onmessage = function(event: any) {
+        //console.log(event.data);
         if(event.data === 'uciok'){
           console.log('Analysis ok');
+          timestampStart.current = performance.now();
           //@ts-ignore
           analysisRef.current.postMessage('setoption name MultiPV value 1');
+          //@ts-ignore
+          analysisRef.current.postMessage('setoption name UCI_AnalyseMode value true');
+          /* //@ts-ignore
+          analysisRef.current.postMessage('setoption name Threads value 4'); */
           console.log(movesHistoryRef.current);
           //@ts-ignore
-          analysisRef.current.postMessage(`position fen ${movesHistoryRef.current.pop().after}`);
+          const lastMove = movesHistoryRef.current.pop();
+          colorRef.current = lastMove.color;
+          console.log(lastMove.after);
+          //@ts-ignore
+          analysisRef.current.postMessage(`position fen ${lastMove.after}`);
           //@ts-ignore
           analysisRef.current.postMessage('go depth 12');
         }
 
-        //TODO: Mettre un timer (début-fin) d'analyse pour en estimer le temps, + tester multi-threads et stockfish en mode analyse
-        //TODO: Gérer les scores lorsqu'il s'agit d'un mat en x coups
-        //TODO: Ordonnée max et ordonnée min
-        //TODO: Le score ne doit pas directement être celui de stockfish mais doit avoir un max (ex: 8/-8 max et 10/-10 pour les mats)
-        //TODO: Problème lors de l'analyse quand le dernier coup est joué par les noirs, ex: 1. e4 e5 2. Qh5 g6 3. Qxe5+ Qe7 4. Qxh8 Bg7 5. Nf3 Bxh8 -> [0.17, 0.22, -0.45, 4.74, 4.83, 4.96, 4.53, 7.61, -3.35, 3.11] (3.11 au lieu de -3.11)
-        if(event.data.match(/\sdepth\s12.*cp\s(-?\d*)/gm)){
+        if(event.data.match(score12CpRegex)){
           console.log(event.data);
-          console.log(event.data.match(/\sdepth\s12.*cp\s(-?\d*)/gm));
+          console.log(event.data.match(score12CpRegex));
           //@ts-ignore
-          let analysisEval = eval(((/\sdepth\s12.*cp\s(-?\d*)/gm).exec(event.data))[1])/100.0;
+          let analysisEval = eval(((score12CpRegex).exec(event.data))[1])/100.0;
           //const analysisColor = (/.*\s(b)|.*\s(w)/gm).exec(event.data);
           if(colorRef.current === 'w') analysisEval =  (-1)*analysisEval;
+          console.log(colorRef.current); 
           console.log(analysisEval); 
 
-          scoreHistory.current.unshift(analysisEval);
+          //scoreHistory.current.unshift(analysisEval);
+          scoreHistory.current.unshift(scoreToPercentage(analysisEval, false));
           //console.log(analysisColor);
           //@ts-ignore
           const lastMove = movesHistoryRef.current.pop();
@@ -217,6 +240,43 @@ const ChessPage = () => {
             analysisRef.current.postMessage('go depth 12');
           }else{
             console.log(scoreHistory.current);
+            timestampEnd.current = performance.now();
+            console.log('Analysis time: ' + (timestampEnd.current - timestampStart.current)/1000 + 's');
+            //@ts-ignore
+            setChartHistoryData(scoreHistory.current);
+          }
+        }
+        if(event.data.match(score12MateRegex)){
+          console.log(event.data);
+          //console.log(((score12MateRegex).exec(event.data))?.length);
+          let regexResult = ((score12MateRegex).exec(event.data));
+          console.log(regexResult);
+          let analysisEval = 0;
+          if(regexResult && regexResult[1] !== undefined && regexResult[1] !== null) analysisEval = eval(regexResult[1]);
+          //@ts-ignore
+          if(colorRef.current === 'w' && analysisEval !== 0) analysisEval =  (-1)*analysisEval;
+          if(colorRef.current === 'w' && analysisEval === 0) analysisEval =  100;
+          if(colorRef.current === 'b' && analysisEval === 0) analysisEval =  -100;
+          console.log(colorRef.current); 
+          console.log(analysisEval);
+
+          //@ts-ignore
+          scoreHistory.current.unshift(scoreToPercentage(analysisEval, true));
+          //console.log(analysisColor);
+          //@ts-ignore
+          const lastMove = movesHistoryRef.current.pop();
+          if(lastMove){
+            const lastFen = lastMove.after;
+            colorRef.current = lastMove.color;
+            console.log(lastFen);
+            //@ts-ignore
+            analysisRef.current.postMessage(`position fen ${lastFen}`);
+            //@ts-ignore
+            analysisRef.current.postMessage('go depth 12');
+          }else{
+            console.log(scoreHistory.current);
+            timestampEnd.current = performance.now();
+            console.log('Analysis time: ' + (timestampEnd.current - timestampStart.current)/1000 + 's');
             //@ts-ignore
             setChartHistoryData(scoreHistory.current);
           }
@@ -338,6 +398,7 @@ const ChessPage = () => {
       return danger;
     }
 
+    //TODO: Faire en sorte que l'ordi joue automatiquement les mat en 1
     function makeStockfishMove(level: string) {
       if(checkGameOver()) return;
       console.log('Make Stockfish Move');
