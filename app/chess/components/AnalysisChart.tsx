@@ -39,7 +39,13 @@ export function AnalysisChart(historyData: any) {
         scales: {
             y: {
                 suggestedMin: 0,
-                suggestedMax: 100
+                suggestedMax: 100,
+                ticks: {
+                    // Include a dollar sign in the ticks
+                    callback: function(value: any, index: any, ticks: any) {
+                        return '';
+                    }
+                }
             }
         }
     };

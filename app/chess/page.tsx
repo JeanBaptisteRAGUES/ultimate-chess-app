@@ -47,6 +47,11 @@ const ChessPage = () => {
     const bestMoveRegex = /bestmove\s(\w*)/;
     const firstEvalMoveRegex = /pv\s[a-h][1-8]/;
     const [chartHistoryData, setChartHistoryData] = useState([]);
+    const [showChartHistory, setShowChartHistory] = useState(false);
+    const [showGameoverWindow, setShowGameoverWindow] = useState(false);
+    const [showAnalysisProgress, setShowAnalysisProgress] = useState(false);
+    const [analysisProgress, setAnalysisProgress] = useState(0);
+    const [winner, setWinner] = useState(''); // 'w' -> blancs gagnent, 'b' -> noirs gagnent, 'd' -> draw
     const timestampStart = useRef(0);
     const timestampEnd = useRef(0);
 
@@ -123,6 +128,10 @@ const ChessPage = () => {
 
     useEffect(() => {
       console.log('New Level : ' + databaseRating);
+      //@ts-ignore
+      if(databaseRating === "Maximum") engineRef.current.postMessage('setoption name Use NNUE value on_use_NNUE');
+      //@ts-ignore
+      if(databaseRating !== "Maximum") engineRef.current.postMessage('setoption name Use NNUE value false');
     }, [databaseRating]);
 
     useEffect(() => {
@@ -141,10 +150,18 @@ const ChessPage = () => {
         console.log('Game Over !');
         if(game.isDraw() || game.isInsufficientMaterial() || game.isStalemate() || game.isInsufficientMaterial()) {
           setEngineEval('1/2 - 1/2');
+          setWinner('d');
         }
         if(game.isCheckmate()){
-          game.turn() === 'w' ? setEngineEval('0 - 1') : setEngineEval('1 - 0');
+          if(game.turn() === 'w'){
+            setEngineEval('0 - 1');
+            setWinner('b');
+          }else{
+            setEngineEval('1 - 0');
+            setWinner('w');
+          }
         }
+        setShowGameoverWindow(true);
         return true;
       }
       return false;
@@ -152,7 +169,7 @@ const ChessPage = () => {
   
     function movesHistory() {
       const movesObj = game.history({verbose: true});
-      console.log(movesObj);
+      //console.log(movesObj);
   
       const movesStr: Array<string> = [];
   
@@ -160,7 +177,7 @@ const ChessPage = () => {
         movesStr.push(move.lan)
       ));
   
-      console.log(JSON.stringify(movesStr));
+      //console.log(JSON.stringify(movesStr));
   
       return movesStr;
     }
@@ -183,6 +200,19 @@ const ChessPage = () => {
       //Temps d'analyse en mode analyse et 4 threads: ~4.2s
       const score12CpRegex = /\sdepth\s12.*cp\s(-?\d*)/gm;
       const score12MateRegex = /\sdepth\s12.*mate\s(-?\d*)|mate\s(0)/gm;
+      const score16CpRegex = /\sdepth\s16.*cp\s(-?\d*)/gm;
+      const score16MateRegex = /\sdepth\s16.*mate\s(-?\d*)|mate\s(0)/gm;
+      let scoreCpRegex = score12CpRegex;
+      let scoreMateRegex = score12MateRegex;
+      if(depth >= 16){
+        depth = 16;
+        scoreCpRegex = score16CpRegex;
+        scoreMateRegex = score16MateRegex;
+      }
+
+      setChartHistoryData([]);
+      scoreHistory.current = [];
+
       //@ts-ignore
       analysisRef.current = new Worker('stockfish.js#stockfish.wasm');
 
@@ -212,24 +242,29 @@ const ChessPage = () => {
           //@ts-ignore
           analysisRef.current.postMessage(`position fen ${lastMove.after}`);
           //@ts-ignore
-          analysisRef.current.postMessage('go depth 12');
+          analysisRef.current.postMessage(`go depth ${depth}`);
         }
 
-        if(event.data.match(score12CpRegex)){
+        if(event.data.match(scoreCpRegex)){
           console.log(event.data);
-          console.log(event.data.match(score12CpRegex));
+          //console.log(event.data.match(score12CpRegex));
           //@ts-ignore
-          let analysisEval = eval(((score12CpRegex).exec(event.data))[1])/100.0;
+          let analysisEval = eval(((scoreCpRegex).exec(event.data))[1])/100.0;
           //const analysisColor = (/.*\s(b)|.*\s(w)/gm).exec(event.data);
           if(colorRef.current === 'w') analysisEval =  (-1)*analysisEval;
-          console.log(colorRef.current); 
-          console.log(analysisEval); 
+          //console.log(colorRef.current); 
+          //console.log(analysisEval); 
 
           //scoreHistory.current.unshift(analysisEval);
           scoreHistory.current.unshift(scoreToPercentage(analysisEval, false));
           //console.log(analysisColor);
           //@ts-ignore
           const lastMove = movesHistoryRef.current.pop();
+          //@ts-ignore
+          setAnalysisProgress(Math.min(100, (scoreHistory.current.length/game.history().length)*100));
+          //setAnalysisProgress(Math.random()*100);
+          //@ts-ignore
+          //console.log(`scoreHistory.current.length: ${scoreHistory.current.length}, movesHistoryRef.current.length: ${movesHistoryRef.current.length}`);
           if(lastMove){
             const lastFen = lastMove.after;
             colorRef.current = lastMove.color;
@@ -237,19 +272,20 @@ const ChessPage = () => {
             //@ts-ignore
             analysisRef.current.postMessage(`position fen ${lastFen}`);
             //@ts-ignore
-            analysisRef.current.postMessage('go depth 12');
+            analysisRef.current.postMessage(`go depth ${depth}`);
           }else{
             console.log(scoreHistory.current);
             timestampEnd.current = performance.now();
             console.log('Analysis time: ' + (timestampEnd.current - timestampStart.current)/1000 + 's');
             //@ts-ignore
             setChartHistoryData(scoreHistory.current);
+            setShowChartHistory(true);
           }
         }
-        if(event.data.match(score12MateRegex)){
+        if(event.data.match(scoreMateRegex)){
           console.log(event.data);
           //console.log(((score12MateRegex).exec(event.data))?.length);
-          let regexResult = ((score12MateRegex).exec(event.data));
+          let regexResult = ((scoreMateRegex).exec(event.data));
           console.log(regexResult);
           let analysisEval = 0;
           if(regexResult && regexResult[1] !== undefined && regexResult[1] !== null) analysisEval = eval(regexResult[1]);
@@ -265,6 +301,8 @@ const ChessPage = () => {
           //console.log(analysisColor);
           //@ts-ignore
           const lastMove = movesHistoryRef.current.pop();
+          //@ts-ignore
+          setAnalysisProgress(Math.min(100, (scoreHistory.current.length/game.history().length)*100));
           if(lastMove){
             const lastFen = lastMove.after;
             colorRef.current = lastMove.color;
@@ -272,7 +310,7 @@ const ChessPage = () => {
             //@ts-ignore
             analysisRef.current.postMessage(`position fen ${lastFen}`);
             //@ts-ignore
-            analysisRef.current.postMessage('go depth 12');
+            analysisRef.current.postMessage(`go depth ${depth}`);
           }else{
             console.log(scoreHistory.current);
             timestampEnd.current = performance.now();
@@ -398,6 +436,26 @@ const ChessPage = () => {
       return danger;
     }
 
+    function checkmateOpponent() {
+      const allMoves = game.moves();
+      let isCheckmate = false;
+      
+      allMoves.forEach((testMove) => {
+        if(!isCheckmate){
+          gameTest.load(game.fen());
+          gameTest.move(testMove);
+          isCheckmate = gameTest.isCheckmate();
+          //console.log(`Move (${testMove}) is checkmate: ${isCheckmate}`);
+          if(isCheckmate){
+            game.move(testMove);
+            setCurrentFen(game.fen());
+          } 
+        }
+      });
+
+      return isCheckmate;
+    }
+
     //TODO: Faire en sorte que l'ordi joue automatiquement les mat en 1
     function makeStockfishMove(level: string) {
       if(checkGameOver()) return;
@@ -463,11 +521,12 @@ const ChessPage = () => {
           depth = 12;
           break;
         case 'Master':
+          // Environ 2900 Elo (Bot chess.com)
           randMoveChance = 1;
-          randMoveInterval = 15;
+          randMoveInterval = 20;
           filterLevel = 4;
           securityLvl = 2;
-          skillValue = 16;
+          skillValue = 20;
           depth = 16;
           break;
         case 'Maximum':
@@ -486,6 +545,12 @@ const ChessPage = () => {
       }
       let rand = Math.random()*100;
 
+      if(checkmateOpponent()){
+        console.log('Play Forced Checkmate !');
+        setLastRandomMove(lastRandomMove-1);
+        return;
+      }
+
       if(securityLvl > 0 && isLastMoveDangerous()){
         console.log('Play Forced Stockfish Best Move !');
         setLastRandomMove(lastRandomMove-1);
@@ -497,7 +562,7 @@ const ChessPage = () => {
         return;
       }
 
-      if(lastRandomMove <= -randMoveInterval){
+      if(databaseRating !== 'Maximum' && lastRandomMove <= -randMoveInterval){
         console.log('Play Forced Random Move !');
         console.log(`Random Move Interval: ${randMoveInterval}, Last Random Move: ${lastRandomMove}`);
         setLastRandomMove(randMoveInterval);
@@ -505,7 +570,7 @@ const ChessPage = () => {
         return;
       }
 
-      if(rand <= randMoveChance && lastRandomMove < 1){
+      if(databaseRating !== 'Maximum' && rand <= randMoveChance && lastRandomMove < 1){
         console.log('Play Random Move !');
         console.log(`Random Move Interval: ${randMoveInterval}, Last Random Move: ${lastRandomMove}`);
         setLastRandomMove(randMoveInterval);
@@ -530,7 +595,7 @@ const ChessPage = () => {
   
       console.log(lichessMove);
   
-      if(lichessMove?.san !== "" && lichessMove?.san !== undefined){
+      if(databaseRating !== 'Maximum' && lichessMove?.san !== "" && lichessMove?.san !== undefined){
   
         game.move(lichessMove.san);
         setWinrate(lichessMove.winrate);
@@ -580,8 +645,11 @@ const ChessPage = () => {
   
       // store timeout so it can be cleared on undo/reset
       //const newTimeout = setTimeout(makeRandomMove, 2000);
+      let delay = 100 + Math.random()*500;
+      if(databaseRating === 'Maximum') delay = 0;
+      console.log('Delay: ' + delay);
       if(gameStarted){
-        const newTimeout = setTimeout(makeLichessMove, 1000);
+        const newTimeout = setTimeout(makeLichessMove, delay);
         setCurrentTimeout(newTimeout);
       }
       
@@ -610,7 +678,7 @@ const ChessPage = () => {
     }
   
     return (
-      <div className="flex flex-col justify-center items-center bg-cyan-900 h-full w-full overflow-auto" >
+      <div className="flex flex-col justify-center items-center bg-cyan-900 h-screen w-full overflow-auto" >
           <h4 className=" text-lg text-white" >
             Niveau de l'adversaire: {databaseRating}
           </h4>
@@ -650,6 +718,9 @@ const ChessPage = () => {
                 clearTimeout(currentTimeout);
                 setCount(-1);
                 setGameStarted(false);
+                setChartHistoryData([]);
+                scoreHistory.current = [];
+                setWinner('');
               }}
             >
               reset
@@ -669,6 +740,7 @@ const ChessPage = () => {
               <option value="Intermediate" >Intermédiaire</option>
               <option value="Advanced" >Avancé</option>
               <option value="Master" >Maître</option>
+              <option value="Maximum" >Maximum</option>
             </select>
             {/* <select id="opening" onChange={(e) => setPosition(e.target.value)} value={opening}>
               <option value="" >Tester une position</option>
@@ -713,9 +785,84 @@ const ChessPage = () => {
               undo
             </button> */}
           </div>
-          <div className=" flex justify-center items-center w-full h-fit" >
-            {chartHistoryData.length > 0 ? <AnalysisChart historyData={chartHistoryData} /> : null}
-          </div>
+          {
+            showGameoverWindow ? 
+            <div className=" flex justify-center items-center w-full h-full absolute top-0 left-0" >
+              <div className=" flex flex-col justify-start items-center w-1/2 h-1/2 bg-gray-200 rounded" >
+                <div className=" relative flex justify-center items-center w-full h-1/4 bg-fuchsia-600 text-white rounded-t" >
+                  <h1 className=" text-white font-bold flex justify-center items-center">
+                    {
+                      winner === 'w' ? 'Les blancs gagnent la partie !'
+                      :
+                      (
+                        winner === 'b' ? 'Les noirs gagnent la partie !'
+                        :
+                        'Match nul'
+                      )
+                    }
+                  </h1>
+                  <button className=" text-white font-extrabold absolute top-5 left-5" onClick={() => setShowGameoverWindow(false)}>
+                    X
+                  </button>
+                </div>
+                <div className="flex justify-center items-center h-full w-full">
+                  {
+                    !showAnalysisProgress ?
+                    <div className=" flex flex-col justify-center items-center gap-5">
+                      <button
+                        className=" m-4 p-1 bg-fuchsia-600 text-white border rounded cursor-pointer"
+                        onClick={() => {
+                          launchStockfishAnalysis(12);
+                          setShowAnalysisProgress(true);
+                        }}
+                      >
+                        Analyse rapide
+                      </button>
+                      <button
+                        className=" m-4 p-1 bg-fuchsia-600 text-white border rounded cursor-pointer"
+                        onClick={() => {
+                          launchStockfishAnalysis(16);
+                          setShowAnalysisProgress(true);
+                        }}
+                      >
+                        Analyse approfondie
+                      </button>
+                    </div>
+                    :
+                    <div className=" h-6 w-2/3 flex flex-row justify-start items-center bg-gray-600 rounded relative">
+                      <div className=" bg-fuchsia-600 text-white h-full flex justify-center items-center rounded" style={{width: `${Math.round(analysisProgress)}%`}} >
+                        {analysisProgress > 10 ? Math.round(analysisProgress) + '%' : ''}
+                      </div>
+                      <p></p>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+            :
+            null
+          }
+          {
+            showChartHistory ? 
+            <div className=" flex justify-center items-center w-full h-full absolute top-0 left-0" >
+              <div className=" relative flex flex-col justify-start items-center w-1/2 h-2/3 bg-gray-200 rounded" >
+                <button 
+                  className=" text-white font-extrabold absolute top-2 left-5" 
+                  onClick={() => {setShowAnalysisProgress(false); setAnalysisProgress(0); setShowChartHistory(false);}}>
+                  X
+                </button>
+                <div className=" w-full h-10 bg-fuchsia-600 rounded-t" ></div>
+                <div className=" flex justify-center items-center w-full h-fit" >
+                  <AnalysisChart historyData={chartHistoryData} className=" " />
+                </div>
+                <div className="  w-full h-max" >
+                  {game.pgn()}
+                </div>
+              </div>
+            </div>
+            :
+            null
+          }
       </div>
     )
 }
