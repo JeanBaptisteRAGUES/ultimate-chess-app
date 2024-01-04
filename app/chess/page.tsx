@@ -192,6 +192,7 @@ const ChessPage = () => {
       return (5+scoreLimit)/0.1;
     }
 
+    //TODO: Si coups restants < x -> go depth {depth+4}
     function launchStockfishAnalysis(depth: number) {
       //1. e4 c6 2. d4 d5 3. e5 c5 4. dxc5 Nc6 5. Nf3 Bg4 6. c3 e6 7. Be3 Nxe5 8. Qa4+ Nc6 9. Qxg4 Nf6 10. Be2
       //Temps d'analyse sans avoir rien modifié: 3.5s
@@ -204,10 +205,12 @@ const ChessPage = () => {
       const score16MateRegex = /\sdepth\s16.*mate\s(-?\d*)|mate\s(0)/gm;
       let scoreCpRegex = score12CpRegex;
       let scoreMateRegex = score12MateRegex;
+      let useNNUE = false;
       if(depth >= 16){
         depth = 16;
         scoreCpRegex = score16CpRegex;
         scoreMateRegex = score16MateRegex;
+        useNNUE = true;
       }
 
       setChartHistoryData([]);
@@ -224,7 +227,7 @@ const ChessPage = () => {
 
       //@ts-ignore
       analysisRef.current.onmessage = function(event: any) {
-        //console.log(event.data);
+        console.log(event.data);
         if(event.data === 'uciok'){
           console.log('Analysis ok');
           timestampStart.current = performance.now();
@@ -232,6 +235,14 @@ const ChessPage = () => {
           analysisRef.current.postMessage('setoption name MultiPV value 1');
           //@ts-ignore
           analysisRef.current.postMessage('setoption name UCI_AnalyseMode value true');
+          if(useNNUE){
+            console.log('Use NNUE !');
+            //@ts-ignore
+            analysisRef.current.postMessage('setoption name Use NNUE value on_use_NNUE');
+          }else{
+            //@ts-ignore
+            analysisRef.current.postMessage('setoption name Use NNUE value false');
+          } 
           /* //@ts-ignore
           analysisRef.current.postMessage('setoption name Threads value 4'); */
           console.log(movesHistoryRef.current);
@@ -272,11 +283,19 @@ const ChessPage = () => {
             //@ts-ignore
             analysisRef.current.postMessage(`position fen ${lastFen}`);
             //@ts-ignore
-            analysisRef.current.postMessage(`go depth ${depth}`);
+            if(movesHistoryRef.current.length <= 5){
+              //@ts-ignore
+              analysisRef.current.postMessage(`go depth ${depth+4}`);
+            }else{
+              //@ts-ignore
+              analysisRef.current.postMessage(`go depth ${depth}`);
+            }
           }else{
             console.log(scoreHistory.current);
             timestampEnd.current = performance.now();
             console.log('Analysis time: ' + (timestampEnd.current - timestampStart.current)/1000 + 's');
+            //@ts-ignore
+            analysisRef.current.postMessage('stop');
             //@ts-ignore
             setChartHistoryData(scoreHistory.current);
             setShowChartHistory(true);
@@ -310,11 +329,19 @@ const ChessPage = () => {
             //@ts-ignore
             analysisRef.current.postMessage(`position fen ${lastFen}`);
             //@ts-ignore
-            analysisRef.current.postMessage(`go depth ${depth}`);
+            if(movesHistoryRef.current.length <= 5){
+              //@ts-ignore
+              analysisRef.current.postMessage(`go depth ${depth+4}`);
+            }else{
+              //@ts-ignore
+              analysisRef.current.postMessage(`go depth ${depth}`);
+            }
           }else{
             console.log(scoreHistory.current);
             timestampEnd.current = performance.now();
             console.log('Analysis time: ' + (timestampEnd.current - timestampStart.current)/1000 + 's');
+            //@ts-ignore
+            analysisRef.current.postMessage('stop');
             //@ts-ignore
             setChartHistoryData(scoreHistory.current);
           }
