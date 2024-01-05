@@ -39,6 +39,7 @@ const ChessPage = () => {
     const engineRef = useRef();
     const analysisRef = useRef();
     const movesHistoryRef = useRef();
+    const bestMovesRef = useRef(new Array());
     const colorRef = useRef('w');
     const scoreHistory = useRef(new Array());
     const analysisChart = useRef();
@@ -192,7 +193,25 @@ const ChessPage = () => {
       return (5+scoreLimit)/0.1;
     }
 
-    //TODO: Si coups restants < x -> go depth {depth+4}
+    function uciToSan(uci: string, testFen: string) {
+      gameTest.load(testFen);
+      gameTest.move(uci);
+
+      const lastMove = gameTest.history({verbose: true}).pop();
+      console.log(lastMove);
+
+      return lastMove?.san;
+    }
+
+    function getBestMove(evalData: string) {
+      const bestMoveObject = (/pv\s([a-h][1-8][a-h][1-8])/).exec(evalData);
+      console.log(bestMoveObject);
+      return bestMoveObject ? bestMoveObject[1] : '';
+    }
+    
+    //TODO: Erreur à la fin de l'analyse (pour le dernier coup ?)
+    //TODO: Les "meilleurs coups" de stockfish dans l'ouverture sont parfois très mauvais -> essayer d'utiliser l'option Ownbook
+    //TODO: Évaluer les imprécisions/erreurs/gaffes 
     function launchStockfishAnalysis(depth: number) {
       //1. e4 c6 2. d4 d5 3. e5 c5 4. dxc5 Nc6 5. Nf3 Bg4 6. c3 e6 7. Be3 Nxe5 8. Qa4+ Nc6 9. Qxg4 Nf6 10. Be2
       //Temps d'analyse sans avoir rien modifié: 3.5s
@@ -215,6 +234,7 @@ const ChessPage = () => {
 
       setChartHistoryData([]);
       scoreHistory.current = [];
+      bestMovesRef.current = [];
 
       //@ts-ignore
       analysisRef.current = new Worker('stockfish.js#stockfish.wasm');
@@ -227,7 +247,7 @@ const ChessPage = () => {
 
       //@ts-ignore
       analysisRef.current.onmessage = function(event: any) {
-        console.log(event.data);
+        //console.log(event.data);
         if(event.data === 'uciok'){
           console.log('Analysis ok');
           timestampStart.current = performance.now();
@@ -271,6 +291,13 @@ const ChessPage = () => {
           //console.log(analysisColor);
           //@ts-ignore
           const lastMove = movesHistoryRef.current.pop();
+
+          const bestMoveUci = getBestMove(event.data);
+          if(bestMoveUci?.length > 0 && bestMovesRef.current.length > 0) {
+            bestMovesRef.current[0].pvSan = uciToSan(bestMoveUci, bestMovesRef.current[0].fenBefore);
+            bestMovesRef.current[0].pvScoreBefore = analysisEval.toString();
+          } 
+
           //@ts-ignore
           setAnalysisProgress(Math.min(100, (scoreHistory.current.length/game.history().length)*100));
           //setAnalysisProgress(Math.random()*100);
@@ -279,7 +306,9 @@ const ChessPage = () => {
           if(lastMove){
             const lastFen = lastMove.after;
             colorRef.current = lastMove.color;
-            console.log(lastFen);
+            console.log(lastMove);
+            bestMovesRef.current.unshift({fenBefore: lastMove.after, pvSan: '', pvScoreBefore: '', pvScoreAfter: analysisEval.toString()});
+            //bestMovesRef.current.unshift(uciToSan(lastMove.san, lastFen));
             //@ts-ignore
             analysisRef.current.postMessage(`position fen ${lastFen}`);
             //@ts-ignore
@@ -296,6 +325,8 @@ const ChessPage = () => {
             console.log('Analysis time: ' + (timestampEnd.current - timestampStart.current)/1000 + 's');
             //@ts-ignore
             analysisRef.current.postMessage('stop');
+            bestMovesRef.current.unshift('');
+            console.log(bestMovesRef.current);
             //@ts-ignore
             setChartHistoryData(scoreHistory.current);
             setShowChartHistory(true);
@@ -304,28 +335,40 @@ const ChessPage = () => {
         if(event.data.match(scoreMateRegex)){
           console.log(event.data);
           //console.log(((score12MateRegex).exec(event.data))?.length);
+          //@ts-ignore
+          const lastMove = movesHistoryRef.current.pop();
           let regexResult = ((scoreMateRegex).exec(event.data));
           console.log(regexResult);
           let analysisEval = 0;
+          let analysisEvalPercentage = 0;
           if(regexResult && regexResult[1] !== undefined && regexResult[1] !== null) analysisEval = eval(regexResult[1]);
-          //@ts-ignore
-          if(colorRef.current === 'w' && analysisEval !== 0) analysisEval =  (-1)*analysisEval;
-          if(colorRef.current === 'w' && analysisEval === 0) analysisEval =  100;
-          if(colorRef.current === 'b' && analysisEval === 0) analysisEval =  -100;
-          console.log(colorRef.current); 
-          console.log(analysisEval);
+
+          const bestMoveUci = getBestMove(event.data);
+          console.log('Best Move UCI: ' + bestMoveUci);
+          if(bestMoveUci?.length > 0 && bestMovesRef.current.length > 0) {
+            bestMovesRef.current[0].pvSan = uciToSan(bestMoveUci, bestMovesRef.current[0].fenBefore);
+            bestMovesRef.current[0].pvScoreBefore = `M${analysisEval}`;
+          } 
 
           //@ts-ignore
-          scoreHistory.current.unshift(scoreToPercentage(analysisEval, true));
+          if(colorRef.current === 'w' && analysisEval !== 0) analysisEvalPercentage =  (-1)*analysisEval;
+          if(colorRef.current === 'w' && analysisEval === 0) analysisEvalPercentage =  100;
+          if(colorRef.current === 'b' && analysisEval === 0) analysisEvalPercentage =  -100;
+          console.log(colorRef.current); 
+          console.log(analysisEvalPercentage);
+
+          //@ts-ignore
+          scoreHistory.current.unshift(scoreToPercentage(analysisEvalPercentage, true));
           //console.log(analysisColor);
           //@ts-ignore
-          const lastMove = movesHistoryRef.current.pop();
-          //@ts-ignore
           setAnalysisProgress(Math.min(100, (scoreHistory.current.length/game.history().length)*100));
+
           if(lastMove){
             const lastFen = lastMove.after;
             colorRef.current = lastMove.color;
-            console.log(lastFen);
+            console.log(lastMove);
+            bestMovesRef.current.unshift({fenBefore: lastMove.after, pvSan: '', pvScoreBefore: '', pvScoreAfter: `M${analysisEval}`});
+            //bestMovesRef.current.unshift(uciToSan(lastMove.san, lastFen));
             //@ts-ignore
             analysisRef.current.postMessage(`position fen ${lastFen}`);
             //@ts-ignore
@@ -342,6 +385,8 @@ const ChessPage = () => {
             console.log('Analysis time: ' + (timestampEnd.current - timestampStart.current)/1000 + 's');
             //@ts-ignore
             analysisRef.current.postMessage('stop');
+            bestMovesRef.current.unshift('');
+            console.log(bestMovesRef.current);
             //@ts-ignore
             setChartHistoryData(scoreHistory.current);
           }
@@ -674,7 +719,7 @@ const ChessPage = () => {
       //const newTimeout = setTimeout(makeRandomMove, 2000);
       let delay = 100 + Math.random()*500;
       if(databaseRating === 'Maximum') delay = 0;
-      console.log('Delay: ' + delay);
+      //console.log('Delay: ' + delay);
       if(gameStarted){
         const newTimeout = setTimeout(makeLichessMove, delay);
         setCurrentTimeout(newTimeout);

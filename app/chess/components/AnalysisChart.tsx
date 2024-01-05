@@ -51,10 +51,10 @@ export function AnalysisChart(historyData: any) {
     };
       
     //const labels = ['January', 'February', 'March', 'April', 'May', 'June', 'July'];
-    console.log(historyData);
-    console.log(historyData.historyData);
+    /* console.log(historyData);
+    console.log(historyData.historyData); */
     const labels = historyData.historyData.map(() => '');
-    console.log(labels);
+    //console.log(labels);
     //TODO: Essayer de faire en sorte que les labels donnent le score: chartjs doc -> Axes -> Labeling Axes -> Creating Custom Tick Formats
       
     const data = {
