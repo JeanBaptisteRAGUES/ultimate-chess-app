@@ -34,6 +34,7 @@ const ChessPage = () => {
     const [stockfishReady, setStockfishReady] = useState(false);
     const [bestMove, setBestMove] = useState('');
     const [engineEval, setEngineEval] = useState('0.3');
+    const [showEval, setShowEval] = useState(true);
     const [lastRandomMove, setLastRandomMove] = useState(0);
     const evalRef = useRef();
     const engineRef = useRef();
@@ -212,6 +213,7 @@ const ChessPage = () => {
     //TODO: Erreur à la fin de l'analyse (pour le dernier coup ?)
     //TODO: Les "meilleurs coups" de stockfish dans l'ouverture sont parfois très mauvais -> essayer d'utiliser l'option Ownbook
     //TODO: Évaluer les imprécisions/erreurs/gaffes 
+    //TODO: Pouvoir naviguer dans la partie jouée avec l'évaluation de l'ordinateur (+ base de données ?)
     function launchStockfishAnalysis(depth: number) {
       //1. e4 c6 2. d4 d5 3. e5 c5 4. dxc5 Nc6 5. Nf3 Bg4 6. c3 e6 7. Be3 Nxe5 8. Qa4+ Nc6 9. Qxg4 Nf6 10. Be2
       //Temps d'analyse sans avoir rien modifié: 3.5s
@@ -351,14 +353,14 @@ const ChessPage = () => {
           } 
 
           //@ts-ignore
-          if(colorRef.current === 'w' && analysisEval !== 0) analysisEvalPercentage =  (-1)*analysisEval;
-          if(colorRef.current === 'w' && analysisEval === 0) analysisEvalPercentage =  100;
-          if(colorRef.current === 'b' && analysisEval === 0) analysisEvalPercentage =  -100;
+          if(colorRef.current === 'w' && analysisEval !== 0) analysisEval =  (-1)*analysisEval;
+          if(colorRef.current === 'w' && analysisEval === 0) analysisEval =  100;
+          if(colorRef.current === 'b' && analysisEval === 0) analysisEval =  -100;
           console.log(colorRef.current); 
-          console.log(analysisEvalPercentage);
+          console.log(analysisEval);
 
           //@ts-ignore
-          scoreHistory.current.unshift(scoreToPercentage(analysisEvalPercentage, true));
+          scoreHistory.current.unshift(scoreToPercentage(analysisEval, true));
           //console.log(analysisColor);
           //@ts-ignore
           setAnalysisProgress(Math.min(100, (scoreHistory.current.length/game.history().length)*100));
@@ -528,7 +530,6 @@ const ChessPage = () => {
       return isCheckmate;
     }
 
-    //TODO: Faire en sorte que l'ordi joue automatiquement les mat en 1
     function makeStockfishMove(level: string) {
       if(checkGameOver()) return;
       console.log('Make Stockfish Move');
@@ -541,6 +542,13 @@ const ChessPage = () => {
       // Empeche d'avoir un deuxième coup aléatoire avant le Xème coup
       let randMoveInterval = 5;
 
+      //TODO: à implémenter
+      let playForcedMate = 1; // Empèche de louper les mats en x quand x < ou = à playForcedMate
+
+      //TODO: à implémenter quand le reste sera fait: plus il y a de pièces attaquées, plus la charge mentale augmente, plus 
+      // les chances de commettre une erreur (randomMove) augmentent. Echanger des pièces réduit la charge mentale, maintenir
+      // un clouage au contraire maintient cette charge mentale. Plus la partie avance, plus la charge mentale augmente (légèrement)
+      let mentalChargeLimit = 100;
       /* //@ts-ignore
       evalRef.current.postMessage('stop');
       //@ts-ignore
@@ -564,6 +572,7 @@ const ChessPage = () => {
           securityLvl = 0;
           skillValue = 0;
           depth = 10;
+          playForcedMate = 1;
           break;
         case 'Casual':
           // ~1300 Elo (Bot chess.com) (ancien)
@@ -573,15 +582,17 @@ const ChessPage = () => {
           securityLvl = 1;
           skillValue = 2;
           depth = 10;
+          playForcedMate = 2;
           break;
         case 'Intermediate':
-          // ~1800 Elo (Bot chess.com)
-          randMoveChance = 5;
+          // 1 victoire contre Jonas (1700 chess.com) avec les blancs, 1 victoire contre Maia9 (1681 rapide Lichess) avec les blancs
+          randMoveChance = 10; //Test: 5 -> 10
           randMoveInterval = 10;
           filterLevel = 2;
-          securityLvl = 1;
-          skillValue = 10;
+          securityLvl = 2; //Test: 1 -> 2
+          skillValue = 5; //Test: 10 -> 5
           depth = 12;
+          playForcedMate = 3;
           break;
         case 'Advanced':
           // Au moins 2100 Elo (Bot chess.com)
@@ -591,6 +602,7 @@ const ChessPage = () => {
           securityLvl = 2;
           skillValue = 13;
           depth = 12;
+          playForcedMate = 4;
           break;
         case 'Master':
           // Environ 2900 Elo (Bot chess.com)
@@ -600,6 +612,7 @@ const ChessPage = () => {
           securityLvl = 2;
           skillValue = 20;
           depth = 16;
+          playForcedMate = 5;
           break;
         case 'Maximum':
           randMoveChance = 0;
@@ -760,7 +773,7 @@ const ChessPage = () => {
           </div>
           <div className=" h-20 w-full flex flex-col justify-center items-center">
             <div className=" text-white" >
-              {engineEval}
+              {showEval ? engineEval : '???'}
             </div>
             <div className=" h-5 w-52 flex flex-row">
               <div className="bg-white h-5 flex justify-center" style={{width: `${winrate.white}%`}} >{
@@ -819,17 +832,28 @@ const ChessPage = () => {
               <option value="Test King Attack" >Test King Attack</option>
               <option value="Test Pawn Attack" >Test Pawn Attack</option>
             </select> */}
-            <button
-              className=" m-4 p-1 bg-white border rounded cursor-pointer"
-              onClick={() => {
-                setGameStarted(true);
-                if(game.turn() !== playerColor){
-                  makeLichessMove();
-                }
-              }}
-            >
-              Start Game
-            </button>
+            {
+              !gameStarted ? 
+                <button
+                  className=" m-4 p-1 bg-white border rounded cursor-pointer"
+                  onClick={() => {
+                    setGameStarted(true);
+                    setShowEval(false);
+                    if(game.turn() !== playerColor){
+                      makeLichessMove();
+                    }
+                  }}
+                >
+                  Start Game
+                </button>
+                :
+                <button
+                  className=" m-4 p-1 bg-white border rounded cursor-pointer"
+                  onClick={() => setShowEval(!showEval)}
+                >
+                  Show Eval
+                </button>
+            }
             <button
               className=" m-4 p-1 bg-white border rounded cursor-pointer"
               onClick={() => {
