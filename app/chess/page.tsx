@@ -184,6 +184,12 @@ const ChessPage = () => {
       return movesStr;
     }
 
+    function movesHistorySan(gamePGN: string){
+      let pgnAfter = gamePGN.replaceAll(/\d*\.\s/gm, (test) => test.trim());
+
+      return pgnAfter.split(' ');
+    }
+
     function scoreToPercentage(score: number, isMate: boolean) {
       if(isMate){
         if(score < 0) return 0;
@@ -761,6 +767,28 @@ const ChessPage = () => {
   
       setOpening(positionName);
     }
+
+    function analyseMoveByMove(cpBestMoves: any, gameHistory: string[]): string[] {
+      let movesAnalysis: string[] = [];
+      cpBestMoves.forEach((bMove: any, i: number) => {
+        if(bMove !== '' && !bMove.pvScoreBefore.match('M') && !bMove.pvScoreAfter.match('M')){
+          let comment = ' ';
+          let scoreDiff = Math.abs(eval(bMove.pvScoreBefore) - eval(bMove.pvScoreAfter));
+          if(scoreDiff > 0.5) comment = `?! (${bMove.pvSan} was best) `;
+          if(scoreDiff > 1) comment = `? (${bMove.pvSan} was best) `;
+          if(scoreDiff > 2) comment = `?? (${bMove.pvSan} was best) `;
+          movesAnalysis.push(gameHistory[i] + comment);
+        }else{
+          if(bMove === ''){
+            movesAnalysis.push(gameHistory[i] + ' ');
+          }else{
+            movesAnalysis.push(gameHistory[i]);
+          }
+        }
+      })
+
+      return movesAnalysis;
+    }
   
     return (
       <div className="flex flex-col justify-center items-center bg-cyan-900 h-screen w-full overflow-auto" >
@@ -841,6 +869,7 @@ const ChessPage = () => {
                     setShowEval(false);
                     if(game.turn() !== playerColor){
                       makeLichessMove();
+                      //game.loadPgn('1. e4 c5 2. f4 d5 3. exd5 Nf6 4. c4 e6 5. dxe6 Bxe6 6. Nf3 Nc6 7. d3 Nd4 8. Nbd2 Be7 9. Nxd4 cxd4 10. Be2 O-O 11. g4 Qc7 12. f5 Bc8 13. O-O b6 14. Ne4 Bb7 15. Bf4 Qc6 16. g5 Nxe4 17. Bf3')
                     }
                   }}
                 >
@@ -952,7 +981,7 @@ const ChessPage = () => {
                   <AnalysisChart historyData={chartHistoryData} className=" " />
                 </div>
                 <div className="  w-full h-max" >
-                  {game.pgn()}
+                  {analyseMoveByMove(bestMovesRef.current, movesHistorySan(game.pgn()))}
                 </div>
               </div>
             </div>
