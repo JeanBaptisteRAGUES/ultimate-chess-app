@@ -6,6 +6,7 @@ import { Piece, Square } from "react-chessboard/dist/chessboard/types";
 import { fetchLichessDatabase } from "./libs/fetchLichess";
 import { Chart } from "chart.js";
 import { AnalysisChart } from "./components/AnalysisChart";
+import Draggable, { DraggableCore } from "react-draggable";
 //import 'remote-web-worker';
 
 
@@ -23,7 +24,7 @@ const ChessPage = () => {
     const [databaseRating, setDatabaseRating] = useState('Master');
     const [opening, setOpening] = useState('');
     const [startingFen, setStartingFen] = useState('');
-    const [currentFen, setCurrentFen] = useState('');
+    const [currentFen, setCurrentFen] = useState('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
     const [winrate, setWinrate] = useState({
       white: 50,
       draws: 0,
@@ -45,6 +46,7 @@ const ChessPage = () => {
     const scoreHistory = useRef(new Array());
     const analysisChart = useRef();
     const ctxRef = useRef(null);
+    const movesTypeRef = useRef(new Array()); // 0(blanc): joueur, 1(jaune): lichess, 2(vert clair): stockfish, 3(vert foncé): stockfish forcé, 4(rouge): random
     const evalRegex = /cp\s-?[0-9]*|mate\s-?[0-9]*/;
     const bestMoveRegex = /bestmove\s(\w*)/;
     const firstEvalMoveRegex = /pv\s[a-h][1-8]/;
@@ -58,6 +60,7 @@ const ChessPage = () => {
     const timestampEnd = useRef(0);
 
     useEffect(() => {
+        if(winner) return;
         //const buffer = new SharedArrayBuffer(4096);
         console.log(crossOriginIsolated);
         //@ts-ignore
@@ -114,7 +117,8 @@ const ChessPage = () => {
             console.log(`Game Turn: ${game.turn()}, Player Color: ${playerColor}`);
             if(newBestMove !== null){
               //playMoveAtCertainLevel(databaseRating, newBestMove);
-              game.move(newBestMove);
+              //game.move(newBestMove);
+              gameMove(newBestMove);
               if(checkGameOver()) return;
               console.log('Not Game Over');
               setCurrentFen(game.fen());
@@ -137,7 +141,7 @@ const ChessPage = () => {
     }, [databaseRating]);
 
     useEffect(() => {
-      if(checkGameOver()) return;
+      if(winner || checkGameOver()) return;
       //@ts-ignore
       evalRef.current.postMessage('stop');
       //@ts-ignore
@@ -145,6 +149,11 @@ const ChessPage = () => {
       //@ts-ignore
       evalRef.current.postMessage('go depth 18');
     }, [currentFen]);
+
+    const gameMove = (move: string) => {
+      game.move(move);
+      setCurrentFen(game.fen());
+    }
   
     function checkGameOver() {
       // exit if the game is over
@@ -210,6 +219,17 @@ const ChessPage = () => {
       return lastMove?.san;
     }
 
+    //TODO: Éliminer les doublons
+    function scoreToPercentage2(score: number, isMate: boolean) {
+      if(isMate){
+        if(score < 0) return -5;
+        return 5;
+      } 
+      const scoreLimit = Math.min(4.5,(Math.max(-4.5,score)));
+      console.log(`Score: ${score}, Score Limit: ${scoreLimit}`);
+      return scoreLimit;
+    }
+
     function getBestMove(evalData: string) {
       const bestMoveObject = (/pv\s([a-h][1-8][a-h][1-8])/).exec(evalData);
       console.log(bestMoveObject);
@@ -218,8 +238,7 @@ const ChessPage = () => {
     
     //TODO: Erreur à la fin de l'analyse (pour le dernier coup ?)
     //TODO: Les "meilleurs coups" de stockfish dans l'ouverture sont parfois très mauvais -> essayer d'utiliser l'option Ownbook
-    //TODO: Évaluer les imprécisions/erreurs/gaffes 
-    //TODO: Pouvoir naviguer dans la partie jouée avec l'évaluation de l'ordinateur (+ base de données ?)
+    //TODO: Erreurs lors de l'analyse profonde mais pas avec l'analyse rapide (en fin d'analyse donc sur les premiers coups)
     function launchStockfishAnalysis(depth: number) {
       //1. e4 c6 2. d4 d5 3. e5 c5 4. dxc5 Nc6 5. Nf3 Bg4 6. c3 e6 7. Be3 Nxe5 8. Qa4+ Nc6 9. Qxg4 Nf6 10. Be2
       //Temps d'analyse sans avoir rien modifié: 3.5s
@@ -295,7 +314,7 @@ const ChessPage = () => {
           //console.log(analysisEval); 
 
           //scoreHistory.current.unshift(analysisEval);
-          scoreHistory.current.unshift(scoreToPercentage(analysisEval, false));
+          scoreHistory.current.unshift(scoreToPercentage2(analysisEval, false));
           //console.log(analysisColor);
           //@ts-ignore
           const lastMove = movesHistoryRef.current.pop();
@@ -315,7 +334,7 @@ const ChessPage = () => {
             const lastFen = lastMove.after;
             colorRef.current = lastMove.color;
             console.log(lastMove);
-            bestMovesRef.current.unshift({fenBefore: lastMove.after, pvSan: '', pvScoreBefore: '', pvScoreAfter: analysisEval.toString()});
+            bestMovesRef.current.unshift({lastMove: lastMove.san, fenBefore: lastMove.after, pvSan: '', pvScoreBefore: '', pvScoreAfter: analysisEval.toString()});
             //bestMovesRef.current.unshift(uciToSan(lastMove.san, lastFen));
             //@ts-ignore
             analysisRef.current.postMessage(`position fen ${lastFen}`);
@@ -366,7 +385,7 @@ const ChessPage = () => {
           console.log(analysisEval);
 
           //@ts-ignore
-          scoreHistory.current.unshift(scoreToPercentage(analysisEval, true));
+          scoreHistory.current.unshift(scoreToPercentage2(analysisEval, true));
           //console.log(analysisColor);
           //@ts-ignore
           setAnalysisProgress(Math.min(100, (scoreHistory.current.length/game.history().length)*100));
@@ -442,7 +461,9 @@ const ChessPage = () => {
       console.log(safePossibleMoves[randomIndex]);
       //makeLichessMove();
       if(safePossibleMoves.length <= 0) return;
-      game.move(safePossibleMoves[randomIndex]);
+      movesTypeRef.current.push(4);
+      //game.move(safePossibleMoves[randomIndex]);
+      gameMove(safePossibleMoves[randomIndex]);
       //setCount(0);
       setCurrentFen(game.fen());
     }
@@ -527,7 +548,9 @@ const ChessPage = () => {
           isCheckmate = gameTest.isCheckmate();
           //console.log(`Move (${testMove}) is checkmate: ${isCheckmate}`);
           if(isCheckmate){
-            game.move(testMove);
+            movesTypeRef.current.push(3);
+            //game.move(testMove);
+            gameMove(testMove);
             setCurrentFen(game.fen());
           } 
         }
@@ -644,6 +667,7 @@ const ChessPage = () => {
 
       if(securityLvl > 0 && isLastMoveDangerous()){
         console.log('Play Forced Stockfish Best Move !');
+        movesTypeRef.current.push(3);
         setLastRandomMove(lastRandomMove-1);
         console.log(lastRandomMove);
         //@ts-ignore
@@ -668,6 +692,7 @@ const ChessPage = () => {
         makeRandomMove(filterLevel, securityLvl > 1);
       }else{
         console.log('Play Stockfish Best Move !');
+        movesTypeRef.current.push(2);
         setLastRandomMove(lastRandomMove-1);
         console.log(lastRandomMove);
         //@ts-ignore
@@ -687,11 +712,12 @@ const ChessPage = () => {
       console.log(lichessMove);
   
       if(databaseRating !== 'Maximum' && lichessMove?.san !== "" && lichessMove?.san !== undefined){
-  
-        game.move(lichessMove.san);
+        movesTypeRef.current.push(1);
+        //game.move(lichessMove.san);
+        gameMove(lichessMove.san);
         setWinrate(lichessMove.winrate);
         console.log(lichessMove.winrate);
-        setCurrentFen(game.fen());
+        //setCurrentFen(game.fen());
         setBestMove(lichessMove.san);
         if(checkGameOver()) return;
         //setUseStockfish(true);
@@ -733,6 +759,8 @@ const ChessPage = () => {
   
       // illegal move
       if (move === null) return false;
+
+      movesTypeRef.current.push(0);
   
       // store timeout so it can be cleared on undo/reset
       //const newTimeout = setTimeout(makeRandomMove, 2000);
@@ -789,205 +817,277 @@ const ChessPage = () => {
 
       return movesAnalysis;
     }
-  
-    return (
-      <div className="flex flex-col justify-center items-center bg-cyan-900 h-screen w-full overflow-auto" >
-          <h4 className=" text-lg text-white" >
-            Niveau de l'adversaire: {databaseRating}
-          </h4>
-          <div className=" absolute left-5 top-10 text-white w-96">
-            {/* 1.e4 e5 2.Nf3 Nc6 3.Bb5 Bc5 4.c3 Nf6 5.d4 exd4 6.e5 Ne4 7.cxd4 Bb4+ 8.Nbd2 O-O 9.O-O Nxd2 10.Bxd2 Bxd2 11.Qxd2 */}
-            {game.pgn()}
-          </div>
-          <div className=" h-20 w-full flex flex-col justify-center items-center">
-            <div className=" text-white" >
-              {showEval ? engineEval : '???'}
-            </div>
-            <div className=" h-5 w-52 flex flex-row">
-              <div className="bg-white h-5 flex justify-center" style={{width: `${winrate.white}%`}} >{
-                winrate.white >= 10 ? `${winrate.white}%` : "" 
-              }</div>
-              <div className=" bg-slate-500 h-5 flex justify-center" style={{width: `${winrate.draws}%`}} >{
-                winrate.draws >= 10 ? `${winrate.draws}%` : "" 
-              }</div>
-              <div className="bg-black text-white h-5 flex justify-center" style={{width: `${winrate.black}%`}} >{
-                winrate.black >= 10 ? `${winrate.black}%` : "" 
-              }</div>
-            </div>
-          </div>
-          <div className=" h-[500px] w-[500px]" >
-              <Chessboard 
-                id="PlayVsRandom"
-                position={game.fen()}
-                onPieceDrop={onDrop} 
-                boardOrientation={playerColor === 'w' ? 'white' : 'black'}
-              />
-          </div>
+
+    function analyseMoveByMove2(cpBestMoves: any, gameHistory: string[]) {
+      console.log(cpBestMoves);
+      console.log(gameHistory);
+      return cpBestMoves.map((bMove: any, i: number) => {
+        if(bMove !== '' && !bMove.pvScoreBefore.match('M') && !bMove.pvScoreAfter.match('M')){
+          let scoreDiff = Math.abs(eval(bMove.pvScoreBefore) - eval(bMove.pvScoreAfter));
+          console.log(gameHistory[i] + " : " + scoreDiff);
+          if(scoreDiff > 2) return <span onClick={() => showMovePosition(i)} key={i} className=" text-red-600 cursor-pointer" >{gameHistory[i]}?? ({bMove.pvSan} was best)</span>;
+          if(scoreDiff > 1) return <span onClick={() => showMovePosition(i)} key={i} className=" text-orange-500 cursor-pointer" >{gameHistory[i]}? ({bMove.pvSan} was best)</span>;
+          if(scoreDiff > 0.5) return <span onClick={() => showMovePosition(i)} key={i} className=" text-yellow-400 cursor-pointer" >{gameHistory[i]}?! ({bMove.pvSan} was best)</span>;
+          return <span onClick={() => showMovePosition(i)} key={i} className=" text-white cursor-pointer" >{gameHistory[i]}</span>;
+        }else{
+          return <span onClick={() => showMovePosition(i)} key={i} className=" text-white cursor-pointer" >{gameHistory[i]}</span>;
+        }
+      });
+    }
+
+    const moveColor = (moveType: number, move: string, i: number) => {
+      switch (moveType) {
+        case 0:
+          return <span onClick={() => showMovePosition(i)} key={i} className=" text-white cursor-pointer" >{move}</span>
+        case 1:
+          return <span onClick={() => showMovePosition(i)} key={i} className=" text-yellow-600 cursor-pointer" >{move}</span>
+        case 2:
+          return <span onClick={() => showMovePosition(i)} key={i} className=" text-lime-500 cursor-pointer" >{move}</span>
+        case 3:
+          return <span onClick={() => showMovePosition(i)} key={i} className=" text-green-600 cursor-pointer" >{move}</span>
+        case 4:
+          return <span onClick={() => showMovePosition(i)} key={i} className=" text-red-600 cursor-pointer" >{move}</span>            
+        default:
+          return <span onClick={() => showMovePosition(i)} key={i} className=" text-white cursor-pointer" >{move}</span>
+      }
+    }
+
+    const showMovePosition = (moveIndex: number) =>{
+      console.log("Move index: " + moveIndex);
+      const newGame = new Chess();
+      newGame.load('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+
+      for(let i = 0; i <= moveIndex && i < game.history().length; i++){
+        console.log('ok');
+        newGame.move(game.history()[i]);
+      }
+      
+      setCurrentFen(newGame.fen());
+    }
+
+    const gamePGN = () => {
+      const history = movesHistorySan(game.pgn());
+
+      return history.map((move,i) => {
+          if(i%2 === 0){
+            return (
+              <div key={i} className="flex flex-row justify-start items-center gap-2" >
+                {moveColor(movesTypeRef.current[i], move, i)}
+                {(i+1) < history.length ? moveColor(movesTypeRef.current[i+1], history[i+1], i+1) : null}
+              </div>
+            )
+          } 
+          /* return moveColor(movesTypeRef.current[i], move, i); */
+        }
+      )
+    }
+
+    const analysisMenu = !showAnalysisProgress ?
+      <div className=" flex flex-col justify-center items-center gap-5">
+        <button
+          className=" m-4 p-1 bg-fuchsia-600 text-white border rounded cursor-pointer"
+          onClick={() => {
+            launchStockfishAnalysis(12);
+            setShowAnalysisProgress(true);
+          }}
+        >
+          Analyse rapide
+        </button>
+        <button
+          className=" m-4 p-1 bg-fuchsia-600 text-white border rounded cursor-pointer"
+          onClick={() => {
+            launchStockfishAnalysis(16);
+            setShowAnalysisProgress(true);
+          }}
+        >
+          Analyse approfondie
+        </button>
+      </div>
+      :
+      <div className=" h-6 w-2/3 flex flex-row justify-start items-center bg-gray-600 rounded relative">
+        <div className=" bg-fuchsia-600 text-white h-full flex justify-center items-center rounded" style={{width: `${Math.round(analysisProgress)}%`}} >
+          {analysisProgress > 10 ? Math.round(analysisProgress) + '%' : ''}
+        </div>
+        <p></p>
+      </div>
+    
+    const chartHistory = showChartHistory ? 
+      <div className=" flex justify-center items-center grow h-full" >
+        <div className=" relative flex flex-col justify-start items-center w-full h-full pt-5" >
+          {/* <button 
+            className=" text-white font-extrabold absolute top-2 left-5" 
+            onClick={() => {setShowAnalysisProgress(false); setAnalysisProgress(0); setShowChartHistory(false);}}>
+            X
+          </button> */}
           <div className=" flex justify-center items-center w-full h-fit" >
-            <button
-              className=" m-4 p-1 bg-white border rounded cursor-pointer"
-              onClick={() => {
-                game.reset();
-                clearTimeout(currentTimeout);
-                setCount(-1);
-                setGameStarted(false);
-                setChartHistoryData([]);
-                scoreHistory.current = [];
-                setWinner('');
-              }}
-            >
-              reset
-            </button>
-            {/* <button
-              className=" m-4 p-1 bg-white border rounded cursor-pointer"
-              onClick={() => {
-                test();
-              }}
-            >
-              test
-            </button> */}
-            <select id="rating" onChange={(e) => setDatabaseRating(e.target.value)} value={databaseRating}>
-              <option value="" >Sélectionnez un niveau</option>
-              <option value="Beginner" >Débutant</option>
-              <option value="Casual" >Casual</option>
-              <option value="Intermediate" >Intermédiaire</option>
-              <option value="Advanced" >Avancé</option>
-              <option value="Master" >Maître</option>
-              <option value="Maximum" >Maximum</option>
-            </select>
-            {/* <select id="opening" onChange={(e) => setPosition(e.target.value)} value={opening}>
-              <option value="" >Tester une position</option>
-              <option value="Test King Attack" >Test King Attack</option>
-              <option value="Test Pawn Attack" >Test Pawn Attack</option>
-            </select> */}
-            {
-              !gameStarted ? 
-                <button
-                  className=" m-4 p-1 bg-white border rounded cursor-pointer"
-                  onClick={() => {
-                    setGameStarted(true);
-                    setShowEval(false);
-                    if(game.turn() !== playerColor){
-                      makeLichessMove();
-                      //game.loadPgn('1. e4 c5 2. f4 d5 3. exd5 Nf6 4. c4 e6 5. dxe6 Bxe6 6. Nf3 Nc6 7. d3 Nd4 8. Nbd2 Be7 9. Nxd4 cxd4 10. Be2 O-O 11. g4 Qc7 12. f5 Bc8 13. O-O b6 14. Ne4 Bb7 15. Bf4 Qc6 16. g5 Nxe4 17. Bf3')
-                    }
-                  }}
-                >
-                  Start Game
-                </button>
-                :
-                <button
-                  className=" m-4 p-1 bg-white border rounded cursor-pointer"
-                  onClick={() => setShowEval(!showEval)}
-                >
-                  Show Eval
-                </button>
-            }
-            <button
-              className=" m-4 p-1 bg-white border rounded cursor-pointer"
-              onClick={() => {
-                playerColor === 'w' ? setPlayerColor('b') : setPlayerColor('w')
-              }}
-            >
-              Switch
-            </button>
-            <button
-              className=" m-4 p-1 bg-white border rounded cursor-pointer"
-              onClick={() => {
-                launchStockfishAnalysis(12);
-              }}
-            >
-              Analysis
-            </button>
-            {/* <button
-              className=" m-4 p-1 bg-white border rounded cursor-pointer"
-              onClick={() => {
-                game.undo();
-                clearTimeout(currentTimeout);
-                setCount(-1);
-              }}
-            >
-              undo
-            </button> */}
+            <AnalysisChart historyData={chartHistoryData} className=" " />
           </div>
-          {
-            showGameoverWindow ? 
-            <div className=" flex justify-center items-center w-full h-full absolute top-0 left-0" >
-              <div className=" flex flex-col justify-start items-center w-1/2 h-1/2 bg-gray-200 rounded" >
-                <div className=" relative flex justify-center items-center w-full h-1/4 bg-fuchsia-600 text-white rounded-t" >
-                  <h1 className=" text-white font-bold flex justify-center items-center">
-                    {
-                      winner === 'w' ? 'Les blancs gagnent la partie !'
-                      :
-                      (
-                        winner === 'b' ? 'Les noirs gagnent la partie !'
-                        :
-                        'Match nul'
-                      )
-                    }
-                  </h1>
-                  <button className=" text-white font-extrabold absolute top-5 left-5" onClick={() => setShowGameoverWindow(false)}>
-                    X
-                  </button>
-                </div>
-                <div className="flex justify-center items-center h-full w-full">
-                  {
-                    !showAnalysisProgress ?
-                    <div className=" flex flex-col justify-center items-center gap-5">
-                      <button
-                        className=" m-4 p-1 bg-fuchsia-600 text-white border rounded cursor-pointer"
-                        onClick={() => {
-                          launchStockfishAnalysis(12);
-                          setShowAnalysisProgress(true);
-                        }}
-                      >
-                        Analyse rapide
-                      </button>
-                      <button
-                        className=" m-4 p-1 bg-fuchsia-600 text-white border rounded cursor-pointer"
-                        onClick={() => {
-                          launchStockfishAnalysis(16);
-                          setShowAnalysisProgress(true);
-                        }}
-                      >
-                        Analyse approfondie
-                      </button>
-                    </div>
-                    :
-                    <div className=" h-6 w-2/3 flex flex-row justify-start items-center bg-gray-600 rounded relative">
-                      <div className=" bg-fuchsia-600 text-white h-full flex justify-center items-center rounded" style={{width: `${Math.round(analysisProgress)}%`}} >
-                        {analysisProgress > 10 ? Math.round(analysisProgress) + '%' : ''}
-                      </div>
-                      <p></p>
-                    </div>
-                  }
-                </div>
-              </div>
-            </div>
-            :
-            null
+          <div className="  w-full h-full overflow-y-auto flex flex-wrap gap-2" >
+            {analyseMoveByMove2(bestMovesRef.current, movesHistorySan(game.pgn()))}
+          </div>
+        </div>
+      </div>
+      :
+      null
+
+    const gameOverWindow = showGameoverWindow ? 
+      <div className=" flex justify-center items-center w-full h-full absolute top-0 left-0" >
+        <div className=" flex flex-col justify-start items-center w-1/2 h-1/2 bg-gray-200 rounded" >
+          <div className=" relative flex justify-center items-center w-full h-1/4 bg-fuchsia-600 text-white rounded-t" >
+            <h1 className=" text-white font-bold flex justify-center items-center">
+              {
+                winner === 'w' ? 'Les blancs gagnent la partie !'
+                :
+                (
+                  winner === 'b' ? 'Les noirs gagnent la partie !'
+                  :
+                  'Match nul'
+                )
+              }
+            </h1>
+            <button className=" text-white font-extrabold absolute top-5 left-5" onClick={() => setShowGameoverWindow(false)}>
+              X
+            </button>
+          </div>
+          <div className="flex justify-center items-center h-full w-full">
+            {analysisMenu}
+          </div>
+        </div>
+      </div>
+      :
+      null
+
+    const titleComponent = <h4 className=" text-lg text-white" >
+      {"Niveau de l adversaire: " + databaseRating}
+    </h4>
+
+    const pgnComponent = !showChartHistory ?
+      <div className=" text-white grow h-full flex flex-col flex-wrap">
+        {gamePGN()}
+      </div>
+    :
+      null
+
+    const evalComponent = <div className=" h-20 w-full flex flex-col justify-center items-center">
+      <div className=" text-white" >
+        {showEval ? engineEval : '???'}
+      </div>
+      <div className=" h-5 w-52 flex flex-row">
+        <div className="bg-white h-5 flex justify-center" style={{width: `${winrate.white}%`}} >{
+          winrate.white >= 10 ? `${winrate.white}%` : "" 
+        }</div>
+        <div className=" bg-slate-500 h-5 flex justify-center" style={{width: `${winrate.draws}%`}} >{
+          winrate.draws >= 10 ? `${winrate.draws}%` : "" 
+        }</div>
+        <div className="bg-black text-white h-5 flex justify-center" style={{width: `${winrate.black}%`}} >{
+          winrate.black >= 10 ? `${winrate.black}%` : "" 
+        }</div>
+      </div>
+    </div>
+
+    const boardComponent = <div className=" h-[500px] w-[500px]" >
+        <Chessboard 
+          id="PlayVsRandom"
+          position={currentFen}
+          onPieceDrop={onDrop} 
+          boardOrientation={playerColor === 'w' ? 'white' : 'black'}
+        />
+    </div>
+
+    const resetButton = <button
+      className=" m-4 p-1 bg-white border rounded cursor-pointer"
+      onClick={() => {
+        game.reset();
+        clearTimeout(currentTimeout);
+        setCount(-1);
+        setGameStarted(false);
+        setChartHistoryData([]);
+        scoreHistory.current = [];
+        setWinner('');
+      }}
+    >
+      reset
+    </button>
+
+    const selectDifficultyButton = <select id="rating" onChange={(e) => setDatabaseRating(e.target.value)} value={databaseRating}>
+      <option value="" >Sélectionnez un niveau</option>
+      <option value="Beginner" >Débutant</option>
+      <option value="Casual" >Casual</option>
+      <option value="Intermediate" >Intermédiaire</option>
+      <option value="Advanced" >Avancé</option>
+      <option value="Master" >Maître</option>
+      <option value="Maximum" >Maximum</option>
+    </select>
+
+    const startGameButton = !gameStarted ? 
+      <button
+        className=" m-4 p-1 bg-white border rounded cursor-pointer"
+        onClick={() => {
+          setGameStarted(true);
+          setShowEval(false);
+          if(game.turn() !== playerColor){
+            makeLichessMove();
+            //game.loadPgn('1. e4 c5 2. f4 d5 3. exd5 Nf6 4. c4 e6 5. dxe6 Bxe6 6. Nf3 Nc6 7. d3 Nd4 8. Nbd2 Be7 9. Nxd4 cxd4 10. Be2 O-O 11. g4 Qc7 12. f5 Bc8 13. O-O b6 14. Ne4 Bb7 15. Bf4 Qc6 16. g5 Nxe4 17. Bf3')
           }
-          {
-            showChartHistory ? 
-            <div className=" flex justify-center items-center w-full h-full absolute top-0 left-0" >
-              <div className=" relative flex flex-col justify-start items-center w-1/2 h-2/3 bg-gray-200 rounded" >
-                <button 
-                  className=" text-white font-extrabold absolute top-2 left-5" 
-                  onClick={() => {setShowAnalysisProgress(false); setAnalysisProgress(0); setShowChartHistory(false);}}>
-                  X
-                </button>
-                <div className=" w-full h-10 bg-fuchsia-600 rounded-t" ></div>
-                <div className=" flex justify-center items-center w-full h-fit" >
-                  <AnalysisChart historyData={chartHistoryData} className=" " />
-                </div>
-                <div className="  w-full h-max" >
-                  {analyseMoveByMove(bestMovesRef.current, movesHistorySan(game.pgn()))}
-                </div>
-              </div>
-            </div>
-            :
-            null
-          }
+        }}
+      >
+        Start Game
+      </button>
+    :
+      <button
+        className=" m-4 p-1 bg-white border rounded cursor-pointer"
+        onClick={() => setShowEval(!showEval)}
+      >
+        Show Eval
+      </button>
+
+    const switchButton = <button
+      className=" m-4 p-1 bg-white border rounded cursor-pointer"
+      onClick={() => {
+        playerColor === 'w' ? setPlayerColor('b') : setPlayerColor('w')
+      }}
+    >
+      Switch
+    </button>
+
+    const analysisButton = <button
+      className=" m-4 p-1 bg-white border rounded cursor-pointer"
+      onClick={() => {
+        launchStockfishAnalysis(12);
+      }}
+    >
+      Analysis
+    </button>
+
+    const buttonsComponent = !showChartHistory ?
+      <div className=" flex justify-center items-center w-full h-fit" >
+        {resetButton}
+        {selectDifficultyButton}
+        {startGameButton}
+        {switchButton}
+        {analysisButton}
+        {
+          //TODO: faire un bouton 'hint' / 'indice'
+        }
+      </div>
+    :
+      null
+
+    const gameComponent = <div className="flex flex-row justify-start items-center grow-[2] h-full pl-5" >
+      <div className="flex flex-col justify-center items-center">
+        {titleComponent}
+        {evalComponent}
+        {boardComponent}
+        {buttonsComponent}
+      </div>
+    </div>
+
+    return (
+      <div className="flex flex-row justify-stretch items-start bg-cyan-900 h-screen w-full overflow-auto" >
+          {pgnComponent}
+          {gameComponent}
+          {gameOverWindow}
+          {chartHistory}
       </div>
     )
 }

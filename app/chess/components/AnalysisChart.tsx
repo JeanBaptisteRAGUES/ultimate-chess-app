@@ -29,17 +29,18 @@ export function AnalysisChart(historyData: any) {
         responsive: true,
         plugins: {
             legend: {
-            position: 'top' as const,
+                display: false,
+                position: 'top' as const,
             },
             title: {
-            display: true,
+            display: false,
             text: 'Chart.js Line Chart',
             },
         },
         scales: {
             y: {
-                suggestedMin: 0,
-                suggestedMax: 100,
+                suggestedMin: -5,
+                suggestedMax: 5,
                 ticks: {
                     // Include a dollar sign in the ticks
                     callback: function(value: any, index: any, ticks: any) {
@@ -62,11 +63,11 @@ export function AnalysisChart(historyData: any) {
         datasets: [
             {
                 fill: {
-                    target: {value: 50}, // 3. Set the fill options
+                    target: {value: 0}, // 3. Set the fill options
                     above: "rgba(255, 255, 255, 1)",
                     below: "rgba(0,0,0,1)"
                 },
-                label: '',
+                label: 'Eval',
                 data: historyData.historyData,
                 borderColor: 'rgba(255, 100, 255, 1)',
                 backgroundColor: 'rgba(255, 255, 255, 0)',

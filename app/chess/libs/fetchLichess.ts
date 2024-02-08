@@ -5,8 +5,8 @@ function randomIntFromInterval(min: number, max: number) { // min and max includ
 // https://explorer.lichess.ovh/lichess?variant=standard&fen=rnbqkbnr%2Fpppppppp%2F8%2F8%2F8%2F8%2FPPPPPPPP%2FRNBQKBNR+w+KQkq+-+0+1&play=e2e4%2Ce7e5%2Cg1f3&since=2012-01&until=2022-12&speeds=bullet%2Cblitz%2Crapid%2Cclassical&ratings=1600%2C1800%2C2000
 
 const ratings = new Map([
-    ['Beginner', '400%2C1000%2C1200'],
-    ['Casual', '1200%2C1400%2C1600'],
+    ['Beginner', '400%2C1000'],
+    ['Casual', '1200%2C1400'],
     ['Intermediate', '1600%2C1800%2C2000'],
     ['Advanced', '2200%2C2500'],
 ])
