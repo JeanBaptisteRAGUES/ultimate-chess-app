@@ -11,6 +11,7 @@ import Draggable, { DraggableCore } from "react-draggable";
 
 
 const ChessPage = () => {
+    const gameActive = useRef(false);
     const [game, setGame] = useState(new Chess());
     const gameTest = new Chess();
     const [playerColor, setPlayerColor] = useState('w');
@@ -58,6 +59,119 @@ const ChessPage = () => {
     const [winner, setWinner] = useState(''); // 'w' -> blancs gagnent, 'b' -> noirs gagnent, 'd' -> draw
     const timestampStart = useRef(0);
     const timestampEnd = useRef(0);
+    const whiteTimeControl = useRef({
+      startingTime: 600,
+      increment: 0,
+      timeElapsed: 0,
+    });
+    const [whiteTimestamp, setWhiteTimestamp] = useState('10:00');
+    const blackTimeControl = useRef({
+      startingTime: 600,
+      increment: 0,
+      timeElapsed: 0,
+    });
+    const [blackTimestamp, setBlackTimestamp] = useState('10:00');
+    const timeControls = new Map([
+      ['3+0', {startingTime: 180, increment: 0}],
+      ['3+2', {startingTime: 180, increment: 2}],
+      ['10+0', {startingTime: 600, increment: 0}],
+      ['15+10', {startingTime: 900, increment: 10}],
+      ['30+20', {startingTime: 1800, increment: 20}],
+    ]);
+    const [timeControl, setTimeControl] = useState('infinite');
+
+    const updateTimers = () => {
+      if(!gameActive.current) return;
+      //console.log('Update Timers !');
+      //console.log(gameActive.current);
+      //TODO: Faire une persion plus précise en ms si ça marche
+      if(game.turn() === 'w'){
+        const newTimeControl = whiteTimeControl.current;
+        //console.log(whiteTimeControl);
+        newTimeControl.timeElapsed = newTimeControl.timeElapsed+1;
+        const date = new Date((newTimeControl.startingTime - newTimeControl.timeElapsed)*1000);
+        let minutes = date.getMinutes().toString();
+        let seconds = date.getSeconds().toString();
+        if(+seconds < 10) seconds = '0' + seconds;
+        setWhiteTimestamp(`${minutes}:${seconds}`);
+        //console.log(newTimeControl.timeElapsed);
+        whiteTimeControl.current = newTimeControl;
+      }else{
+        const newTimeControl = blackTimeControl.current;
+        newTimeControl.timeElapsed = newTimeControl.timeElapsed+1;
+        const date = new Date((newTimeControl.startingTime - newTimeControl.timeElapsed)*1000);
+        let minutes = date.getMinutes().toString();
+        let seconds = date.getSeconds().toString();
+        if(+seconds < 10) seconds = '0' + seconds;
+        setBlackTimestamp(`${minutes}:${seconds}`);
+        blackTimeControl.current = newTimeControl;
+      }
+      //setCount(Math.random()*1000000);
+    }
+
+    const addIncrement = (gameTurn: string) => {
+      if(timeControl !== 'infinite'){
+        if(gameTurn === 'w'){
+          const newTimeControl = whiteTimeControl.current;
+          newTimeControl.timeElapsed-= whiteTimeControl.current.increment;
+          const date = new Date((newTimeControl.startingTime - newTimeControl.timeElapsed)*1000);
+          let minutes = date.getMinutes().toString();
+          let seconds = date.getSeconds().toString();
+          if(+seconds < 10) seconds = '0' + seconds;
+          setWhiteTimestamp(`${minutes}:${seconds}`);
+          whiteTimeControl.current = newTimeControl;
+        }else{
+          const newTimeControl = blackTimeControl.current;
+          newTimeControl.timeElapsed-= blackTimeControl.current.increment;
+          const date = new Date((newTimeControl.startingTime - newTimeControl.timeElapsed)*1000);
+          let minutes = date.getMinutes().toString();
+          let seconds = date.getSeconds().toString();
+          if(+seconds < 10) seconds = '0' + seconds;
+          setBlackTimestamp(`${minutes}:${seconds}`);
+          blackTimeControl.current = newTimeControl;
+        }
+      }
+    }
+
+    useEffect(() => {
+      //console.log('Set Time Control !');
+      if(timeControl === "infinite") return ;
+      //console.log('Time Control : ' + timeControl);
+      const newWhiteTimeControl = whiteTimeControl.current;
+      const newBlackTimeControl = blackTimeControl.current;
+
+      //@ts-ignore
+      newWhiteTimeControl.startingTime = timeControls.get(timeControl).startingTime;
+      //@ts-ignore
+      newWhiteTimeControl.increment = timeControls.get(timeControl)?.increment;
+      //@ts-ignore
+      newBlackTimeControl.startingTime = timeControls.get(timeControl)?.startingTime;
+      //@ts-ignore
+      newBlackTimeControl.increment = timeControls.get(timeControl)?.increment;
+      const dateWhite = new Date((newWhiteTimeControl.startingTime - newWhiteTimeControl.timeElapsed)*1000);
+      setWhiteTimestamp(`${dateWhite.getMinutes()}:${dateWhite.getSeconds()}`);
+      const dateBlack = new Date((newBlackTimeControl.startingTime - newBlackTimeControl.timeElapsed)*1000);
+      setBlackTimestamp(`${dateBlack.getMinutes()}:${dateBlack.getSeconds()}`);
+      whiteTimeControl.current = newWhiteTimeControl;
+      blackTimeControl.current = newBlackTimeControl;
+      //setCount(Math.random()*1000000);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [timeControl]);
+
+    useEffect(() => {
+      if(!gameStarted) return;
+      if(timeControl === 'infinite') return;
+      console.log("Set Interval !");
+      
+      const interval = setInterval(() => updateTimers(), 1000);
+
+      return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [gameStarted, timeControl, game]);
+
+    useEffect(() => {
+      checkTimeout();
+    }, [whiteTimestamp, blackTimestamp]);
 
     useEffect(() => {
         if(winner) return;
@@ -151,14 +265,32 @@ const ChessPage = () => {
     }, [currentFen]);
 
     const gameMove = (move: string) => {
+      addIncrement(game.turn());
       game.move(move);
       setCurrentFen(game.fen());
+    }
+
+    function checkTimeout() {
+      if(whiteTimeControl.current.startingTime - whiteTimeControl.current.timeElapsed <= 0){
+        setEngineEval('0 - 1');
+        setWinner('b');
+        setShowGameoverWindow(true);
+        gameActive.current = false;
+        return ;
+      }
+      if(blackTimeControl.current.startingTime - blackTimeControl.current.timeElapsed <= 0){
+        setEngineEval('1 - 0');
+        setWinner('w');
+        setShowGameoverWindow(true);
+        gameActive.current = false;
+      }
     }
   
     function checkGameOver() {
       // exit if the game is over
       if (game.isGameOver()){
         console.log('Game Over !');
+        gameActive.current = false;
         if(game.isDraw() || game.isInsufficientMaterial() || game.isStalemate() || game.isInsufficientMaterial()) {
           setEngineEval('1/2 - 1/2');
           setWinner('d');
@@ -742,11 +874,48 @@ const ChessPage = () => {
   
       setEvaluation(cloudEval);
     }
+
+    function getTimeControlDelay() {
+      //@ts-ignore
+      let rawDelay = (timeControls.get(timeControl)?.startingTime/60);
+      console.log("Raw Delay before : " + rawDelay);
+      if(game.history().length <= 10) rawDelay =  rawDelay/4; // On joue plus vite dans l'ouverture
+      if(game.turn() === 'w'){
+        console.log(whiteTimeControl.current.startingTime - whiteTimeControl.current.timeElapsed);
+        console.log(whiteTimeControl.current.startingTime*0.2);
+        if((whiteTimeControl.current.startingTime - whiteTimeControl.current.timeElapsed) < whiteTimeControl.current.startingTime*0.2){
+          rawDelay/=2;
+          console.log("Les blancs ont 20% ou moins de leur temps initial !");
+        }
+        if((whiteTimeControl.current.startingTime - whiteTimeControl.current.timeElapsed) < whiteTimeControl.current.startingTime*0.1){
+          rawDelay/=2;
+          console.log("Les blancs ont 10% ou moins de leur temps initial !");
+        }
+      }else{
+        console.log(blackTimeControl.current.startingTime - blackTimeControl.current.timeElapsed);
+        console.log(blackTimeControl.current.startingTime*0.2);
+        if((blackTimeControl.current.startingTime - blackTimeControl.current.timeElapsed) < blackTimeControl.current.startingTime*0.2){
+          rawDelay/=2;
+          console.log("Les noirs ont 20% ou moins de leur temps initial !");
+        }
+        if((blackTimeControl.current.startingTime - blackTimeControl.current.timeElapsed) < blackTimeControl.current.startingTime*0.1){
+          rawDelay/=2;
+          console.log("Les noirs ont 10% ou moins de leur temps initial !");
+        }
+      }
+      console.log("Raw Delay after : " + rawDelay);
+      let randDelay = Math.max(rawDelay,Math.random()*rawDelay*2)*1000;
+      console.log("Random Delay : " + randDelay);
+      console.log(game.history().length);
+      //@ts-ignore
+      return randDelay;
+    }
   
     function onDrop(sourceSquare: Square, targetSquare: Square, piece: Piece) {
       //const gameCopy = { ...game };
   
       const gameCopy = game; // gameCopy = {...game} as Game ?
+      const gameTurn = game.turn();
       const move = gameCopy.move({
         from: sourceSquare,
         to: targetSquare,
@@ -759,12 +928,13 @@ const ChessPage = () => {
   
       // illegal move
       if (move === null) return false;
+      addIncrement(gameTurn);
 
       movesTypeRef.current.push(0);
   
       // store timeout so it can be cleared on undo/reset
       //const newTimeout = setTimeout(makeRandomMove, 2000);
-      let delay = 100 + Math.random()*500;
+      let delay = getTimeControlDelay();
       if(databaseRating === 'Maximum') delay = 0;
       //console.log('Delay: ' + delay);
       if(gameStarted){
@@ -818,9 +988,10 @@ const ChessPage = () => {
       return movesAnalysis;
     }
 
+    //TODO: Appliquer showMovePosition() sur le meilleur coup suggéré
     function analyseMoveByMove2(cpBestMoves: any, gameHistory: string[]) {
-      console.log(cpBestMoves);
-      console.log(gameHistory);
+      /* console.log(cpBestMoves);
+      console.log(gameHistory); */
       return cpBestMoves.map((bMove: any, i: number) => {
         if(bMove !== '' && !bMove.pvScoreBefore.match('M') && !bMove.pvScoreAfter.match('M')){
           let scoreDiff = Math.abs(eval(bMove.pvScoreBefore) - eval(bMove.pvScoreAfter));
@@ -911,9 +1082,9 @@ const ChessPage = () => {
         <p></p>
       </div>
     
-    const chartHistory = showChartHistory ? 
-      <div className=" flex justify-center items-center grow h-full" >
-        <div className=" relative flex flex-col justify-start items-center w-full h-full pt-5" >
+    const chartHistoryComponent =
+      <div className=" flex justify-center items-center w-full h-full" >
+        <div className=" relative flex flex-col justify-start items-center w-11/12 h-full pt-5" >
           {/* <button 
             className=" text-white font-extrabold absolute top-2 left-5" 
             onClick={() => {setShowAnalysisProgress(false); setAnalysisProgress(0); setShowChartHistory(false);}}>
@@ -922,12 +1093,18 @@ const ChessPage = () => {
           <div className=" flex justify-center items-center w-full h-fit" >
             <AnalysisChart historyData={chartHistoryData} className=" " />
           </div>
-          <div className="  w-full h-full overflow-y-auto flex flex-wrap gap-2" >
+          <div className="  w-full h-full overflow-y-auto flex flex-row flex-wrap justify-start items-start gap-2" >
             {analyseMoveByMove2(bestMovesRef.current, movesHistorySan(game.pgn()))}
           </div>
         </div>
       </div>
-      :
+  
+    
+    const chartHistoryContainer = showChartHistory ? 
+      <div className=" flex justify-center items-center w-1/2 h-full">
+        {chartHistoryComponent}
+      </div>
+    :
       null
 
     const gameOverWindow = showGameoverWindow ? 
@@ -962,7 +1139,7 @@ const ChessPage = () => {
     </h4>
 
     const pgnComponent = !showChartHistory ?
-      <div className=" text-white grow h-full flex flex-col flex-wrap">
+      <div className=" text-white w-1/4 h-full flex flex-col flex-wrap">
         {gamePGN()}
       </div>
     :
@@ -985,13 +1162,23 @@ const ChessPage = () => {
       </div>
     </div>
 
-    const boardComponent = <div className=" h-[500px] w-[500px]" >
+    const boardComponent = <div className=" flex flex-col justify-center items-center h-[500px] w-[500px] my-10" >
+        <div className=" flex justify-end items-center w-full" >
+          <div className=" bg-slate-900 text-slate-200">
+            {blackTimestamp}
+          </div>
+        </div>
         <Chessboard 
           id="PlayVsRandom"
           position={currentFen}
           onPieceDrop={onDrop} 
           boardOrientation={playerColor === 'w' ? 'white' : 'black'}
         />
+        <div className=" flex justify-end items-center w-full" >
+          <div className=" bg-slate-200 text-slate-900">
+            {whiteTimestamp}
+          </div>
+        </div>
     </div>
 
     const resetButton = <button
@@ -1009,21 +1196,34 @@ const ChessPage = () => {
       reset
     </button>
 
-    const selectDifficultyButton = <select id="rating" onChange={(e) => setDatabaseRating(e.target.value)} value={databaseRating}>
-      <option value="" >Sélectionnez un niveau</option>
-      <option value="Beginner" >Débutant</option>
-      <option value="Casual" >Casual</option>
-      <option value="Intermediate" >Intermédiaire</option>
-      <option value="Advanced" >Avancé</option>
-      <option value="Master" >Maître</option>
-      <option value="Maximum" >Maximum</option>
-    </select>
+    const selectDifficultyButton = 
+      <select id="rating" onChange={(e) => setDatabaseRating(e.target.value)} value={databaseRating}>
+        <option value="" >Sélectionnez un niveau</option>
+        <option value="Beginner" >Débutant</option>
+        <option value="Casual" >Casual</option>
+        <option value="Intermediate" >Intermédiaire</option>
+        <option value="Advanced" >Avancé</option>
+        <option value="Master" >Maître</option>
+        <option value="Maximum" >Maximum</option>
+      </select>
+
+    const selectTimeControlButton = 
+      <select id='time-control' onChange={(e) => setTimeControl(e.target.value)} value={timeControl}>
+        <option value="infinite">Sélectionnez une cadence</option>
+        <option value="infinite">Infini</option>
+        <option value="3+0">3+0</option>
+        <option value="3+2">3+2</option>
+        <option value="10+0">10+0</option>
+        <option value="15+10">15+10</option>
+        <option value="30+20">30+20</option>
+      </select>
 
     const startGameButton = !gameStarted ? 
       <button
-        className=" m-4 p-1 bg-white border rounded cursor-pointer"
+        className=" bg-white border rounded cursor-pointer"
         onClick={() => {
           setGameStarted(true);
+          gameActive.current = true;
           setShowEval(false);
           if(game.turn() !== playerColor){
             makeLichessMove();
@@ -1035,14 +1235,14 @@ const ChessPage = () => {
       </button>
     :
       <button
-        className=" m-4 p-1 bg-white border rounded cursor-pointer"
+        className=" bg-white border rounded cursor-pointer"
         onClick={() => setShowEval(!showEval)}
       >
         Show Eval
       </button>
 
     const switchButton = <button
-      className=" m-4 p-1 bg-white border rounded cursor-pointer"
+      className=" bg-white border rounded cursor-pointer"
       onClick={() => {
         playerColor === 'w' ? setPlayerColor('b') : setPlayerColor('w')
       }}
@@ -1051,7 +1251,7 @@ const ChessPage = () => {
     </button>
 
     const analysisButton = <button
-      className=" m-4 p-1 bg-white border rounded cursor-pointer"
+      className=" bg-white border rounded cursor-pointer"
       onClick={() => {
         launchStockfishAnalysis(12);
       }}
@@ -1060,9 +1260,10 @@ const ChessPage = () => {
     </button>
 
     const buttonsComponent = !showChartHistory ?
-      <div className=" flex justify-center items-center w-full h-fit" >
+      <div className="flex justify-center items-center gap-2 w-full h-fit" >
         {resetButton}
         {selectDifficultyButton}
+        {selectTimeControlButton}
         {startGameButton}
         {switchButton}
         {analysisButton}
@@ -1073,21 +1274,29 @@ const ChessPage = () => {
     :
       null
 
-    const gameComponent = <div className="flex flex-row justify-start items-center grow-[2] h-full pl-5" >
-      <div className="flex flex-col justify-center items-center">
+    const gameComponent = 
+      <div className="flex flex-col justify-start items-center h-full">
         {titleComponent}
         {evalComponent}
         {boardComponent}
         {buttonsComponent}
       </div>
-    </div>
+
+    const gameContainer = showChartHistory ?
+      <div className="flex flex-row justify-center items-center w-1/2 h-full pl-5" >
+        {gameComponent}
+      </div>
+    :
+      <div className="flex flex-row justify-start items-center w-3/4 h-full pl-5" >
+        {gameComponent}
+      </div>
 
     return (
       <div className="flex flex-row justify-stretch items-start bg-cyan-900 h-screen w-full overflow-auto" >
           {pgnComponent}
-          {gameComponent}
+          {gameContainer}
           {gameOverWindow}
-          {chartHistory}
+          {chartHistoryContainer}
       </div>
     )
 }
