@@ -77,6 +77,7 @@ const ChessPage = () => {
       ['10+0', {startingTime: 600, increment: 0}],
       ['15+10', {startingTime: 900, increment: 10}],
       ['30+20', {startingTime: 1800, increment: 20}],
+      ['90+30', {startingTime: 5400, increment: 30}],
     ]);
     const [timeControl, setTimeControl] = useState('infinite');
 
@@ -92,9 +93,9 @@ const ChessPage = () => {
         const date = new Date((newTimeControl.startingTime - newTimeControl.timeElapsed)*1000);
         let minutes = date.getMinutes().toString();
         let seconds = date.getSeconds().toString();
+        let hours = date.getUTCHours().toString();
         if(+seconds < 10) seconds = '0' + seconds;
-        setWhiteTimestamp(`${minutes}:${seconds}`);
-        //console.log(newTimeControl.timeElapsed);
+        setWhiteTimestamp(+hours > 0 ? `${hours}:${minutes}:${seconds}` : `${minutes}:${seconds}`);
         whiteTimeControl.current = newTimeControl;
       }else{
         const newTimeControl = blackTimeControl.current;
@@ -102,8 +103,9 @@ const ChessPage = () => {
         const date = new Date((newTimeControl.startingTime - newTimeControl.timeElapsed)*1000);
         let minutes = date.getMinutes().toString();
         let seconds = date.getSeconds().toString();
+        let hours = date.getUTCHours().toString();
         if(+seconds < 10) seconds = '0' + seconds;
-        setBlackTimestamp(`${minutes}:${seconds}`);
+        setBlackTimestamp(+hours > 0 ? `${hours}:${minutes}:${seconds}` : `${minutes}:${seconds}`);
         blackTimeControl.current = newTimeControl;
       }
       //setCount(Math.random()*1000000);
@@ -117,8 +119,9 @@ const ChessPage = () => {
           const date = new Date((newTimeControl.startingTime - newTimeControl.timeElapsed)*1000);
           let minutes = date.getMinutes().toString();
           let seconds = date.getSeconds().toString();
+          let hours = date.getUTCHours().toString();
           if(+seconds < 10) seconds = '0' + seconds;
-          setWhiteTimestamp(`${minutes}:${seconds}`);
+          setWhiteTimestamp(+hours > 0 ? `${hours}:${minutes}:${seconds}` : `${minutes}:${seconds}`);
           whiteTimeControl.current = newTimeControl;
         }else{
           const newTimeControl = blackTimeControl.current;
@@ -126,8 +129,9 @@ const ChessPage = () => {
           const date = new Date((newTimeControl.startingTime - newTimeControl.timeElapsed)*1000);
           let minutes = date.getMinutes().toString();
           let seconds = date.getSeconds().toString();
+          let hours = date.getUTCHours().toString();
           if(+seconds < 10) seconds = '0' + seconds;
-          setBlackTimestamp(`${minutes}:${seconds}`);
+          setBlackTimestamp(+hours > 0 ? `${hours}:${minutes}:${seconds}` : `${minutes}:${seconds}`);
           blackTimeControl.current = newTimeControl;
         }
       }
@@ -149,9 +153,17 @@ const ChessPage = () => {
       //@ts-ignore
       newBlackTimeControl.increment = timeControls.get(timeControl)?.increment;
       const dateWhite = new Date((newWhiteTimeControl.startingTime - newWhiteTimeControl.timeElapsed)*1000);
-      setWhiteTimestamp(`${dateWhite.getMinutes()}:${dateWhite.getSeconds()}`);
+      let secondsWhite = dateWhite.getSeconds().toString();
+      let minutesWhite = dateWhite.getMinutes().toString();
+      let hoursWhite = dateWhite.getUTCHours().toString();
+      if(+secondsWhite < 10) secondsWhite = '0' + secondsWhite;
+      setWhiteTimestamp(+hoursWhite > 0 ? `${hoursWhite}:${minutesWhite}:${secondsWhite}` : `${minutesWhite}:${secondsWhite}`);
       const dateBlack = new Date((newBlackTimeControl.startingTime - newBlackTimeControl.timeElapsed)*1000);
-      setBlackTimestamp(`${dateBlack.getMinutes()}:${dateBlack.getSeconds()}`);
+      let secondsBlack = dateBlack.getSeconds().toString();
+      let minutesBlack = dateBlack.getMinutes().toString();
+      let hoursBlack = dateBlack.getUTCHours().toString();
+      if(+secondsBlack < 10) secondsBlack = '0' + secondsBlack;
+      setBlackTimestamp(+hoursBlack > 0 ? `${hoursBlack}:${minutesBlack}:${secondsBlack}` : `${minutesBlack}:${secondsBlack}`);
       whiteTimeControl.current = newWhiteTimeControl;
       blackTimeControl.current = newBlackTimeControl;
       //setCount(Math.random()*1000000);
@@ -736,42 +748,42 @@ const ChessPage = () => {
           playForcedMate = 1;
           break;
         case 'Casual':
-          // ~1300 Elo (Bot chess.com) (ancien)
-          randMoveChance = 10;
+          // ~1400 bot chess.com
+          randMoveChance = 20;
           randMoveInterval = 5;
           filterLevel = 1;
-          securityLvl = 1;
+          securityLvl = 2;
           skillValue = 2;
           depth = 10;
           playForcedMate = 2;
           break;
         case 'Intermediate':
-          // 1 victoire contre Jonas (1700 chess.com) avec les blancs, 1 victoire contre Maia9 (1681 rapide Lichess) avec les blancs
-          randMoveChance = 10; //Test: 5 -> 10
+          // 1700~1800 bot chess.comm
+          randMoveChance = 10; 
           randMoveInterval = 10;
           filterLevel = 2;
-          securityLvl = 2; //Test: 1 -> 2
-          skillValue = 5; //Test: 10 -> 5
+          securityLvl = 2; 
+          skillValue = 5; 
           depth = 12;
           playForcedMate = 3;
           break;
         case 'Advanced':
-          // Au moins 2100 Elo (Bot chess.com)
+          // ~2000 bot chess.com
           randMoveChance = 3;
           randMoveInterval = 15;
           filterLevel = 3;
           securityLvl = 2;
-          skillValue = 13;
+          skillValue = 10;
           depth = 12;
           playForcedMate = 4;
           break;
         case 'Master':
-          // Environ 2900 Elo (Bot chess.com)
+          // ???
           randMoveChance = 1;
           randMoveInterval = 20;
           filterLevel = 4;
           securityLvl = 2;
-          skillValue = 20;
+          skillValue = 15;
           depth = 16;
           playForcedMate = 5;
           break;
@@ -876,10 +888,11 @@ const ChessPage = () => {
     }
 
     function getTimeControlDelay() {
+      if(timeControl === 'infinite') return 300;
       //@ts-ignore
       let rawDelay = (timeControls.get(timeControl)?.startingTime/60);
       console.log("Raw Delay before : " + rawDelay);
-      if(game.history().length <= 10) rawDelay =  rawDelay/4; // On joue plus vite dans l'ouverture
+      if(game.history().length <= 10) rawDelay =  Math.min(5,rawDelay/4); // On joue plus vite dans l'ouverture
       if(game.turn() === 'w'){
         console.log(whiteTimeControl.current.startingTime - whiteTimeControl.current.timeElapsed);
         console.log(whiteTimeControl.current.startingTime*0.2);
@@ -1162,24 +1175,44 @@ const ChessPage = () => {
       </div>
     </div>
 
-    const boardComponent = <div className=" flex flex-col justify-center items-center h-[500px] w-[500px] my-10" >
-        <div className=" flex justify-end items-center w-full" >
-          <div className=" bg-slate-900 text-slate-200">
-            {blackTimestamp}
+    const boardComponent = playerColor === 'w' ?
+      <div className=" flex flex-col justify-center items-center h-[500px] w-[500px] my-10" >
+          <div className=" flex justify-end items-center w-full" >
+            <div className=" bg-slate-900 text-slate-200">
+              {blackTimestamp}
+            </div>
           </div>
-        </div>
-        <Chessboard 
-          id="PlayVsRandom"
-          position={currentFen}
-          onPieceDrop={onDrop} 
-          boardOrientation={playerColor === 'w' ? 'white' : 'black'}
-        />
-        <div className=" flex justify-end items-center w-full" >
-          <div className=" bg-slate-200 text-slate-900">
-            {whiteTimestamp}
+          <Chessboard 
+            id="PlayVsRandom"
+            position={currentFen}
+            onPieceDrop={onDrop} 
+            boardOrientation={playerColor === 'w' ? 'white' : 'black'}
+          />
+          <div className=" flex justify-end items-center w-full" >
+            <div className=" bg-slate-200 text-slate-900">
+              {whiteTimestamp}
+            </div>
           </div>
-        </div>
-    </div>
+      </div>
+    :
+      <div className=" flex flex-col justify-center items-center h-[500px] w-[500px] my-10" >
+          <div className=" flex justify-end items-center w-full" >
+            <div className=" bg-slate-200 text-slate-900">
+              {whiteTimestamp}
+            </div>
+          </div>
+          <Chessboard 
+            id="PlayVsRandom"
+            position={currentFen}
+            onPieceDrop={onDrop} 
+            boardOrientation={playerColor === 'w' ? 'white' : 'black'}
+          />
+          <div className=" flex justify-end items-center w-full" >
+            <div className=" bg-slate-900 text-slate-200">
+              {blackTimestamp}
+            </div>
+          </div>
+      </div>
 
     const resetButton = <button
       className=" m-4 p-1 bg-white border rounded cursor-pointer"
@@ -1209,13 +1242,14 @@ const ChessPage = () => {
 
     const selectTimeControlButton = 
       <select id='time-control' onChange={(e) => setTimeControl(e.target.value)} value={timeControl}>
-        <option value="infinite">Sélectionnez une cadence</option>
+        <option value="">Sélectionnez une cadence</option>
         <option value="infinite">Infini</option>
         <option value="3+0">3+0</option>
         <option value="3+2">3+2</option>
         <option value="10+0">10+0</option>
         <option value="15+10">15+10</option>
         <option value="30+20">30+20</option>
+        <option value="90+30">90+30</option>
       </select>
 
     const startGameButton = !gameStarted ? 
