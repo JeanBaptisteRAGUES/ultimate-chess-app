@@ -7,6 +7,7 @@ import { fetchLichessDatabase } from "./libs/fetchLichess";
 import { Chart } from "chart.js";
 import { AnalysisChart } from "./components/AnalysisChart";
 import Draggable, { DraggableCore } from "react-draggable";
+import EvalAndWinrate from "./components/EvalAndWinrate";
 //import 'remote-web-worker';
 
 
@@ -38,7 +39,7 @@ const ChessPage = () => {
     const [engineEval, setEngineEval] = useState('0.3');
     const [showEval, setShowEval] = useState(true);
     const [lastRandomMove, setLastRandomMove] = useState(0);
-    const evalRef = useRef();
+    //const evalRef = useRef();//TODO: Supprimer
     const engineRef = useRef();
     const analysisRef = useRef();
     const movesHistoryRef = useRef();
@@ -189,18 +190,21 @@ const ChessPage = () => {
         if(winner) return;
         //const buffer = new SharedArrayBuffer(4096);
         console.log(crossOriginIsolated);
+        //TODO: Supprimer
         //@ts-ignore
-        evalRef.current = new Worker('stockfish.js#stockfish.wasm');
+        //evalRef.current = new Worker('stockfish.js#stockfish.wasm');
         //@ts-ignore
         engineRef.current = new Worker('stockfish.js#stockfish.wasm');
 
+        //TODO: Supprimer
         //@ts-ignore
-        evalRef.current.postMessage('uci');
+        //evalRef.current.postMessage('uci');
         //@ts-ignore
         engineRef.current.postMessage('uci');
 
+        //TODO: Supprimer
         //@ts-ignore
-        evalRef.current.onmessage = function(event: any) {
+        /* evalRef.current.onmessage = function(event: any) {
           //console.log('Stockfish message')
           //console.log(event.data);
     
@@ -225,14 +229,14 @@ const ChessPage = () => {
             //console.log('Evaluation : ' + evaluationStr);
             setEngineEval(evaluationStr);
           }
-        } 
+        }  */
 
         //@ts-ignore
         engineRef.current.onmessage = function(event: any) {
           if(event.data === 'uciok'){
             console.log('Engine ok');
             //@ts-ignore
-            evalRef.current.postMessage('setoption name MultiPV value 1');
+            engineRef.current.postMessage('setoption name MultiPV value 1');
             setStockfishReady(true);
           }
 
@@ -266,7 +270,8 @@ const ChessPage = () => {
       if(databaseRating !== "Maximum") engineRef.current.postMessage('setoption name Use NNUE value false');
     }, [databaseRating]);
 
-    useEffect(() => {
+    //TODO: Supprimer
+    /* useEffect(() => {
       if(winner || checkGameOver()) return;
       //@ts-ignore
       evalRef.current.postMessage('stop');
@@ -274,7 +279,7 @@ const ChessPage = () => {
       evalRef.current.postMessage(`position fen ${game.fen()}`);
       //@ts-ignore
       evalRef.current.postMessage('go depth 18');
-    }, [currentFen]);
+    }, [currentFen]); */
 
     const gameMove = (move: string) => {
       addIncrement(game.turn());
@@ -1158,23 +1163,6 @@ const ChessPage = () => {
     :
       null
 
-    const evalComponent = <div className=" h-20 w-full flex flex-col justify-center items-center">
-      <div className=" text-white" >
-        {showEval ? engineEval : '???'}
-      </div>
-      <div className=" h-5 w-52 flex flex-row">
-        <div className="bg-white h-5 flex justify-center" style={{width: `${winrate.white}%`}} >{
-          winrate.white >= 10 ? `${winrate.white}%` : "" 
-        }</div>
-        <div className=" bg-slate-500 h-5 flex justify-center" style={{width: `${winrate.draws}%`}} >{
-          winrate.draws >= 10 ? `${winrate.draws}%` : "" 
-        }</div>
-        <div className="bg-black text-white h-5 flex justify-center" style={{width: `${winrate.black}%`}} >{
-          winrate.black >= 10 ? `${winrate.black}%` : "" 
-        }</div>
-      </div>
-    </div>
-
     const boardComponent = playerColor === 'w' ?
       <div className=" flex flex-col justify-center items-center h-[500px] w-[500px] my-10" >
           <div className=" flex justify-end items-center w-full" >
@@ -1311,7 +1299,15 @@ const ChessPage = () => {
     const gameComponent = 
       <div className="flex flex-col justify-start items-center h-full">
         {titleComponent}
-        {evalComponent}
+        {/* {evalComponent} */}
+        <EvalAndWinrate 
+          game={game} 
+          winrate={winrate} 
+          winner={winner} 
+          currentFen={currentFen} 
+          showEval={showEval} 
+          isGameOver={checkGameOver()}
+        />
         {boardComponent}
         {buttonsComponent}
       </div>
