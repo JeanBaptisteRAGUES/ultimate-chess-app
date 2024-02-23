@@ -1044,13 +1044,10 @@ const ChessPage = () => {
     const showMovePosition = (moveIndex: number) =>{
       console.log("Move index: " + moveIndex);
       const newGame = new Chess();
-      newGame.load('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
-
-      for(let i = 0; i <= moveIndex && i < game.history().length; i++){
-        console.log('ok');
-        newGame.move(game.history()[i]);
-      }
-      
+      //console.log(game.pgn());
+      //console.log(movesHistorySan(game.pgn()).slice(0, moveIndex+1).join(' '));
+      const positionPGN = movesHistorySan(game.pgn()).slice(0, moveIndex+1).join(' ');
+      newGame.loadPgn(positionPGN);
       setCurrentFen(newGame.fen());
     }
 
