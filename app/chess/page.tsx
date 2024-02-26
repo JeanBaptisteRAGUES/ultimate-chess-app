@@ -8,6 +8,7 @@ import { Chart } from "chart.js";
 import { AnalysisChart } from "./components/AnalysisChart";
 import Draggable, { DraggableCore } from "react-draggable";
 import EvalAndWinrate from "./components/EvalAndWinrate";
+import Clock from "./components/Clock";
 //import 'remote-web-worker';
 
 
@@ -73,6 +74,7 @@ const ChessPage = () => {
     });
     const [blackTimestamp, setBlackTimestamp] = useState('10:00');
     const timeControls = new Map([
+      ['1+0', {startingTime: 60, increment: 0}],
       ['3+0', {startingTime: 180, increment: 0}],
       ['3+2', {startingTime: 180, increment: 2}],
       ['10+0', {startingTime: 600, increment: 0}],
@@ -282,7 +284,7 @@ const ChessPage = () => {
     }, [currentFen]); */
 
     const gameMove = (move: string) => {
-      addIncrement(game.turn());
+      //addIncrement(game.turn());
       game.move(move);
       setCurrentFen(game.fen());
     }
@@ -305,8 +307,10 @@ const ChessPage = () => {
   
     function checkGameOver() {
       // exit if the game is over
+      if(!gameActive.current) return false;
       if (game.isGameOver()){
         console.log('Game Over !');
+        console.log(game.pgn());
         gameActive.current = false;
         if(game.isDraw() || game.isInsufficientMaterial() || game.isStalemate() || game.isInsufficientMaterial()) {
           setEngineEval('1/2 - 1/2');
@@ -946,7 +950,7 @@ const ChessPage = () => {
   
       // illegal move
       if (move === null) return false;
-      addIncrement(gameTurn);
+      //addIncrement(gameTurn);
 
       movesTypeRef.current.push(0);
   
@@ -1162,41 +1166,85 @@ const ChessPage = () => {
 
     const boardComponent = playerColor === 'w' ?
       <div className=" flex flex-col justify-center items-center h-[500px] w-[500px] my-10" >
-          <div className=" flex justify-end items-center w-full" >
+          {/* <div className=" flex justify-end items-center w-full" >
             <div className=" bg-slate-900 text-slate-200">
               {blackTimestamp}
             </div>
-          </div>
+          </div> */}
+          <Clock 
+            game={game} 
+            turnColor={game.turn()} 
+            clockColor="b" 
+            timeControl={timeControl} 
+            timeControls={timeControls}
+            setEngineEval={setEngineEval}
+            setWinner={setWinner}
+            setShowGameoverWindow={setShowGameoverWindow}
+            gameStarted={gameStarted} 
+          />
           <Chessboard 
             id="PlayVsRandom"
             position={currentFen}
             onPieceDrop={onDrop} 
             boardOrientation={playerColor === 'w' ? 'white' : 'black'}
           />
-          <div className=" flex justify-end items-center w-full" >
+          {/* <div className=" flex justify-end items-center w-full" >
             <div className=" bg-slate-200 text-slate-900">
               {whiteTimestamp}
             </div>
-          </div>
+          </div> */}
+          <Clock 
+            game={game} 
+            turnColor={game.turn()} 
+            clockColor="w" 
+            timeControl={timeControl} 
+            timeControls={timeControls}
+            setEngineEval={setEngineEval}
+            setWinner={setWinner}
+            setShowGameoverWindow={setShowGameoverWindow}
+            gameStarted={gameStarted} 
+          />
       </div>
     :
       <div className=" flex flex-col justify-center items-center h-[500px] w-[500px] my-10" >
-          <div className=" flex justify-end items-center w-full" >
+          {/* <div className=" flex justify-end items-center w-full" >
             <div className=" bg-slate-200 text-slate-900">
               {whiteTimestamp}
             </div>
-          </div>
+          </div> */}
+          <Clock 
+            game={game} 
+            turnColor={game.turn()} 
+            clockColor="w" 
+            timeControl={timeControl} 
+            timeControls={timeControls}
+            setEngineEval={setEngineEval}
+            setWinner={setWinner}
+            setShowGameoverWindow={setShowGameoverWindow}
+            gameStarted={gameStarted} 
+          />
           <Chessboard 
             id="PlayVsRandom"
             position={currentFen}
             onPieceDrop={onDrop} 
             boardOrientation={playerColor === 'w' ? 'white' : 'black'}
           />
-          <div className=" flex justify-end items-center w-full" >
+          <Clock 
+            game={game} 
+            turnColor={game.turn()} 
+            clockColor="b" 
+            timeControl={timeControl} 
+            timeControls={timeControls}
+            setEngineEval={setEngineEval}
+            setWinner={setWinner}
+            setShowGameoverWindow={setShowGameoverWindow}
+            gameStarted={gameStarted} 
+          />
+          {/* <div className=" flex justify-end items-center w-full" >
             <div className=" bg-slate-900 text-slate-200">
               {blackTimestamp}
             </div>
-          </div>
+          </div> */}
       </div>
 
     const resetButton = <button
@@ -1229,6 +1277,7 @@ const ChessPage = () => {
       <select id='time-control' onChange={(e) => setTimeControl(e.target.value)} value={timeControl}>
         <option value="">Sélectionnez une cadence</option>
         <option value="infinite">Infini</option>
+        <option value="1+0">1+0</option>
         <option value="3+0">3+0</option>
         <option value="3+2">3+2</option>
         <option value="10+0">10+0</option>

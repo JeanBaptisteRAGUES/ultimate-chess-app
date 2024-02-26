@@ -15,8 +15,10 @@ const EvalAndWinrate: React.FC<EvalProps> = ({game, winrate, winner, currentFen,
     const evalRegex = /cp\s-?[0-9]*|mate\s-?[0-9]*/;
     const firstEvalMoveRegex = /pv\s[a-h][1-8]/;
 
+    //TODO: Gros problème lors des game over, ne détecte pas le changement
     useEffect(() => {
         if(winner) return;
+        if(isGameOver) return;
         //@ts-ignore
         evalRef.current = new Worker('stockfish.js#stockfish.wasm');
 
@@ -25,22 +27,24 @@ const EvalAndWinrate: React.FC<EvalProps> = ({game, winrate, winner, currentFen,
 
         //@ts-ignore
         evalRef.current.onmessage = function(event: any) {
-    
-          if(event.data === 'uciok'){
-            //@ts-ignore
-            evalRef.current.postMessage('setoption name MultiPV value 1');
-          }
-    
-          if((evalRegex.exec(event.data)) !== null){
-            //@ts-ignore
-            let evaluationStr: string = (evalRegex.exec(event.data)).toString();
-            let firstMove = (event.data.match(firstEvalMoveRegex))[0].slice(-2);
-            let coeff = game.get(firstMove).color === 'w' ? 1 : -1;
-            const evaluationArr = evaluationStr.split(' ');
-            if(evaluationArr[0] === 'mate') evaluationStr = '#' + coeff*(eval(evaluationArr[1]));
-            if(evaluationArr[0] === 'cp') evaluationStr = (coeff*(eval(evaluationArr[1])/100)).toString();
-            setEngineEval(evaluationStr);
-          }
+            console.log(isGameOver);
+            if(winner) return;
+            if(isGameOver) return;
+            if(event.data === 'uciok'){
+                //@ts-ignore
+                evalRef.current.postMessage('setoption name MultiPV value 1');
+            }
+        
+            if((evalRegex.exec(event.data)) !== null){
+                //@ts-ignore
+                let evaluationStr: string = (evalRegex.exec(event.data)).toString();
+                let firstMove = (event.data.match(firstEvalMoveRegex))[0].slice(-2);
+                let coeff = game.get(firstMove).color === 'w' ? 1 : -1;
+                const evaluationArr = evaluationStr.split(' ');
+                if(evaluationArr[0] === 'mate') evaluationStr = '#' + coeff*(eval(evaluationArr[1]));
+                if(evaluationArr[0] === 'cp') evaluationStr = (coeff*(eval(evaluationArr[1])/100)).toString();
+                setEngineEval(evaluationStr);
+            }
         }
     }, []);
 

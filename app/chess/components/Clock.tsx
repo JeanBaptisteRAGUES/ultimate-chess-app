@@ -10,8 +10,6 @@ interface ClockProps {
     setEngineEval: (val: string) => void,
     setWinner: (val: string) => void,
     setShowGameoverWindow: (val: boolean) => void,
-    setGameActive: (val: boolean) => void,
-    gameActive: boolean,
     gameStarted: boolean,
 }
 
@@ -24,8 +22,6 @@ const Clock: React.FC<ClockProps> = ({
     setEngineEval,
     setWinner,
     setShowGameoverWindow,
-    setGameActive,
-    gameActive,
     gameStarted
 }) => {
     const timeControlRef = useRef({
@@ -36,11 +32,13 @@ const Clock: React.FC<ClockProps> = ({
     const [timestamp, setTimestamp] = useState('10:00');
 
     const updateTimers = () => {
-        if(!gameActive) return;
+        if(!gameStarted) return;
         //console.log('Update Timers !');
+        //console.log("game.turn() : " + game.turn());
+        //console.log("turnColor : " + turnColor);
         //console.log(gameActive.current);
         //TODO: Faire une version plus précise en ms si ça marche
-        if(turnColor === clockColor){
+        if(game.turn() === clockColor){
             const newTimeControl = timeControlRef.current;
             //console.log(whiteTimeControl);
             newTimeControl.timeElapsed = newTimeControl.timeElapsed+1;
@@ -55,9 +53,12 @@ const Clock: React.FC<ClockProps> = ({
         //setCount(Math.random()*1000000);
     }
   
+    //TODO: ne marche pas
     const addIncrement = (gameTurn: string) => {
         if(timeControl !== 'infinite'){
-            if(gameTurn === clockColor){
+            //console.log("Add increment");
+            //Le joueur à qui est assigné l'horloge vient de jouer donc ce n'est plus son tour
+            if(game.turn() !== clockColor){
             const newTimeControl = timeControlRef.current;
             newTimeControl.timeElapsed-= timeControlRef.current.increment;
             const date = new Date((newTimeControl.startingTime - newTimeControl.timeElapsed)*1000);
@@ -70,6 +71,11 @@ const Clock: React.FC<ClockProps> = ({
             }
         }
     }
+
+    useEffect(() => {
+        //console.log('Test Add increment');
+        addIncrement(turnColor)
+    }, [turnColor, game]);
   
     useEffect(() => {
         //console.log('Set Time Control !');
@@ -91,9 +97,10 @@ const Clock: React.FC<ClockProps> = ({
     }, [timeControl]);
   
     useEffect(() => {
+        //console.log('Check game started');
         if(!gameStarted) return;
         if(timeControl === 'infinite') return;
-        console.log("Set Interval !");
+        //console.log("Set Interval !");
         
         const interval = setInterval(() => updateTimers(), 1000);
 
@@ -105,19 +112,32 @@ const Clock: React.FC<ClockProps> = ({
         checkTimeout();
     }, [timestamp]);
 
+    //TODO: il faut faire en sorte de changer gameActive
     function checkTimeout() {
+        //console.log("Check Timeout")
         if(timeControlRef.current.startingTime - timeControlRef.current.timeElapsed <= 0){
             setEngineEval('0 - 1');
             setWinner('b');
             setShowGameoverWindow(true);
             //gameActive.current = false;
             //TODO: modifier gameActive en state
-            setGameActive(false);
+            //setGameActive(false);
             return ;
         }
     }
     return (
-        <div>Clock</div>
+        <div className=" flex justify-end items-center w-full" >
+            {
+                clockColor === 'b' ?
+                <div className=" bg-slate-900 text-slate-200">
+                    {timestamp}
+                </div>
+                :
+                <div className=" bg-slate-200 text-slate-900">
+                    {timestamp}
+                </div>
+            }
+        </div>
     )
 }
 
