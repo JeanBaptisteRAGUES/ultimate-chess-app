@@ -11,6 +11,7 @@ interface ClockProps {
     setWinner: (val: string) => void,
     setShowGameoverWindow: (val: boolean) => void,
     gameStarted: boolean,
+    gameActive: any,
 }
 
 const Clock: React.FC<ClockProps> = ({
@@ -22,7 +23,8 @@ const Clock: React.FC<ClockProps> = ({
     setEngineEval,
     setWinner,
     setShowGameoverWindow,
-    gameStarted
+    gameStarted,
+    gameActive
 }) => {
     const timeControlRef = useRef({
       startingTime: 600,
@@ -33,6 +35,7 @@ const Clock: React.FC<ClockProps> = ({
 
     const updateTimers = () => {
         if(!gameStarted) return;
+        if(!gameActive.current) return;
         //console.log('Update Timers !');
         //console.log("game.turn() : " + game.turn());
         //console.log("turnColor : " + turnColor);
@@ -116,12 +119,15 @@ const Clock: React.FC<ClockProps> = ({
     function checkTimeout() {
         //console.log("Check Timeout")
         if(timeControlRef.current.startingTime - timeControlRef.current.timeElapsed <= 0){
-            setEngineEval('0 - 1');
-            setWinner('b');
+            if(clockColor === 'w'){
+                setWinner('b');
+                setEngineEval('0 - 1');
+            } else {
+                setWinner('w');
+                setEngineEval('1 - 0');
+            }
             setShowGameoverWindow(true);
-            //gameActive.current = false;
-            //TODO: modifier gameActive en state
-            //setGameActive(false);
+            gameActive.current = false;
             return ;
         }
     }

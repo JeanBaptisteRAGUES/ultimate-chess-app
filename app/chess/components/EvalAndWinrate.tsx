@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { MutableRefObject, useEffect, useRef, useState } from 'react';
 
 interface EvalProps {
     game: any,
@@ -6,10 +6,10 @@ interface EvalProps {
     winner: string,
     currentFen: string,
     showEval: boolean,
-    isGameOver: boolean
+    gameActive: MutableRefObject<boolean>,
 }
 
-const EvalAndWinrate: React.FC<EvalProps> = ({game, winrate, winner, currentFen, showEval, isGameOver}) => {
+const EvalAndWinrate: React.FC<EvalProps> = ({game, winrate, winner, currentFen, showEval, gameActive}) => {
     const [engineEval, setEngineEval] = useState('0.3');
     const evalRef = useRef();
     const evalRegex = /cp\s-?[0-9]*|mate\s-?[0-9]*/;
@@ -17,8 +17,9 @@ const EvalAndWinrate: React.FC<EvalProps> = ({game, winrate, winner, currentFen,
 
     //TODO: Gros problème lors des game over, ne détecte pas le changement
     useEffect(() => {
-        if(winner) return;
-        if(isGameOver) return;
+        //if(winner) return;
+        console.log('Can analyse');
+        //if(!gameActive.current) return;
         //@ts-ignore
         evalRef.current = new Worker('stockfish.js#stockfish.wasm');
 
@@ -27,17 +28,19 @@ const EvalAndWinrate: React.FC<EvalProps> = ({game, winrate, winner, currentFen,
 
         //@ts-ignore
         evalRef.current.onmessage = function(event: any) {
-            console.log(isGameOver);
-            if(winner) return;
-            if(isGameOver) return;
             if(event.data === 'uciok'){
+                console.log('Eval uci ok');
                 //@ts-ignore
                 evalRef.current.postMessage('setoption name MultiPV value 1');
             }
-        
-            if((evalRegex.exec(event.data)) !== null){
+
+            if(gameActive.current && (evalRegex.exec(event.data)) !== null){
+                //console.log('Event data');
+                //console.log(event.data);
                 //@ts-ignore
                 let evaluationStr: string = (evalRegex.exec(event.data)).toString();
+                //console.log(event.data.match(firstEvalMoveRegex));
+                if(!event.data.match(firstEvalMoveRegex)) return;
                 let firstMove = (event.data.match(firstEvalMoveRegex))[0].slice(-2);
                 let coeff = game.get(firstMove).color === 'w' ? 1 : -1;
                 const evaluationArr = evaluationStr.split(' ');
@@ -49,9 +52,11 @@ const EvalAndWinrate: React.FC<EvalProps> = ({game, winrate, winner, currentFen,
     }, []);
 
     useEffect(() => {
-        if(winner || isGameOver) return;
         //@ts-ignore
         evalRef.current.postMessage('stop');
+        if(winner) return;
+        console.log('Can analyse');
+        console.log(gameActive.current);
         //@ts-ignore
         evalRef.current.postMessage(`position fen ${game.fen()}`);
         //@ts-ignore

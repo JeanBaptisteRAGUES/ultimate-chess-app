@@ -13,7 +13,7 @@ import Clock from "./components/Clock";
 
 
 const ChessPage = () => {
-    const gameActive = useRef(false);
+    const gameActive = useRef(true);
     const [game, setGame] = useState(new Chess());
     const gameTest = new Chess();
     const [playerColor, setPlayerColor] = useState('w');
@@ -306,8 +306,10 @@ const ChessPage = () => {
     }
   
     function checkGameOver() {
+      console.log('Check Game Over');
       // exit if the game is over
       if(!gameActive.current) return false;
+      console.log("Game is active");
       if (game.isGameOver()){
         console.log('Game Over !');
         console.log(game.pgn());
@@ -367,7 +369,7 @@ const ChessPage = () => {
       gameTest.move(uci);
 
       const lastMove = gameTest.history({verbose: true}).pop();
-      console.log(lastMove);
+      //console.log(lastMove);
 
       return lastMove?.san;
     }
@@ -379,13 +381,13 @@ const ChessPage = () => {
         return 5;
       } 
       const scoreLimit = Math.min(4.5,(Math.max(-4.5,score)));
-      console.log(`Score: ${score}, Score Limit: ${scoreLimit}`);
+      //console.log(`Score: ${score}, Score Limit: ${scoreLimit}`);
       return scoreLimit;
     }
 
     function getBestMove(evalData: string) {
       const bestMoveObject = (/pv\s([a-h][1-8][a-h][1-8])/).exec(evalData);
-      console.log(bestMoveObject);
+      //console.log(bestMoveObject);
       return bestMoveObject ? bestMoveObject[1] : '';
     }
     
@@ -445,11 +447,11 @@ const ChessPage = () => {
           } 
           /* //@ts-ignore
           analysisRef.current.postMessage('setoption name Threads value 4'); */
-          console.log(movesHistoryRef.current);
+          //console.log(movesHistoryRef.current);
           //@ts-ignore
           const lastMove = movesHistoryRef.current.pop();
           colorRef.current = lastMove.color;
-          console.log(lastMove.after);
+          //console.log(lastMove.after);
           //@ts-ignore
           analysisRef.current.postMessage(`position fen ${lastMove.after}`);
           //@ts-ignore
@@ -457,7 +459,7 @@ const ChessPage = () => {
         }
 
         if(event.data.match(scoreCpRegex)){
-          console.log(event.data);
+          //console.log(event.data);
           //console.log(event.data.match(score12CpRegex));
           //@ts-ignore
           let analysisEval = eval(((scoreCpRegex).exec(event.data))[1])/100.0;
@@ -486,7 +488,7 @@ const ChessPage = () => {
           if(lastMove){
             const lastFen = lastMove.after;
             colorRef.current = lastMove.color;
-            console.log(lastMove);
+            //console.log(lastMove);
             bestMovesRef.current.unshift({lastMove: lastMove.san, fenBefore: lastMove.after, pvSan: '', pvScoreBefore: '', pvScoreAfter: analysisEval.toString()});
             //bestMovesRef.current.unshift(uciToSan(lastMove.san, lastFen));
             //@ts-ignore
@@ -503,6 +505,7 @@ const ChessPage = () => {
             console.log(scoreHistory.current);
             timestampEnd.current = performance.now();
             console.log('Analysis time: ' + (timestampEnd.current - timestampStart.current)/1000 + 's');
+            console.log(game.pgn());
             //@ts-ignore
             analysisRef.current.postMessage('stop');
             bestMovesRef.current.unshift('');
@@ -513,18 +516,18 @@ const ChessPage = () => {
           }
         }
         if(event.data.match(scoreMateRegex)){
-          console.log(event.data);
+          //console.log(event.data);
           //console.log(((score12MateRegex).exec(event.data))?.length);
           //@ts-ignore
           const lastMove = movesHistoryRef.current.pop();
           let regexResult = ((scoreMateRegex).exec(event.data));
-          console.log(regexResult);
+          //console.log(regexResult);
           let analysisEval = 0;
           let analysisEvalPercentage = 0;
           if(regexResult && regexResult[1] !== undefined && regexResult[1] !== null) analysisEval = eval(regexResult[1]);
 
           const bestMoveUci = getBestMove(event.data);
-          console.log('Best Move UCI: ' + bestMoveUci);
+          //console.log('Best Move UCI: ' + bestMoveUci);
           if(bestMoveUci?.length > 0 && bestMovesRef.current.length > 0) {
             bestMovesRef.current[0].pvSan = uciToSan(bestMoveUci, bestMovesRef.current[0].fenBefore);
             bestMovesRef.current[0].pvScoreBefore = `M${analysisEval}`;
@@ -534,8 +537,8 @@ const ChessPage = () => {
           if(colorRef.current === 'w' && analysisEval !== 0) analysisEval =  (-1)*analysisEval;
           if(colorRef.current === 'w' && analysisEval === 0) analysisEval =  100;
           if(colorRef.current === 'b' && analysisEval === 0) analysisEval =  -100;
-          console.log(colorRef.current); 
-          console.log(analysisEval);
+          //console.log(colorRef.current); 
+          //console.log(analysisEval);
 
           //@ts-ignore
           scoreHistory.current.unshift(scoreToPercentage2(analysisEval, true));
@@ -546,7 +549,7 @@ const ChessPage = () => {
           if(lastMove){
             const lastFen = lastMove.after;
             colorRef.current = lastMove.color;
-            console.log(lastMove);
+            //console.log(lastMove);
             bestMovesRef.current.unshift({fenBefore: lastMove.after, pvSan: '', pvScoreBefore: '', pvScoreAfter: `M${analysisEval}`});
             //bestMovesRef.current.unshift(uciToSan(lastMove.san, lastFen));
             //@ts-ignore
@@ -563,6 +566,7 @@ const ChessPage = () => {
             console.log(scoreHistory.current);
             timestampEnd.current = performance.now();
             console.log('Analysis time: ' + (timestampEnd.current - timestampStart.current)/1000 + 's');
+            console.log(game.pgn());
             //@ts-ignore
             analysisRef.current.postMessage('stop');
             bestMovesRef.current.unshift('');
@@ -856,7 +860,7 @@ const ChessPage = () => {
     }
   
     async function makeLichessMove(fen = "") {
-      if(checkGameOver()) return;
+      if(!gameActive.current) return;
       console.log('Make Lichess Move');
       let lichessMove = {san: "", uci: "", winrate: {white: 33, draws: 33, black: 33}};
   
@@ -959,7 +963,7 @@ const ChessPage = () => {
       let delay = getTimeControlDelay();
       if(databaseRating === 'Maximum') delay = 0;
       //console.log('Delay: ' + delay);
-      if(gameStarted){
+      if(!checkGameOver() && gameStarted){
         const newTimeout = setTimeout(makeLichessMove, delay);
         setCurrentTimeout(newTimeout);
       }
@@ -1017,7 +1021,7 @@ const ChessPage = () => {
       return cpBestMoves.map((bMove: any, i: number) => {
         if(bMove !== '' && !bMove.pvScoreBefore.match('M') && !bMove.pvScoreAfter.match('M')){
           let scoreDiff = Math.abs(eval(bMove.pvScoreBefore) - eval(bMove.pvScoreAfter));
-          console.log(gameHistory[i] + " : " + scoreDiff);
+          //console.log(gameHistory[i] + " : " + scoreDiff);
           if(scoreDiff > 2) return <span onClick={() => showMovePosition(i)} key={i} className=" text-red-600 cursor-pointer" >{gameHistory[i]}?? ({bMove.pvSan} was best)</span>;
           if(scoreDiff > 1) return <span onClick={() => showMovePosition(i)} key={i} className=" text-orange-500 cursor-pointer" >{gameHistory[i]}? ({bMove.pvSan} was best)</span>;
           if(scoreDiff > 0.5) return <span onClick={() => showMovePosition(i)} key={i} className=" text-yellow-400 cursor-pointer" >{gameHistory[i]}?! ({bMove.pvSan} was best)</span>;
@@ -1181,6 +1185,7 @@ const ChessPage = () => {
             setWinner={setWinner}
             setShowGameoverWindow={setShowGameoverWindow}
             gameStarted={gameStarted} 
+            gameActive={gameActive}
           />
           <Chessboard 
             id="PlayVsRandom"
@@ -1203,6 +1208,7 @@ const ChessPage = () => {
             setWinner={setWinner}
             setShowGameoverWindow={setShowGameoverWindow}
             gameStarted={gameStarted} 
+            gameActive={gameActive}
           />
       </div>
     :
@@ -1221,7 +1227,8 @@ const ChessPage = () => {
             setEngineEval={setEngineEval}
             setWinner={setWinner}
             setShowGameoverWindow={setShowGameoverWindow}
-            gameStarted={gameStarted} 
+            gameStarted={gameStarted}
+            gameActive={gameActive} 
           />
           <Chessboard 
             id="PlayVsRandom"
@@ -1239,6 +1246,7 @@ const ChessPage = () => {
             setWinner={setWinner}
             setShowGameoverWindow={setShowGameoverWindow}
             gameStarted={gameStarted} 
+            gameActive={gameActive}
           />
           {/* <div className=" flex justify-end items-center w-full" >
             <div className=" bg-slate-900 text-slate-200">
@@ -1352,7 +1360,7 @@ const ChessPage = () => {
           winner={winner} 
           currentFen={currentFen} 
           showEval={showEval} 
-          isGameOver={checkGameOver()}
+          gameActive={gameActive}
         />
         {boardComponent}
         {buttonsComponent}
