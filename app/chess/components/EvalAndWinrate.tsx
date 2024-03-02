@@ -1,4 +1,5 @@
 import React, { MutableRefObject, useEffect, useRef, useState } from 'react';
+import Engine from '../engine/Engine';
 
 interface EvalProps {
     game: any,
@@ -11,12 +12,12 @@ interface EvalProps {
 
 const EvalAndWinrate: React.FC<EvalProps> = ({game, winrate, winner, currentFen, showEval, gameActive}) => {
     const [engineEval, setEngineEval] = useState('0.3');
-    const evalRef = useRef();
+    //const evalRef = useRef();
     const evalRegex = /cp\s-?[0-9]*|mate\s-?[0-9]*/;
     const firstEvalMoveRegex = /pv\s[a-h][1-8]/;
+    
 
-    //TODO: Gros problème lors des game over, ne détecte pas le changement
-    useEffect(() => {
+    /* useEffect(() => {
         //if(winner) return;
         console.log('Can analyse');
         //if(!gameActive.current) return;
@@ -49,18 +50,22 @@ const EvalAndWinrate: React.FC<EvalProps> = ({game, winrate, winner, currentFen,
                 setEngineEval(evaluationStr);
             }
         }
-    }, []);
+    }, []); */
 
+    //TODO: Trouver un moyen de déclarer engine de façon définitive
     useEffect(() => {
-        //@ts-ignore
-        evalRef.current.postMessage('stop');
         if(winner) return;
-        console.log('Can analyse');
-        console.log(gameActive.current);
-        //@ts-ignore
-        evalRef.current.postMessage(`position fen ${game.fen()}`);
-        //@ts-ignore
-        evalRef.current.postMessage('go depth 18');
+        const engine = new Engine();
+        engine.init().then(() => {
+            console.log('Can analyse');
+            let coeff = game.pgn().length %2 === 0 ? 1 : -1;
+            engine.evalPosition(game.fen(), 18, coeff).then((res) => {
+                console.log(res);
+                setEngineEval(JSON.stringify(res).replaceAll("\"", ''));
+            }).catch((err) => {
+                console.log(err);
+            });
+        })
     }, [currentFen]);
 
     return (

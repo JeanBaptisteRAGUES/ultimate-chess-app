@@ -9,6 +9,7 @@ import { AnalysisChart } from "./components/AnalysisChart";
 import Draggable, { DraggableCore } from "react-draggable";
 import EvalAndWinrate from "./components/EvalAndWinrate";
 import Clock from "./components/Clock";
+import Engine from "./engine/Engine";
 //import 'remote-web-worker';
 
 
@@ -258,6 +259,24 @@ const ChessPage = () => {
             } 
           }
         }
+    }, []);
+
+    useEffect(() => {
+      /* let promise = testPromise();
+
+      promise.then((res) => {
+        console.log(res);
+      }) */
+      let engine = new Engine();
+      engine.init().then((res) => {
+        console.log(res);
+
+        engine.findBestMove('r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 4 4', 16).then((res) => {
+          console.log(res);
+          console.log('Fini !');
+        })
+      })
+
     }, []);
   
     /* useEffect( () => {
@@ -1074,6 +1093,33 @@ const ChessPage = () => {
           /* return moveColor(movesTypeRef.current[i], move, i); */
         }
       )
+    }
+
+    function testPromise() {
+      return new Promise(function(resolve, reject) {
+        //@ts-ignore
+        let engine = new Worker('stockfish.js#stockfish.wasm');
+
+        //@ts-ignore
+        engine.postMessage('uci');
+
+        //@ts-ignore
+        engine.onmessage = function(event: any) {
+          if(event.data === 'uciok'){
+            console.log('Test Engine ok');
+            //@ts-ignore
+            engine.postMessage('go depth 16');
+          }
+          if((event.data.match(bestMoveRegex)) !== null){
+            /* console.log(event.data);
+            console.log(event.data.match(bestMoveRegex)[1]); */
+            const newBestMove = event.data.match(bestMoveRegex)[1];
+            if(newBestMove !== null){
+              resolve("Meilleur coup: " + newBestMove);
+            } 
+          }
+        }
+      })
     }
 
     const analysisMenu = !showAnalysisProgress ?
