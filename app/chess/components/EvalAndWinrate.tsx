@@ -24,12 +24,17 @@ const EvalAndWinrate: React.FC<EvalProps> = ({game, winrate, winner, currentFen,
         if(winner || !engine.current) return;
         
         let coeff = game.history().length %2 === 0 ? 1 : -1;
-        engine.current.evalPosition(game.fen(), 14, coeff).then((res: any) => {
-            console.log(res);
-            setEngineEval(JSON.stringify(res).replaceAll("\"", ''));
+        engine.current.evalPositionWithFen(game.fen(), 14, coeff).then((res: any) => {
+            //console.log(res);
+            setEngineEval(JSON.stringify(res.pv).replaceAll("\"", ''));
         }).catch((err: any) => {
             console.log(err);
         });
+        /* engine.current.evalPositionWithBestMove(game.fen(), 14, coeff).then((res: any) => {
+            console.log(res);
+        }).catch((err: any) => {
+            console.log(err);
+        }) */
     }, [currentFen]);
 
     return (

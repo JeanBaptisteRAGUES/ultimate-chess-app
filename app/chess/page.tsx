@@ -260,24 +260,6 @@ const ChessPage = () => {
           }
         }
     }, []);
-
-    useEffect(() => {
-      /* let promise = testPromise();
-
-      promise.then((res) => {
-        console.log(res);
-      }) */
-      let engine = new Engine();
-      engine.init().then((res) => {
-        console.log(res);
-
-        engine.findBestMove('r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 4 4', 16).then((res) => {
-          console.log(res);
-          console.log('Fini !');
-        })
-      })
-
-    }, []);
   
     /* useEffect( () => {
       getCloudEval(game.fen());
@@ -1122,6 +1104,15 @@ const ChessPage = () => {
       })
     }
 
+    function launchStockfishAnalysis2(depth: number){
+      let engine = new Engine();
+      engine.init().then((res) => {
+        console.log(res);
+        let movesArray = ['e2e4', 'e7e5', 'g1f3', 'b8c6', 'f1b5'];
+        engine.launchGameAnalysis(movesArray, depth);
+      })
+    }
+
     const analysisMenu = !showAnalysisProgress ?
       <div className=" flex flex-col justify-center items-center gap-5">
         <button
@@ -1375,7 +1366,7 @@ const ChessPage = () => {
     const analysisButton = <button
       className=" bg-white border rounded cursor-pointer"
       onClick={() => {
-        launchStockfishAnalysis(12);
+        launchStockfishAnalysis2(12);
       }}
     >
       Analysis
