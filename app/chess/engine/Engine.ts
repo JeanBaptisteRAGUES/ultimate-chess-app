@@ -5,6 +5,14 @@ const pvMoveRegex = /\spv\s\w*/;
 const evalRegex = /cp\s-?[0-9]*|mate\s-?[0-9]*/; 
 const firstEvalMoveRegex = /pv\s[a-h][1-8]/;
 
+type EvalResult = {
+    bestMove: string,
+    movePlayed: string,
+    evalBefore: string,
+    evalAfter: string,
+    quality: string,
+}
+
 class Engine {
     stockfish: Worker;
 
@@ -90,30 +98,31 @@ class Engine {
             this.stockfish.postMessage(`go depth ${depth}`);
 
             this.stockfish.onmessage = function(event: any) {
+                if(event.data === "info depth 0 score mate 0"){
+                    console.log(event.data);
+                    resolve({
+                        eval: '#' + coeff,
+                        pv: ''
+                    });
+                }
                 if(event.data.includes(`info depth ${depth} `) && (evalRegex.exec(event.data)) !== null){
+                    console.log(event.data);
                     let evaluationStr: string | undefined = (evalRegex.exec(event.data))?.toString();
                     let bestMove: string | undefined = (pvMoveRegex.exec(event.data))?.toString();
 
                     if(!evaluationStr || !bestMove || !event.data.match(firstEvalMoveRegex)){
-                        resolve("Erreur lors de l'évaluation");
-                        return;
+                        reject("Erreur lors de l'évaluation");
+                        return; // inutile ?
                     }
 
-                    const evaluationArr = evaluationStr.split(' ');
                     const bestMoveArr = bestMove.trim().split(' ');
-
                     bestMove = bestMoveArr[1];
+                    
+                    const evaluationArr = evaluationStr.split(' ');
 
-                    if(evaluationArr[0] === 'mate'){
-                        evaluationStr = '#' + coeff*(eval(evaluationArr[1]));
-                    } 
-                    if(evaluationArr[0] === 'cp') {
-                        evaluationStr = (coeff*(eval(evaluationArr[1])/100)).toString();
-                    }
-                    console.log({
-                        eval: evaluationStr,
-                        pv: bestMove
-                    });
+                    if(evaluationArr[0] === 'mate') evaluationStr = '#' + coeff*(eval(evaluationArr[1]));
+                    if(evaluationArr[0] === 'cp') evaluationStr = (coeff*(eval(evaluationArr[1])/100)).toString();
+
                     resolve({
                         eval: evaluationStr,
                         pv: bestMove
@@ -123,26 +132,58 @@ class Engine {
         })
     }
 
+    mateToNumber(mateEval: string) {
+        return 20/eval(mateEval.split('#')[1]);
+    }
+
+    evalMoveQuality(moveEval: EvalResult) {
+        let evalBefore: number = moveEval.evalBefore.includes('#') ? this.mateToNumber(moveEval.evalBefore) : eval(moveEval.evalBefore);
+        let evalAfter: number = moveEval.evalAfter.includes('#') ? this.mateToNumber(moveEval.evalAfter) : eval(moveEval.evalAfter);
+        let scoreDiff = Math.abs(evalAfter - evalBefore);
+        console.log(moveEval.movePlayed);
+        console.log(evalBefore);
+        console.log(evalAfter);
+        console.log(scoreDiff);
+        if(scoreDiff > 0.5 && moveEval.bestMove !== moveEval.movePlayed) moveEval.quality = "inaccuracy";
+        if(scoreDiff > 1 && moveEval.bestMove !== moveEval.movePlayed) moveEval.quality = "mistake";
+        if(scoreDiff > 2 && moveEval.bestMove !== moveEval.movePlayed) moveEval.quality = "blunder";
+        return moveEval;
+    }
+
     //Test avec : movesArray = ['e2e4', 'e7e5', 'g1f3', 'b8c6', 'f1b5'];
-    //TODO: Vérifier pourquoi le score en début de position est négatif
-    //TODO: Faire pour chaque coup le score avant et le score après
+    //TODO: Utiliser nnue (vérifier avant si c'est par défaut)
     async launchGameAnalysis(movesList: Array<string>, depth: number) {
         console.log('Start Game Anaysis');
         let results = [];
+        //let i = 0; // for(let [movesSet, i] of movesSetArray){...} ne semble pas marcher 
 
         let movesSetArray = movesList.map((move, i) => {
             return movesList.slice(0, i).join(' ');
         });
 
-        for(let movesSet of movesSetArray){
-            const coeff = movesSet.split(' ').length%2 === 0 ? 1 : -1;
+        //Il a fallu ajouter "downlevelIteration": true dans le tsconfig.json pour que ça marche
+        //TODO: corriger l'eval pour le dernier coup de la partie
+        for(let [i, movesSet] of movesSetArray.entries()){
+            const coeff = i%2 === 0 ? 1 : -1;
             const result: any = await this.evalPositionWithMovesList(movesSet, depth, coeff);
-            results.push(result);
+            let finalResult: EvalResult = {
+                bestMove: result.pv,
+                movePlayed: movesList[i],
+                evalBefore: result.eval,
+                evalAfter: result.eval,
+                quality: "correct",
+            }
+            results.push(finalResult);
+            if(i > 0) results[i-1].evalAfter = result.eval;
         }
 
-        results.forEach((result, i) => {
+        for(let result of results){
+            result = this.evalMoveQuality(result);
+        }
+
+        /* results.forEach((result, i) => {
             result.movePlayed = movesList[i];
-        });
+        }); */
 
         console.log(results);
         return results;

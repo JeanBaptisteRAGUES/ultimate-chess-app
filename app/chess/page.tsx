@@ -10,6 +10,7 @@ import Draggable, { DraggableCore } from "react-draggable";
 import EvalAndWinrate from "./components/EvalAndWinrate";
 import Clock from "./components/Clock";
 import Engine from "./engine/Engine";
+import GameToolBox from "./game-toolbox/GameToolbox";
 //import 'remote-web-worker';
 
 
@@ -1108,9 +1109,17 @@ const ChessPage = () => {
       let engine = new Engine();
       engine.init().then((res) => {
         console.log(res);
-        let movesArray = ['e2e4', 'e7e5', 'g1f3', 'b8c6', 'f1b5'];
-        engine.launchGameAnalysis(movesArray, depth);
-      })
+        //let movesArray = ['e2e4', 'e7e5', 'g1f3', 'b8c6', 'f1b5'];
+        let movesArray = ['e2e4', 'e7e5', 'd1h5', 'g7g6', 'h5e5', 'd8e7', 'e5h8', 'f8g7', 'g1f3', 'g7h8'];
+        engine.launchGameAnalysis(movesArray, depth).then(() => {
+          testGameToolbox();
+        })
+      });
+    }
+
+    function testGameToolbox() {
+      let toolbox = new GameToolBox();
+      toolbox.testAllMethods();
     }
 
     const analysisMenu = !showAnalysisProgress ?
@@ -1366,7 +1375,7 @@ const ChessPage = () => {
     const analysisButton = <button
       className=" bg-white border rounded cursor-pointer"
       onClick={() => {
-        launchStockfishAnalysis2(12);
+        launchStockfishAnalysis2(16);
       }}
     >
       Analysis
