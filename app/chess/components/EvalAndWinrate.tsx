@@ -24,7 +24,7 @@ const EvalAndWinrate: React.FC<EvalProps> = ({game, winrate, winner, currentFen,
         if(winner || !engine.current) return;
         
         let coeff = game.history().length %2 === 0 ? 1 : -1;
-        engine.current.evalPositionWithFen(game.fen(), 14, coeff).then((res: any) => {
+        engine.current.evalPositionFromFen(game.fen(), 14, coeff).then((res: any) => {
             //TODO: voir si on peut pas directement retourner un résultat de type string
             setEngineEval(JSON.stringify(res.eval).replaceAll("\"", ''));
         }).catch((err: any) => {

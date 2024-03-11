@@ -13,10 +13,20 @@ import Engine from "./engine/Engine";
 import GameToolBox from "./game-toolbox/GameToolbox";
 //import 'remote-web-worker';
 
+type EvalResult = {
+  bestMove: string,
+  movePlayed: string,
+  evalBefore: string,
+  evalAfter: string,
+  quality: string,
+}
+
 
 const ChessPage = () => {
     const gameActive = useRef(true);
     const [game, setGame] = useState(new Chess());
+    const toolbox = new GameToolBox();
+    const engine = useRef<Engine>();
     const gameTest = new Chess();
     const [playerColor, setPlayerColor] = useState('w');
     const [ponderArrow, setPonderArrow] = useState<Square[][]>([]);
@@ -42,7 +52,6 @@ const ChessPage = () => {
     const [engineEval, setEngineEval] = useState('0.3');
     const [showEval, setShowEval] = useState(true);
     const [lastRandomMove, setLastRandomMove] = useState(0);
-    //const evalRef = useRef();//TODO: Supprimer
     const engineRef = useRef();
     const analysisRef = useRef();
     const movesHistoryRef = useRef();
@@ -55,7 +64,8 @@ const ChessPage = () => {
     const evalRegex = /cp\s-?[0-9]*|mate\s-?[0-9]*/;
     const bestMoveRegex = /bestmove\s(\w*)/;
     const firstEvalMoveRegex = /pv\s[a-h][1-8]/;
-    const [chartHistoryData, setChartHistoryData] = useState([]);
+    const [chartHistoryData, setChartHistoryData] = useState<number[]>([]);
+    const [analysisResults, setAnalysisResults] = useState<EvalResult[]>([]);
     const [showChartHistory, setShowChartHistory] = useState(false);
     const [showGameoverWindow, setShowGameoverWindow] = useState(false);
     const [showAnalysisProgress, setShowAnalysisProgress] = useState(false);
@@ -86,154 +96,18 @@ const ChessPage = () => {
     ]);
     const [timeControl, setTimeControl] = useState('infinite');
 
-    const updateTimers = () => {
-      if(!gameActive.current) return;
-      //console.log('Update Timers !');
-      //console.log(gameActive.current);
-      //TODO: Faire une persion plus précise en ms si ça marche
-      if(game.turn() === 'w'){
-        const newTimeControl = whiteTimeControl.current;
-        //console.log(whiteTimeControl);
-        newTimeControl.timeElapsed = newTimeControl.timeElapsed+1;
-        const date = new Date((newTimeControl.startingTime - newTimeControl.timeElapsed)*1000);
-        let minutes = date.getMinutes().toString();
-        let seconds = date.getSeconds().toString();
-        let hours = date.getUTCHours().toString();
-        if(+seconds < 10) seconds = '0' + seconds;
-        setWhiteTimestamp(+hours > 0 ? `${hours}:${minutes}:${seconds}` : `${minutes}:${seconds}`);
-        whiteTimeControl.current = newTimeControl;
-      }else{
-        const newTimeControl = blackTimeControl.current;
-        newTimeControl.timeElapsed = newTimeControl.timeElapsed+1;
-        const date = new Date((newTimeControl.startingTime - newTimeControl.timeElapsed)*1000);
-        let minutes = date.getMinutes().toString();
-        let seconds = date.getSeconds().toString();
-        let hours = date.getUTCHours().toString();
-        if(+seconds < 10) seconds = '0' + seconds;
-        setBlackTimestamp(+hours > 0 ? `${hours}:${minutes}:${seconds}` : `${minutes}:${seconds}`);
-        blackTimeControl.current = newTimeControl;
-      }
-      //setCount(Math.random()*1000000);
-    }
-
-    const addIncrement = (gameTurn: string) => {
-      if(timeControl !== 'infinite'){
-        if(gameTurn === 'w'){
-          const newTimeControl = whiteTimeControl.current;
-          newTimeControl.timeElapsed-= whiteTimeControl.current.increment;
-          const date = new Date((newTimeControl.startingTime - newTimeControl.timeElapsed)*1000);
-          let minutes = date.getMinutes().toString();
-          let seconds = date.getSeconds().toString();
-          let hours = date.getUTCHours().toString();
-          if(+seconds < 10) seconds = '0' + seconds;
-          setWhiteTimestamp(+hours > 0 ? `${hours}:${minutes}:${seconds}` : `${minutes}:${seconds}`);
-          whiteTimeControl.current = newTimeControl;
-        }else{
-          const newTimeControl = blackTimeControl.current;
-          newTimeControl.timeElapsed-= blackTimeControl.current.increment;
-          const date = new Date((newTimeControl.startingTime - newTimeControl.timeElapsed)*1000);
-          let minutes = date.getMinutes().toString();
-          let seconds = date.getSeconds().toString();
-          let hours = date.getUTCHours().toString();
-          if(+seconds < 10) seconds = '0' + seconds;
-          setBlackTimestamp(+hours > 0 ? `${hours}:${minutes}:${seconds}` : `${minutes}:${seconds}`);
-          blackTimeControl.current = newTimeControl;
-        }
-      }
-    }
-
     useEffect(() => {
-      //console.log('Set Time Control !');
-      if(timeControl === "infinite") return ;
-      //console.log('Time Control : ' + timeControl);
-      const newWhiteTimeControl = whiteTimeControl.current;
-      const newBlackTimeControl = blackTimeControl.current;
-
-      //@ts-ignore
-      newWhiteTimeControl.startingTime = timeControls.get(timeControl).startingTime;
-      //@ts-ignore
-      newWhiteTimeControl.increment = timeControls.get(timeControl)?.increment;
-      //@ts-ignore
-      newBlackTimeControl.startingTime = timeControls.get(timeControl)?.startingTime;
-      //@ts-ignore
-      newBlackTimeControl.increment = timeControls.get(timeControl)?.increment;
-      const dateWhite = new Date((newWhiteTimeControl.startingTime - newWhiteTimeControl.timeElapsed)*1000);
-      let secondsWhite = dateWhite.getSeconds().toString();
-      let minutesWhite = dateWhite.getMinutes().toString();
-      let hoursWhite = dateWhite.getUTCHours().toString();
-      if(+secondsWhite < 10) secondsWhite = '0' + secondsWhite;
-      setWhiteTimestamp(+hoursWhite > 0 ? `${hoursWhite}:${minutesWhite}:${secondsWhite}` : `${minutesWhite}:${secondsWhite}`);
-      const dateBlack = new Date((newBlackTimeControl.startingTime - newBlackTimeControl.timeElapsed)*1000);
-      let secondsBlack = dateBlack.getSeconds().toString();
-      let minutesBlack = dateBlack.getMinutes().toString();
-      let hoursBlack = dateBlack.getUTCHours().toString();
-      if(+secondsBlack < 10) secondsBlack = '0' + secondsBlack;
-      setBlackTimestamp(+hoursBlack > 0 ? `${hoursBlack}:${minutesBlack}:${secondsBlack}` : `${minutesBlack}:${secondsBlack}`);
-      whiteTimeControl.current = newWhiteTimeControl;
-      blackTimeControl.current = newBlackTimeControl;
-      //setCount(Math.random()*1000000);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [timeControl]);
-
-    useEffect(() => {
-      if(!gameStarted) return;
-      if(timeControl === 'infinite') return;
-      console.log("Set Interval !");
-      
-      const interval = setInterval(() => updateTimers(), 1000);
-
-      return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [gameStarted, timeControl, game]);
-
-    useEffect(() => {
-      checkTimeout();
-    }, [whiteTimestamp, blackTimestamp]);
+        engine.current = new Engine();
+        engine.current.init();
+    }, []);
 
     useEffect(() => {
         if(winner) return;
-        //const buffer = new SharedArrayBuffer(4096);
-        console.log(crossOriginIsolated);
-        //TODO: Supprimer
-        //@ts-ignore
-        //evalRef.current = new Worker('stockfish.js#stockfish.wasm');
         //@ts-ignore
         engineRef.current = new Worker('stockfish.js#stockfish.wasm');
 
-        //TODO: Supprimer
-        //@ts-ignore
-        //evalRef.current.postMessage('uci');
         //@ts-ignore
         engineRef.current.postMessage('uci');
-
-        //TODO: Supprimer
-        //@ts-ignore
-        /* evalRef.current.onmessage = function(event: any) {
-          //console.log('Stockfish message')
-          //console.log(event.data);
-    
-          if(event.data === 'uciok'){
-            console.log('Eval ok');
-            //@ts-ignore
-            evalRef.current.postMessage('setoption name MultiPV value 1');
-          }
-    
-          if((evalRegex.exec(event.data)) !== null){
-            //console.log(event.data);
-            //console.log(`Game Turn: ${game.turn()}, Player color: ${playerColor}`);
-            //@ts-ignore
-            let evaluationStr: string = (evalRegex.exec(event.data)).toString();
-            let firstMove = (event.data.match(firstEvalMoveRegex))[0].slice(-2);
-            //console.log(firstMove);
-            //console.log(game.get(firstMove));
-            let coeff = game.get(firstMove).color === 'w' ? 1 : -1;
-            const evaluationArr = evaluationStr.split(' ');
-            if(evaluationArr[0] === 'mate') evaluationStr = '#' + coeff*(eval(evaluationArr[1]));
-            if(evaluationArr[0] === 'cp') evaluationStr = (coeff*(eval(evaluationArr[1])/100)).toString();
-            //console.log('Evaluation : ' + evaluationStr);
-            setEngineEval(evaluationStr);
-          }
-        }  */
 
         //@ts-ignore
         engineRef.current.onmessage = function(event: any) {
@@ -261,10 +135,6 @@ const ChessPage = () => {
           }
         }
     }, []);
-  
-    /* useEffect( () => {
-      getCloudEval(game.fen());
-    }, [count]); */
 
     useEffect(() => {
       console.log('New Level : ' + databaseRating);
@@ -274,37 +144,10 @@ const ChessPage = () => {
       if(databaseRating !== "Maximum") engineRef.current.postMessage('setoption name Use NNUE value false');
     }, [databaseRating]);
 
-    //TODO: Supprimer
-    /* useEffect(() => {
-      if(winner || checkGameOver()) return;
-      //@ts-ignore
-      evalRef.current.postMessage('stop');
-      //@ts-ignore
-      evalRef.current.postMessage(`position fen ${game.fen()}`);
-      //@ts-ignore
-      evalRef.current.postMessage('go depth 18');
-    }, [currentFen]); */
-
     const gameMove = (move: string) => {
       //addIncrement(game.turn());
       game.move(move);
       setCurrentFen(game.fen());
-    }
-
-    function checkTimeout() {
-      if(whiteTimeControl.current.startingTime - whiteTimeControl.current.timeElapsed <= 0){
-        setEngineEval('0 - 1');
-        setWinner('b');
-        setShowGameoverWindow(true);
-        gameActive.current = false;
-        return ;
-      }
-      if(blackTimeControl.current.startingTime - blackTimeControl.current.timeElapsed <= 0){
-        setEngineEval('1 - 0');
-        setWinner('w');
-        setShowGameoverWindow(true);
-        gameActive.current = false;
-      }
     }
   
     function checkGameOver() {
@@ -580,6 +423,30 @@ const ChessPage = () => {
       }
 
 
+    }
+
+    function evalToNumber(evalScore: string): number {
+      if(evalScore.includes('#')){
+        if(evalScore.includes('-')) return -7;
+        return 7;
+      }
+      return Math.min(eval(evalScore), 6.5);
+    }
+
+    function analysisResultsToHistoryData(results: EvalResult[]): number[] {
+      return results.map((res) => evalToNumber(res.evalAfter));
+    }
+
+    function launchStockfishAnalysis2(pgn: string, depth: number) {
+      if(!engine.current) return;
+      // pgn -> history (san) -> history (uci) : 1.e4 e5 -> ['e4', 'e5'] -> ['e2e4', 'e7e5']
+      const historyUci = toolbox.convertHistorySanToUci(toolbox.convertPgnToHistory(pgn));
+      engine.current.launchGameAnalysis(historyUci, depth).then((results: EvalResult[]) => {
+        console.log(results);
+        setChartHistoryData(analysisResultsToHistoryData(results));
+        setAnalysisResults(results);
+        setShowChartHistory(true);
+      });
     }
   
     function makeRandomMove(filterLevel: number, safeMoves: boolean) {
@@ -1018,8 +885,8 @@ const ChessPage = () => {
 
     //TODO: Appliquer showMovePosition() sur le meilleur coup suggéré
     function analyseMoveByMove2(cpBestMoves: any, gameHistory: string[]) {
-      /* console.log(cpBestMoves);
-      console.log(gameHistory); */
+      console.log(cpBestMoves);
+      console.log(gameHistory);
       return cpBestMoves.map((bMove: any, i: number) => {
         if(bMove !== '' && !bMove.pvScoreBefore.match('M') && !bMove.pvScoreAfter.match('M')){
           let scoreDiff = Math.abs(eval(bMove.pvScoreBefore) - eval(bMove.pvScoreAfter));
@@ -1032,6 +899,21 @@ const ChessPage = () => {
           return <span onClick={() => showMovePosition(i)} key={i} className=" text-white cursor-pointer" >{gameHistory[i]}</span>;
         }
       });
+    }
+
+    function analyseMoveByMove3(pgn: string) {
+      //console.log(analysisResults);
+      const pgnArray = toolbox.convertPgnToArray(pgn);
+      const history = toolbox.convertPgnToHistory(pgn);
+      console.log(game.pgn());
+      console.log(pgn);
+      return analysisResults.map((result: EvalResult, i: number) => {
+        if(result.quality === '??') return <span onClick={() => showMovePosition(i)} key={i} className=" text-red-600 cursor-pointer" >{pgnArray[i]}?? ({toolbox.convertMoveUciToSan2(history, i,result.bestMove)} was best)</span>;
+        if(result.quality === '?') return <span onClick={() => showMovePosition(i)} key={i} className=" text-orange-500 cursor-pointer" >{pgnArray[i]}? ({toolbox.convertMoveUciToSan2(history, i,result.bestMove)} was best)</span>;
+        if(result.quality === '?!') return <span onClick={() => showMovePosition(i)} key={i} className=" text-yellow-400 cursor-pointer" >{pgnArray[i]}?! ({toolbox.convertMoveUciToSan2(history, i,result.bestMove)} was best)</span>;
+        return <span onClick={() => showMovePosition(i)} key={i} className=" text-white cursor-pointer" >{pgnArray[i]}</span>;
+      });
+
     }
 
     const moveColor = (moveType: number, move: string, i: number) => {
@@ -1105,7 +987,7 @@ const ChessPage = () => {
       })
     }
 
-    function launchStockfishAnalysis2(depth: number){
+    /* function launchStockfishAnalysis2(depth: number){
       let engine = new Engine();
       engine.init().then((res) => {
         console.log(res);
@@ -1115,7 +997,7 @@ const ChessPage = () => {
           testGameToolbox();
         })
       });
-    }
+    } */
 
     function testGameToolbox() {
       let toolbox = new GameToolBox();
@@ -1127,7 +1009,8 @@ const ChessPage = () => {
         <button
           className=" m-4 p-1 bg-fuchsia-600 text-white border rounded cursor-pointer"
           onClick={() => {
-            launchStockfishAnalysis(12);
+            launchStockfishAnalysis2(game.pgn(), 12);
+            /* launchStockfishAnalysis(12); */
             setShowAnalysisProgress(true);
           }}
         >
@@ -1136,7 +1019,8 @@ const ChessPage = () => {
         <button
           className=" m-4 p-1 bg-fuchsia-600 text-white border rounded cursor-pointer"
           onClick={() => {
-            launchStockfishAnalysis(16);
+            launchStockfishAnalysis2(game.pgn(), 16);
+            /* launchStockfishAnalysis(16); */
             setShowAnalysisProgress(true);
           }}
         >
@@ -1163,7 +1047,7 @@ const ChessPage = () => {
             <AnalysisChart historyData={chartHistoryData} className=" " />
           </div>
           <div className="  w-full h-full overflow-y-auto flex flex-row flex-wrap justify-start items-start gap-2" >
-            {analyseMoveByMove2(bestMovesRef.current, movesHistorySan(game.pgn()))}
+            {analyseMoveByMove3(game.pgn())}
           </div>
         </div>
       </div>
@@ -1375,7 +1259,7 @@ const ChessPage = () => {
     const analysisButton = <button
       className=" bg-white border rounded cursor-pointer"
       onClick={() => {
-        launchStockfishAnalysis2(16);
+        launchStockfishAnalysis2(game.pgn(), 16);
       }}
     >
       Analysis

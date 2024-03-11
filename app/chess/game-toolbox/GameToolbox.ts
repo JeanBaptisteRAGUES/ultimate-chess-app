@@ -13,6 +13,17 @@ class GameToolBox {
         return this.game.history().pop();
     }
 
+    convertMoveUciToSan2(movesList: string[], index: number, uciNotation: string): string | undefined {
+        this.game.load(DEFAULT_POSITION);
+
+        for(let i = 0; i < index; i++) {
+            if(i < movesList.length) this.game.move(movesList[i]);
+        }
+
+        this.game.move(uciNotation);
+        return this.game.history().pop();
+    }
+
     // 'Bc4' -> 'f1c4'
     convertMoveSanToUci(fen: string, sanNotation: string): string | undefined {
         this.game.load(fen);
@@ -64,6 +75,13 @@ class GameToolBox {
 
         return this.game.history();
     }
+
+    // '1. e4 e5 2. Nf3 -> ['1.e4', 'e5', '2.Nf3']
+    convertPgnToArray(pgn: string): string[] {
+        return pgn.replaceAll('. ', '.').split(' ');
+    }
+
+
 
     testAllMethods() {
         console.log('Test convertMoveUciToSan(): ');

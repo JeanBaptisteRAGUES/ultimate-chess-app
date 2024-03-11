@@ -1,7 +1,5 @@
 const bestMoveRegex = /bestmove\s(\w*)/;
 const pvMoveRegex = /\spv\s\w*/;
-
-//TODO: Remplacer par un truc du genre info depth ${depth}
 const evalRegex = /cp\s-?[0-9]*|mate\s-?[0-9]*/; 
 const firstEvalMoveRegex = /pv\s[a-h][1-8]/;
 
@@ -11,6 +9,31 @@ type EvalResult = {
     evalBefore: string,
     evalAfter: string,
     quality: string,
+}
+
+type EvalResultSimplified = {
+    bestMove: string,
+    eval: string,
+}
+
+function getEvalFromData(data: string, coeff: number) {
+    let evaluationStr: string | undefined = (evalRegex.exec(data))?.toString();
+    if(!evaluationStr) return null;
+
+    const evaluationArr = evaluationStr.split(' ');
+    if(evaluationArr[0] === 'mate') evaluationStr = '#' + coeff*(eval(evaluationArr[1]));
+    if(evaluationArr[0] === 'cp') evaluationStr = (coeff*(eval(evaluationArr[1])/100)).toString();
+
+    return evaluationStr;
+}
+
+function getBestMoveFromData(data: string) {
+    let bestMove: string | undefined = (pvMoveRegex.exec(data))?.toString();
+    if(!bestMove) return null;
+
+    const bestMoveArr = bestMove.trim().split(' ');
+    bestMove = bestMoveArr[1];
+    return bestMove;
 }
 
 class Engine {
@@ -32,10 +55,10 @@ class Engine {
     }
 
     
-    //TODO: Définir un paramètre pour le skill lvl (par défaut au max: 20)
-    findBestMove(fen: string, depth: number) {
+    findBestMove(fen: string, depth: number, skillValue: number) {
         return new Promise((resolve, reject) => {
-            this.stockfish.postMessage(`position fen ${fen}`)
+            this.stockfish.postMessage(`position fen ${fen}`);
+            this.stockfish.postMessage(`setoption name Skill Level value ${skillValue}`);
             this.stockfish.postMessage(`go depth ${depth}`);
 
             this.stockfish.onmessage = function(event: any) {
@@ -51,7 +74,45 @@ class Engine {
         })
     }
 
-    evalPositionWithFen(fen: string, depth: number, coeff: number) {
+    
+
+    findBestMoves(fen: string, depth: number, skillValue: number, multiPv: number, coeff: number) {
+        return new Promise((resolve, reject) => {
+            let bestMoves: EvalResultSimplified[] = [];
+            this.stockfish.postMessage(`position fen ${fen}`);
+            this.stockfish.postMessage(`setoption name Skill Level value ${skillValue}`);
+            this.stockfish.postMessage(`setoption name MultiPv value ${multiPv}`);
+            this.stockfish.postMessage(`go depth ${depth}`);
+
+            this.stockfish.onmessage = function(event: any) {
+                if(event.data.includes(`info depth ${depth} `)){
+                    let evaluationStr: string | null = getEvalFromData(event.data, coeff);
+                    let bestMove: string | null = getBestMoveFromData(event.data);
+
+                    if(!evaluationStr || !bestMove || !event.data.match(firstEvalMoveRegex)){
+                        reject("Erreur lors de l'évaluation");
+                        return;
+                    }
+
+                    bestMoves.push({
+                        eval: evaluationStr,
+                        bestMove: bestMove
+                    });
+                }
+                if((event.data.match(bestMoveRegex)) !== null){
+                    if(event.data.match(bestMoveRegex)[1]){
+                        resolve(bestMoves);
+                    } else{
+                        reject(null);
+                    }
+                }
+            }
+        })
+    }
+
+    //TODO: Afficher les lignes en entier, en plus du meilleur coup : (c7e5 g1f3 d7d6 d2d4 ...)
+    //TODO: Prendre en compte quand l'utilisateur veut afficher plusieurs lignes de coups (MultiPv > 1)
+    evalPositionFromFen(fen: string, depth: number, coeff: number) {
         return new Promise((resolve, reject) => {
             // On stope l'analyse au cas où la position aurait changé avant qu'une précédente analyse soit terminée
             this.stockfish.postMessage('stop');
@@ -60,25 +121,14 @@ class Engine {
 
             this.stockfish.onmessage = function(event: any) {
                 if(event.data.includes(`info depth ${depth} `) && (evalRegex.exec(event.data)) !== null){
-                    let evaluationStr: string | undefined = (evalRegex.exec(event.data))?.toString();
-                    let bestMove: string | undefined = (pvMoveRegex.exec(event.data))?.toString();
+                    let evaluationStr: string | null = getEvalFromData(event.data, coeff);
+                    let bestMove: string | null = getBestMoveFromData(event.data);
 
                     if(!evaluationStr || !bestMove || !event.data.match(firstEvalMoveRegex)){
-                        resolve("Erreur lors de l'évaluation");
+                        reject("Erreur lors de l'évaluation");
                         return;
                     }
 
-                    const evaluationArr = evaluationStr.split(' ');
-                    const bestMoveArr = bestMove.trim().split(' ');
-
-                    bestMove = bestMoveArr[1];
-
-                    if(evaluationArr[0] === 'mate'){
-                        evaluationStr = '#' + coeff*(eval(evaluationArr[1]));
-                    } 
-                    if(evaluationArr[0] === 'cp') {
-                        evaluationStr = (coeff*(eval(evaluationArr[1])/100)).toString();
-                    }
                     resolve({
                         eval: evaluationStr,
                         pv: bestMove
@@ -89,7 +139,7 @@ class Engine {
     }
 
     // movesList: e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 ...
-    evalPositionWithMovesList(movesList: string, depth: number, coeff: number) {
+    evalPositionFromMovesList(movesList: string, depth: number, coeff: number) {
         console.log(movesList);
         return new Promise((resolve, reject) => {
             // On stope l'analyse au cas où la position aurait changé avant qu'une précédente analyse soit terminée
@@ -107,21 +157,13 @@ class Engine {
                 }
                 if(event.data.includes(`info depth ${depth} `) && (evalRegex.exec(event.data)) !== null){
                     console.log(event.data);
-                    let evaluationStr: string | undefined = (evalRegex.exec(event.data))?.toString();
-                    let bestMove: string | undefined = (pvMoveRegex.exec(event.data))?.toString();
+                    let evaluationStr: string | null = getEvalFromData(event.data, coeff);
+                    let bestMove: string | null = getBestMoveFromData(event.data);
 
                     if(!evaluationStr || !bestMove || !event.data.match(firstEvalMoveRegex)){
                         reject("Erreur lors de l'évaluation");
                         return; // inutile ?
                     }
-
-                    const bestMoveArr = bestMove.trim().split(' ');
-                    bestMove = bestMoveArr[1];
-                    
-                    const evaluationArr = evaluationStr.split(' ');
-
-                    if(evaluationArr[0] === 'mate') evaluationStr = '#' + coeff*(eval(evaluationArr[1]));
-                    if(evaluationArr[0] === 'cp') evaluationStr = (coeff*(eval(evaluationArr[1])/100)).toString();
 
                     resolve({
                         eval: evaluationStr,
@@ -144,14 +186,14 @@ class Engine {
         console.log(evalBefore);
         console.log(evalAfter);
         console.log(scoreDiff);
-        if(scoreDiff > 0.5 && moveEval.bestMove !== moveEval.movePlayed) moveEval.quality = "inaccuracy";
-        if(scoreDiff > 1 && moveEval.bestMove !== moveEval.movePlayed) moveEval.quality = "mistake";
-        if(scoreDiff > 2 && moveEval.bestMove !== moveEval.movePlayed) moveEval.quality = "blunder";
+        if(scoreDiff > 0.5 && moveEval.bestMove !== moveEval.movePlayed) moveEval.quality = "?!";
+        if(scoreDiff > 1 && moveEval.bestMove !== moveEval.movePlayed) moveEval.quality = "?";
+        if(scoreDiff > 2 && moveEval.bestMove !== moveEval.movePlayed) moveEval.quality = "??";
         return moveEval;
     }
 
     //Test avec : movesArray = ['e2e4', 'e7e5', 'g1f3', 'b8c6', 'f1b5'];
-    //TODO: Utiliser nnue (vérifier avant si c'est par défaut)
+    //TODO: Voir s'il ne faudrait pas utiliser un Observable plutôt qu'une promesse (pour gérer la barre de progression)
     async launchGameAnalysis(movesList: Array<string>, depth: number) {
         console.log('Start Game Anaysis');
         let results = [];
@@ -165,13 +207,13 @@ class Engine {
         //TODO: corriger l'eval pour le dernier coup de la partie
         for(let [i, movesSet] of movesSetArray.entries()){
             const coeff = i%2 === 0 ? 1 : -1;
-            const result: any = await this.evalPositionWithMovesList(movesSet, depth, coeff);
+            const result: any = await this.evalPositionFromMovesList(movesSet, depth, coeff);
             let finalResult: EvalResult = {
                 bestMove: result.pv,
                 movePlayed: movesList[i],
                 evalBefore: result.eval,
                 evalAfter: result.eval,
-                quality: "correct",
+                quality: "",
             }
             results.push(finalResult);
             if(i > 0) results[i-1].evalAfter = result.eval;
