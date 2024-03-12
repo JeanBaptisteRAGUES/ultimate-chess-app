@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 'use client'
 
 import { useEffect, useRef, useState } from "react";
@@ -5,6 +6,9 @@ import Engine from "../chess/engine/Engine";
 import GameToolBox from "../chess/game-toolbox/GameToolbox";
 import { AnalysisChart } from "../chess/components/AnalysisChart";
 import { Chess } from "chess.js";
+import { Chessboard } from "react-chessboard";
+import { Piece, Square } from "react-chessboard/dist/chessboard/types";
+import EvalAndWinrate from "../chess/components/EvalAndWinrate";
 
 type EvalResult = {
     bestMove: string,
@@ -31,6 +35,14 @@ const GameAnalysisPage = ({searchParams}: AnalysisProps) => {
     const [analysisResults, setAnalysisResults] = useState<EvalResult[]>([]);
     const [showChartHistory, setShowChartHistory] = useState(false);
     const [currentFen, setCurrentFen] = useState('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+    const [playerColor, setPlayerColor] = useState('w');
+    const [winrate, setWinrate] = useState({
+        white: 50,
+        draws: 0,
+        black: 50
+    });
+
+    const gameActive = useRef(true);
     
     useEffect(() => {
         console.log(searchParams);
@@ -72,22 +84,46 @@ const GameAnalysisPage = ({searchParams}: AnalysisProps) => {
         const history = toolbox.convertPgnToHistory(pgn);
 
         return analysisResults.map((result: EvalResult, i: number) => {
-            if(result.quality === '??') return <span onClick={() => showMovePosition(i)} key={i} className=" text-red-600 cursor-pointer" >{pgnArray[i]}?? ({toolbox.convertMoveUciToSan2(history, i,result.bestMove)} was best)</span>;
-            if(result.quality === '?') return <span onClick={() => showMovePosition(i)} key={i} className=" text-orange-500 cursor-pointer" >{pgnArray[i]}? ({toolbox.convertMoveUciToSan2(history, i,result.bestMove)} was best)</span>;
-            if(result.quality === '?!') return <span onClick={() => showMovePosition(i)} key={i} className=" text-yellow-400 cursor-pointer" >{pgnArray[i]}?! ({toolbox.convertMoveUciToSan2(history, i,result.bestMove)} was best)</span>;
-            return <span onClick={() => showMovePosition(i)} key={i} className=" text-white cursor-pointer" >{pgnArray[i]}</span>;
+            const bestMoveSan = toolbox.convertMoveUciToSan2(history, i, result.bestMove);
+            const movePlayed = pgnArray[i];
+            const bestMoveSpan = result.quality !== '' ? 
+                <span>
+                    {movePlayed + result.quality} <span onClick={(e) => {
+                            e.stopPropagation()
+                            showMovePosition(bestMoveSan, i)
+                        }
+                    }>({bestMoveSan} was best)</span>
+                </span>
+            :
+                <span>
+                    {movePlayed}
+                </span>
+            if(result.quality === '??') return <span onClick={() => showMovePosition(movePlayed, i)} key={i} className=" text-red-600 cursor-pointer" >{bestMoveSpan}</span>;
+            if(result.quality === '?') return <span onClick={() => showMovePosition(movePlayed, i)} key={i} className=" text-orange-500 cursor-pointer" >{bestMoveSpan}</span>;
+            if(result.quality === '?!') return <span onClick={() => showMovePosition(movePlayed, i)} key={i} className=" text-yellow-400 cursor-pointer" >{bestMoveSpan}</span>;
+            return <span onClick={() => showMovePosition(movePlayed, i)} key={i} className=" text-white cursor-pointer" >{bestMoveSpan}</span>;
         });
 
     }
   
-    const showMovePosition = (moveIndex: number) =>{
-        console.log("Move index: " + moveIndex);
+    const showMovePosition = (move: string | undefined, moveIndex: number) =>{
+        if(!move) return;
         const newGame = new Chess();
         //console.log(game.pgn());
         //console.log(movesHistorySan(game.pgn()).slice(0, moveIndex+1).join(' '));
-        const positionPGN = toolbox.convertPgnToArray(searchParams.pgn).slice(0, moveIndex+1).join(' ');
+        let positionArray = toolbox.convertPgnToArray(searchParams.pgn).slice(0, moveIndex);
+        positionArray.push(move);
+        const positionPGN = positionArray.join(' ');
         newGame.loadPgn(positionPGN);
         setCurrentFen(newGame.fen());
+    }
+
+    function onDrop(sourceSquare: Square, targetSquare: Square, piece: Piece) {
+
+        game.move(sourceSquare + targetSquare);
+        setCurrentFen(game.fen());
+    
+        return true;
     }
 
     const chartHistoryComponent = showChartHistory ?
@@ -111,9 +147,53 @@ const GameAnalysisPage = ({searchParams}: AnalysisProps) => {
       </div>
     :
       null
+
+    const switchButton = <button
+      className=" bg-white border rounded cursor-pointer"
+      onClick={() => {
+        playerColor === 'w' ? setPlayerColor('b') : setPlayerColor('w')
+      }}
+    >
+      Switch
+    </button>
+
+    const buttonsComponent =
+    <div className="flex justify-center items-center gap-2 w-full h-fit" >
+        {switchButton}
+    </div>
+
+    const boardComponent = 
+        <div className=" flex flex-col justify-center items-center h-[500px] w-[500px] my-10" >
+            <Chessboard 
+            id="PlayVsRandom"
+            position={currentFen}
+            onPieceDrop={onDrop} 
+            boardOrientation={playerColor === 'w' ? 'white' : 'black'}
+            />
+        </div>
+
+    const gameComponent = 
+        <div className="flex flex-col justify-start items-center h-full">
+            <EvalAndWinrate 
+                game={game} 
+                winrate={winrate} 
+                winner={''} 
+                currentFen={currentFen} 
+                showEval={true} 
+                gameActive={gameActive}
+            />
+            {boardComponent}
+            {buttonsComponent}
+        </div>
+
+    const gameContainer =
+        <div className="flex flex-row justify-center items-center w-1/2 h-full pl-5" >
+            {gameComponent}
+        </div>
     
     return (
         <div className="flex flex-row justify-stretch items-start bg-cyan-900 h-screen w-full overflow-auto" >
+            {gameContainer}
             {chartHistoryContainer}
         </div>
     )

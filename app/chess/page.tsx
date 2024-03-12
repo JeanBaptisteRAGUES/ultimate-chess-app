@@ -1010,11 +1010,6 @@ const ChessPage = () => {
 
     const boardComponent = playerColor === 'w' ?
       <div className=" flex flex-col justify-center items-center h-[500px] w-[500px] my-10" >
-          {/* <div className=" flex justify-end items-center w-full" >
-            <div className=" bg-slate-900 text-slate-200">
-              {blackTimestamp}
-            </div>
-          </div> */}
           <Clock 
             game={game} 
             turnColor={game.turn()} 
@@ -1033,11 +1028,6 @@ const ChessPage = () => {
             onPieceDrop={onDrop} 
             boardOrientation={playerColor === 'w' ? 'white' : 'black'}
           />
-          {/* <div className=" flex justify-end items-center w-full" >
-            <div className=" bg-slate-200 text-slate-900">
-              {whiteTimestamp}
-            </div>
-          </div> */}
           <Clock 
             game={game} 
             turnColor={game.turn()} 

@@ -76,7 +76,9 @@ class Engine {
 
     
 
-    findBestMoves(fen: string, depth: number, skillValue: number, multiPv: number, coeff: number) {
+    findBestMoves(fen: string, depth: number, skillValue: number, multiPv: number) {
+        let coeff = fen.includes(' w ') ? 1 : -1;
+
         return new Promise((resolve, reject) => {
             let bestMoves: EvalResultSimplified[] = [];
             this.stockfish.postMessage(`position fen ${fen}`);
@@ -112,7 +114,9 @@ class Engine {
 
     //TODO: Afficher les lignes en entier, en plus du meilleur coup : (c7e5 g1f3 d7d6 d2d4 ...)
     //TODO: Prendre en compte quand l'utilisateur veut afficher plusieurs lignes de coups (MultiPv > 1)
-    evalPositionFromFen(fen: string, depth: number, coeff: number) {
+    evalPositionFromFen(fen: string, depth: number) {
+        let coeff = fen.includes(' w ') ? 1 : -1;
+
         return new Promise((resolve, reject) => {
             // On stope l'analyse au cas où la position aurait changé avant qu'une précédente analyse soit terminée
             this.stockfish.postMessage('stop');
@@ -138,6 +142,7 @@ class Engine {
         })
     }
 
+    //TODO: Faire en sorte de calculer le coeff de manière interne
     // movesList: e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 ...
     evalPositionFromMovesList(movesListUci: string, depth: number, coeff: number) {
         console.log(movesListUci);

@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { MutableRefObject, useEffect, useRef, useState } from 'react';
 import Engine from '../engine/Engine';
 
@@ -11,8 +12,8 @@ interface EvalProps {
 }
 
 const EvalAndWinrate: React.FC<EvalProps> = ({game, winrate, winner, currentFen, showEval, gameActive}) => {
-    const [engineEval, setEngineEval] = useState('0.3');
     const engine = useRef<Engine>();
+    const [engineEval, setEngineEval] = useState('0.3');
 
     useEffect(() => {
         engine.current = new Engine();
@@ -23,8 +24,9 @@ const EvalAndWinrate: React.FC<EvalProps> = ({game, winrate, winner, currentFen,
     useEffect(() => {
         if(winner || !engine.current) return;
         
-        let coeff = game.history().length %2 === 0 ? 1 : -1;
-        engine.current.evalPositionFromFen(game.fen(), 14, coeff).then((res: any) => {
+        //let coeff = game.history().length %2 === 0 ? 1 : -1;
+        
+        engine.current.evalPositionFromFen(currentFen, 14).then((res: any) => {
             //TODO: voir si on peut pas directement retourner un résultat de type string
             setEngineEval(JSON.stringify(res.eval).replaceAll("\"", ''));
         }).catch((err: any) => {
