@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+
+// TODO: Vérifier si ces headers sont vraiment utiles, ils semblerait que ce soit seulement ceux dans le middleware.ts qui le sont
 const nextConfig = {
     async headers() {
         return [

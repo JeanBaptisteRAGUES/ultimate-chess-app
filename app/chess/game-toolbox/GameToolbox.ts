@@ -13,6 +13,7 @@ class GameToolBox {
         return this.game.history().pop();
     }
 
+    // uci ~= lan (long algebric notation), 'f1c4' -> 'Bc4'
     convertMoveUciToSan2(movesList: string[], index: number, uciNotation: string): string | undefined {
         this.game.load(DEFAULT_POSITION);
 
@@ -42,7 +43,12 @@ class GameToolBox {
         return this.game.history();
     }
 
-    // ['e4', 'e5', 'Nf3'] -> ['e2e4', 'e7e5', 'g1f3']
+    /**
+     * ['e4', 'e5', 'Nf3'] -> ['e2e4', 'e7e5', 'g1f3']
+     *
+     * @param   sanPGN  The history of the game in SAN format: ['e4', 'e5', 'Nf3']
+     * @returns The history of the game in UCI format: ['e2e4', 'e7e5', 'g1f3']
+     */
     convertHistorySanToUci(sanPGN: Array<string>): string[]{
         let uciHistory = [];
         this.game.load(DEFAULT_POSITION);
@@ -76,7 +82,13 @@ class GameToolBox {
         return this.game.history();
     }
 
-    // '1. e4 e5 2. Nf3 -> ['1.e4', 'e5', '2.Nf3']
+    // '1. e4 e5 2. Nf3' -> ['1.e4', 'e5', '2.Nf3']
+    /**
+     * '1. e4 e5 2. Nf3' -> ['1.e4', 'e5', '2.Nf3']
+     *
+     * @param   pgn  The pgn of the game in SAN format and one single string: '1. e4 e5 2. Nf3'
+     * @returns An array of the game's moves and their indexes : ['1.e4', 'e5', '2.Nf3']
+     */
     convertPgnToArray(pgn: string): string[] {
         return pgn.replaceAll('. ', '.').split(' ');
     }

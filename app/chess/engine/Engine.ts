@@ -139,12 +139,12 @@ class Engine {
     }
 
     // movesList: e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 ...
-    evalPositionFromMovesList(movesList: string, depth: number, coeff: number) {
-        console.log(movesList);
+    evalPositionFromMovesList(movesListUci: string, depth: number, coeff: number) {
+        console.log(movesListUci);
         return new Promise((resolve, reject) => {
             // On stope l'analyse au cas où la position aurait changé avant qu'une précédente analyse soit terminée
             this.stockfish.postMessage('stop');
-            this.stockfish.postMessage(`position startpos moves ${movesList}`)
+            this.stockfish.postMessage(`position startpos moves ${movesListUci}`)
             this.stockfish.postMessage(`go depth ${depth}`);
 
             this.stockfish.onmessage = function(event: any) {
@@ -194,13 +194,13 @@ class Engine {
 
     //Test avec : movesArray = ['e2e4', 'e7e5', 'g1f3', 'b8c6', 'f1b5'];
     //TODO: Voir s'il ne faudrait pas utiliser un Observable plutôt qu'une promesse (pour gérer la barre de progression)
-    async launchGameAnalysis(movesList: Array<string>, depth: number) {
+    async launchGameAnalysis(movesListUci: Array<string>, depth: number) {
         console.log('Start Game Anaysis');
         let results = [];
         //let i = 0; // for(let [movesSet, i] of movesSetArray){...} ne semble pas marcher 
 
-        let movesSetArray = movesList.map((move, i) => {
-            return movesList.slice(0, i).join(' ');
+        let movesSetArray = movesListUci.map((move, i) => {
+            return movesListUci.slice(0, i).join(' ');
         });
 
         //Il a fallu ajouter "downlevelIteration": true dans le tsconfig.json pour que ça marche
@@ -210,7 +210,7 @@ class Engine {
             const result: any = await this.evalPositionFromMovesList(movesSet, depth, coeff);
             let finalResult: EvalResult = {
                 bestMove: result.pv,
-                movePlayed: movesList[i],
+                movePlayed: movesListUci[i],
                 evalBefore: result.eval,
                 evalAfter: result.eval,
                 quality: "",

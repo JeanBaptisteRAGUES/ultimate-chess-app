@@ -1,20 +1,29 @@
-import { headers } from 'next/headers';
+'use client'
 
-const TestPage = () => {
-    const buffer = new SharedArrayBuffer(4096);
-    console.log(headers());
+import { useEffect, useRef } from 'react';
+import Engine from '../chess/engine/Engine';
+import GameToolBox from '../chess/game-toolbox/GameToolbox';
+
+const TestPage = ({searchParams}: any) => {
+    const engine = useRef<Engine>();
+    const toolbox = new GameToolBox();
+
+    useEffect(() => {
+        engine.current = new Engine();
+        engine.current.init().then(() => {
+            console.log('Launch PGN analysis');
+            const movesList = toolbox.convertHistorySanToUci(toolbox.convertPgnToHistory(searchParams.search));
+            console.log(movesList);
+            engine.current?.launchGameAnalysis(movesList, 12).then((res) => console.log(res));
+        })
+    }, []);
     
-    //console.log(crossOriginIsolated);
-    /* const myWorker = new Worker('/worker1.js');
-
-    myWorker.postMessage('uci');
-
-    myWorker.onmessage = function(event: any) {
-        console.log(event.data);
-    } */
+    
     return (
-        <div>TestPage</div>
-    )
+        <div className="flex flex-row justify-stretch items-start bg-cyan-900 h-screen w-full overflow-auto" >
+            PGN to analyse : {searchParams.search}
+        </div>
+)
 }
 
 export default TestPage;

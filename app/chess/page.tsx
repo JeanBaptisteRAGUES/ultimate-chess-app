@@ -11,6 +11,7 @@ import EvalAndWinrate from "./components/EvalAndWinrate";
 import Clock from "./components/Clock";
 import Engine from "./engine/Engine";
 import GameToolBox from "./game-toolbox/GameToolbox";
+import Link from "next/link";
 //import 'remote-web-worker';
 
 type EvalResult = {
@@ -494,27 +495,6 @@ const ChessPage = () => {
       setCurrentFen(game.fen());
     }
 
-    function testF(functionName: string) {
-      switch (functionName) {
-        case 'getMoveDestination':
-          console.log('Test getMoveDestination(move: string): string');
-          console.log('Input (e4), Output expected (e4): ' + getMoveDestination('e4'));
-          console.log('Input (exd4), Output expected (d4): ' + getMoveDestination('exd4'));
-          console.log('Input (Qd4), Output expected (d4): ' + getMoveDestination('Qd4'));
-          console.log('Input (Ngf3), Output expected (f3): ' + getMoveDestination('Ngf3'));
-          console.log('Input (Bb5+), Output expected (b5): ' + getMoveDestination('Bb5+'));
-          console.log('Input (Re8#), Output expected (e8): ' + getMoveDestination('Re8#'));
-          console.log('Input (h8=N), Output expected (h8): ' + getMoveDestination('h8=N'));
-          console.log('Input (hxg8=N), Output expected (g8): ' + getMoveDestination('hxg8=N'));
-          console.log('Input (hxg8=R+), Output expected (g8): ' + getMoveDestination('hxg8=R+'));
-          console.log('Input (hxg8=Q#), Output expected (g8): ' + getMoveDestination('hxg8=Q#'));
-          break;
-      
-        default:
-          break;
-      }
-    }
-
     function getMoveDestination(move: string) {
       //Qd4 -> d4, Ngf3 -> f3, exd4 -> d4, Bb5+ -> b5, Re8# -> e8, e4 -> e4
       //return move.replaceAll(/[+#]/gm, '').slice(-2);
@@ -759,15 +739,6 @@ const ChessPage = () => {
       }
       
     }
-  
-    async function getCloudEval(fen: string) {
-      //let cloudEval = await fetchLichessCloudEval(fen);
-      let cloudEval = '???';
-  
-      console.log(cloudEval);
-  
-      setEvaluation(cloudEval);
-    }
 
     function getTimeControlDelay() {
       if(timeControl === 'infinite') return 300;
@@ -839,74 +810,13 @@ const ChessPage = () => {
       
       return true;
     }
-  
-    function setPosition(positionName: string) {
-      let fen = '';
-      switch (positionName) {
-        case 'Test King Attack':
-          fen = '1k6/8/8/4K1b1/6n1/8/8/8 w - - 0 1';
-          break;
-        case 'Test Pawn Attack':
-          fen = '2B1k1r1/q2n1p2/2p1p2P/3pP3/P2P4/1p5Q/1P3PP1/R4KN1 w - - 0 1';
-          break;
-        default:
-          fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
-          break;
-      }
-  
-      game.load(fen);
-      setStartingFen(fen);
-      if(playerColor !== game.turn()) makeLichessMove(fen);
-  
-      setOpening(positionName);
-    }
-
-    function analyseMoveByMove(cpBestMoves: any, gameHistory: string[]): string[] {
-      let movesAnalysis: string[] = [];
-      cpBestMoves.forEach((bMove: any, i: number) => {
-        if(bMove !== '' && !bMove.pvScoreBefore.match('M') && !bMove.pvScoreAfter.match('M')){
-          let comment = ' ';
-          let scoreDiff = Math.abs(eval(bMove.pvScoreBefore) - eval(bMove.pvScoreAfter));
-          if(scoreDiff > 0.5) comment = `?! (${bMove.pvSan} was best) `;
-          if(scoreDiff > 1) comment = `? (${bMove.pvSan} was best) `;
-          if(scoreDiff > 2) comment = `?? (${bMove.pvSan} was best) `;
-          movesAnalysis.push(gameHistory[i] + comment);
-        }else{
-          if(bMove === ''){
-            movesAnalysis.push(gameHistory[i] + ' ');
-          }else{
-            movesAnalysis.push(gameHistory[i]);
-          }
-        }
-      })
-
-      return movesAnalysis;
-    }
-
+    
     //TODO: Appliquer showMovePosition() sur le meilleur coup suggéré
-    function analyseMoveByMove2(cpBestMoves: any, gameHistory: string[]) {
-      console.log(cpBestMoves);
-      console.log(gameHistory);
-      return cpBestMoves.map((bMove: any, i: number) => {
-        if(bMove !== '' && !bMove.pvScoreBefore.match('M') && !bMove.pvScoreAfter.match('M')){
-          let scoreDiff = Math.abs(eval(bMove.pvScoreBefore) - eval(bMove.pvScoreAfter));
-          //console.log(gameHistory[i] + " : " + scoreDiff);
-          if(scoreDiff > 2) return <span onClick={() => showMovePosition(i)} key={i} className=" text-red-600 cursor-pointer" >{gameHistory[i]}?? ({bMove.pvSan} was best)</span>;
-          if(scoreDiff > 1) return <span onClick={() => showMovePosition(i)} key={i} className=" text-orange-500 cursor-pointer" >{gameHistory[i]}? ({bMove.pvSan} was best)</span>;
-          if(scoreDiff > 0.5) return <span onClick={() => showMovePosition(i)} key={i} className=" text-yellow-400 cursor-pointer" >{gameHistory[i]}?! ({bMove.pvSan} was best)</span>;
-          return <span onClick={() => showMovePosition(i)} key={i} className=" text-white cursor-pointer" >{gameHistory[i]}</span>;
-        }else{
-          return <span onClick={() => showMovePosition(i)} key={i} className=" text-white cursor-pointer" >{gameHistory[i]}</span>;
-        }
-      });
-    }
-
     function analyseMoveByMove3(pgn: string) {
       //console.log(analysisResults);
       const pgnArray = toolbox.convertPgnToArray(pgn);
       const history = toolbox.convertPgnToHistory(pgn);
-      console.log(game.pgn());
-      console.log(pgn);
+
       return analysisResults.map((result: EvalResult, i: number) => {
         if(result.quality === '??') return <span onClick={() => showMovePosition(i)} key={i} className=" text-red-600 cursor-pointer" >{pgnArray[i]}?? ({toolbox.convertMoveUciToSan2(history, i,result.bestMove)} was best)</span>;
         if(result.quality === '?') return <span onClick={() => showMovePosition(i)} key={i} className=" text-orange-500 cursor-pointer" >{pgnArray[i]}? ({toolbox.convertMoveUciToSan2(history, i,result.bestMove)} was best)</span>;
@@ -1256,14 +1166,18 @@ const ChessPage = () => {
       Switch
     </button>
 
-    const analysisButton = <button
-      className=" bg-white border rounded cursor-pointer"
-      onClick={() => {
-        launchStockfishAnalysis2(game.pgn(), 16);
-      }}
-    >
-      Analysis
-    </button>
+    const analysisButton = 
+      <Link
+        href = {{
+          pathname: '/game-analysis',
+          query: {
+            pgn: game.pgn(),
+            depth: 12
+          }
+        }}
+      >
+        Analyse PGN
+      </Link>
 
     const buttonsComponent = !showChartHistory ?
       <div className="flex justify-center items-center gap-2 w-full h-fit" >
