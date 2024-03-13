@@ -33,6 +33,7 @@ const GameAnalysisPage = ({searchParams}: AnalysisProps) => {
     
     const [chartHistoryData, setChartHistoryData] = useState<number[]>([]);
     const [analysisResults, setAnalysisResults] = useState<EvalResult[]>([]);
+    const [analysisProgress, setAnalysisProgress] = useState(0);
     const [showChartHistory, setShowChartHistory] = useState(false);
     const [currentFen, setCurrentFen] = useState('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
     const [playerColor, setPlayerColor] = useState('w');
@@ -71,7 +72,7 @@ const GameAnalysisPage = ({searchParams}: AnalysisProps) => {
         if(!engine.current) return;
         // pgn -> history (san) -> history (uci) : 1.e4 e5 -> ['e4', 'e5'] -> ['e2e4', 'e7e5']
         const historyUci = toolbox.convertHistorySanToUci(toolbox.convertPgnToHistory(pgn));
-        engine.current.launchGameAnalysis(historyUci, depth).then((results: EvalResult[]) => {
+        engine.current.launchGameAnalysis(historyUci, depth, setAnalysisProgress).then((results: EvalResult[]) => {
             console.log(results);
             setChartHistoryData(analysisResultsToHistoryData(results));
             setAnalysisResults(results);
@@ -141,13 +142,24 @@ const GameAnalysisPage = ({searchParams}: AnalysisProps) => {
     :
         null
     
-    
+    // TODO: Utiliser la balise 'progress'
     const chartHistoryContainer = showChartHistory ? 
-      <div className=" flex justify-center items-center w-1/2 h-full">
-        {chartHistoryComponent}
-      </div>
+        <div className=" flex justify-center items-center w-1/2 h-full">
+            {chartHistoryComponent}
+        </div>
     :
-      null
+        analysisProgress === 0 ?
+            <div className=" flex justify-center items-center w-1/2 h-full">
+                <div className=" text-white h-5 w-full flex justify-center items-center rounded" >
+                    {"Lancement de l'analyse.."}
+                </div>
+            </div>
+            :
+            <div className=" flex justify-center items-center w-1/2 h-full">
+                <div className=" bg-fuchsia-600 text-white h-5 flex justify-center items-center rounded" style={{width: `${Math.round(analysisProgress*100)}%`}} >
+                    {(analysisProgress*100) > 10 ? Math.round(analysisProgress*100) + '%' : ''}
+                </div>
+            </div>
 
     const switchButton = <button
       className=" bg-white border rounded cursor-pointer"

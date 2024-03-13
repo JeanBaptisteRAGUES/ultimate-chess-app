@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 'use client'
 import { useEffect, useMemo, useRef, useState } from "react";
 import {BLACK, Chess} from "chess.js";
@@ -439,7 +440,8 @@ const ChessPage = () => {
     }
 
     function launchStockfishAnalysis2(pgn: string, depth: number) {
-      if(!engine.current) return;
+      console.log('Fonction lancée depuis la mauvaise page !');
+      /* if(!engine.current) return;
       // pgn -> history (san) -> history (uci) : 1.e4 e5 -> ['e4', 'e5'] -> ['e2e4', 'e7e5']
       const historyUci = toolbox.convertHistorySanToUci(toolbox.convertPgnToHistory(pgn));
       engine.current.launchGameAnalysis(historyUci, depth).then((results: EvalResult[]) => {
@@ -447,7 +449,7 @@ const ChessPage = () => {
         setChartHistoryData(analysisResultsToHistoryData(results));
         setAnalysisResults(results);
         setShowChartHistory(true);
-      });
+      }); */
     }
   
     function makeRandomMove(filterLevel: number, safeMoves: boolean) {

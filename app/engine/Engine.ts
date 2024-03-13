@@ -200,28 +200,33 @@ class Engine {
     //Test avec : movesArray = ['e2e4', 'e7e5', 'g1f3', 'b8c6', 'f1b5'];
     // TODO: Voir s'il ne faudrait pas utiliser un Observable plutôt qu'une promesse (pour gérer la barre de progression)
     // TODO: Régler le problème avec le dernier coup du pgn lors de l'analyse
-    async launchGameAnalysis(movesListUci: Array<string>, depth: number) {
+    async launchGameAnalysis(movesListUci: Array<string>, depth: number, callback: (progress: number) => void) {
         console.log('Start Game Anaysis');
         let results = [];
         //let i = 0; // for(let [movesSet, i] of movesSetArray){...} ne semble pas marcher 
-
+        console.log(movesListUci);
         let movesSetArray = movesListUci.map((move, i) => {
-            return movesListUci.slice(0, i).join(' ');
+            return movesListUci.slice(0, i+1).join(' ');
         });
-
+        movesSetArray.unshift('');
+        console.log(movesSetArray);
         //Il a fallu ajouter "downlevelIteration": true dans le tsconfig.json pour que ça marche
         //TODO: corriger l'eval pour le dernier coup de la partie
         for(let [i, movesSet] of movesSetArray.entries()){
             const coeff = i%2 === 0 ? 1 : -1;
             const result: any = await this.evalPositionFromMovesList(movesSet, depth, coeff);
-            let finalResult: EvalResult = {
-                bestMove: result.pv,
-                movePlayed: movesListUci[i],
-                evalBefore: result.eval,
-                evalAfter: result.eval,
-                quality: "",
+            if(i < movesListUci.length ){
+                let finalResult: EvalResult = {
+                    bestMove: result.pv,
+                    movePlayed: movesListUci[i],
+                    evalBefore: result.eval,
+                    evalAfter: result.eval,
+                    quality: "",
+                }
+                results.push(finalResult);
             }
-            results.push(finalResult);
+            
+            callback(i/movesListUci.length);
             if(i > 0) results[i-1].evalAfter = result.eval;
         }
 
