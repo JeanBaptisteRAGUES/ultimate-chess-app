@@ -65,6 +65,7 @@ const GameAnalysisPage = ({searchParams}: AnalysisProps) => {
         return results.map((res) => evalToNumber(res.evalAfter));
     }
 
+    // TODO: Régler le problème avec le dernier coup du pgn lors de l'analyse
     function launchStockfishAnalysis(pgn: string, depth: number) {
         if(!engine.current) return;
         // pgn -> history (san) -> history (uci) : 1.e4 e5 -> ['e4', 'e5'] -> ['e2e4', 'e7e5']
@@ -77,8 +78,7 @@ const GameAnalysisPage = ({searchParams}: AnalysisProps) => {
         });
     }
 
-    //TODO: Appliquer showMovePosition() sur le meilleur coup suggéré
-    function analyseMoveByMove(pgn: string) {
+    function formatAnalyseResults(pgn: string) {
         //console.log(analysisResults);
         const pgnArray = toolbox.convertPgnToArray(pgn);
         const history = toolbox.convertPgnToHistory(pgn);
@@ -133,7 +133,7 @@ const GameAnalysisPage = ({searchParams}: AnalysisProps) => {
                 <AnalysisChart historyData={chartHistoryData} className=" " />
             </div>
             <div className="  w-full h-full overflow-y-auto flex flex-row flex-wrap justify-start items-start gap-2" >
-                {analyseMoveByMove(searchParams.pgn)}
+                {formatAnalyseResults(searchParams.pgn)}
             </div>
             </div>
         </div>
