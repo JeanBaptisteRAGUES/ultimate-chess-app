@@ -2,13 +2,13 @@
 'use client'
 
 import { useEffect, useRef, useState } from "react";
-import Engine from "../chess/engine/Engine";
-import GameToolBox from "../chess/game-toolbox/GameToolbox";
-import { AnalysisChart } from "../chess/components/AnalysisChart";
+import Engine from "../engine/Engine";
+import GameToolBox from "../game-toolbox/GameToolbox";
+import { AnalysisChart } from "../components/AnalysisChart";
 import { Chess } from "chess.js";
 import { Chessboard } from "react-chessboard";
 import { Piece, Square } from "react-chessboard/dist/chessboard/types";
-import EvalAndWinrate from "../chess/components/EvalAndWinrate";
+import EvalAndWinrate from "../components/EvalAndWinrate";
 
 type EvalResult = {
     bestMove: string,
@@ -66,6 +66,7 @@ const GameAnalysisPage = ({searchParams}: AnalysisProps) => {
     }
 
     // TODO: Régler le problème avec le dernier coup du pgn lors de l'analyse
+    // TODO: Essayer d'utiliser un Observable plutôt qu'une Promise
     function launchStockfishAnalysis(pgn: string, depth: number) {
         if(!engine.current) return;
         // pgn -> history (san) -> history (uci) : 1.e4 e5 -> ['e4', 'e5'] -> ['e2e4', 'e7e5']

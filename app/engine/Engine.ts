@@ -198,7 +198,8 @@ class Engine {
     }
 
     //Test avec : movesArray = ['e2e4', 'e7e5', 'g1f3', 'b8c6', 'f1b5'];
-    //TODO: Voir s'il ne faudrait pas utiliser un Observable plutôt qu'une promesse (pour gérer la barre de progression)
+    // TODO: Voir s'il ne faudrait pas utiliser un Observable plutôt qu'une promesse (pour gérer la barre de progression)
+    // TODO: Régler le problème avec le dernier coup du pgn lors de l'analyse
     async launchGameAnalysis(movesListUci: Array<string>, depth: number) {
         console.log('Start Game Anaysis');
         let results = [];

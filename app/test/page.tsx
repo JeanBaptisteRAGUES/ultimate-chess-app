@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useRef } from 'react';
-import Engine from '../chess/engine/Engine';
-import GameToolBox from '../chess/game-toolbox/GameToolbox';
+import Engine from '../engine/Engine';
+import GameToolBox from '../game-toolbox/GameToolbox';
 
 const TestPage = ({searchParams}: any) => {
     const engine = useRef<Engine>();
