@@ -34,6 +34,7 @@ const GameAnalysisPage = ({searchParams}: AnalysisProps) => {
     const [analysisProgress, setAnalysisProgress] = useState(0);
     const [showChartHistory, setShowChartHistory] = useState(false);
     const [currentFen, setCurrentFen] = useState('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+    const [currentIndex, setCurrentIndex] = useState(-1);
     const [formatedResults, setFormatedResults] = useState<JSX.Element[]>([])
     const [playerColor, setPlayerColor] = useState('w');
     const [winrate, setWinrate] = useState({
@@ -79,6 +80,7 @@ const GameAnalysisPage = ({searchParams}: AnalysisProps) => {
         });
     }
 
+    // TODO: Entourer le coup dont l'index = currentIndex
     function formatAnalyseResults(pgn: string, analysisResults: EvalResult[]) {
         //console.log(analysisResults);
         const timestampStart = performance.now();
@@ -109,7 +111,7 @@ const GameAnalysisPage = ({searchParams}: AnalysisProps) => {
         setFormatedResults(results);
     }
   
-    const showMovePosition = (move: string | undefined, moveIndex: number) =>{
+    const showMovePosition = (move: string | undefined, moveIndex: number) => {
         if(!move) return;
         const newGame = new Chess();
         let positionArray = toolbox.convertPgnToArray(searchParams.pgn).slice(0, moveIndex);
@@ -117,6 +119,44 @@ const GameAnalysisPage = ({searchParams}: AnalysisProps) => {
         const positionPGN = positionArray.join(' ');
         newGame.loadPgn(positionPGN);
         setCurrentFen(newGame.fen());
+        setCurrentIndex(moveIndex);
+        console.log('Changement de position');
+    }
+
+    const previousMove = (moveIndex: number) => {
+        if(moveIndex < 0) {
+            console.log('Impossible de revenir plus en arrière !');
+            return;
+        }
+        const newGame = new Chess();
+        console.log(moveIndex);
+        console.log(toolbox.convertPgnToArray(searchParams.pgn));
+        let positionArray = toolbox.convertPgnToArray(searchParams.pgn).slice(0, moveIndex);
+        console.log(positionArray);
+        const positionPGN = positionArray.join(' ');
+        console.log(positionPGN);
+        newGame.loadPgn(positionPGN);
+        setCurrentFen(newGame.fen());
+        setCurrentIndex(moveIndex-1);
+        console.log('Changement de position');
+    }
+
+    const nextMove = (moveIndex: number) => {
+        if(moveIndex + 2 > formatedResults.length) {
+            console.log("Impossible d'avancer plus dans la partie !");
+            return;
+        }
+        const newGame = new Chess();
+        console.log(moveIndex);
+        console.log(moveIndex+2);
+        console.log(toolbox.convertPgnToArray(searchParams.pgn));
+        let positionArray = toolbox.convertPgnToArray(searchParams.pgn).slice(0, moveIndex+2);
+        console.log(positionArray);
+        const positionPGN = positionArray.join(' ');
+        console.log(positionPGN);
+        newGame.loadPgn(positionPGN);
+        setCurrentFen(newGame.fen());
+        setCurrentIndex(moveIndex+1);
         console.log('Changement de position');
     }
 
@@ -161,19 +201,54 @@ const GameAnalysisPage = ({searchParams}: AnalysisProps) => {
                 </div>
             </div>
 
-    const switchButton = <button
-      className=" bg-white border rounded cursor-pointer"
-      onClick={() => {
-        playerColor === 'w' ? setPlayerColor('b') : setPlayerColor('w')
-      }}
-    >
-      Switch
-    </button>
+    const switchButton = 
+        <button
+            className=" bg-white border rounded cursor-pointer w-10"
+            onClick={() => {
+                playerColor === 'w' ? setPlayerColor('b') : setPlayerColor('w')
+            }}
+        >
+            ↺
+        </button>
+    
+    const previousButton = currentIndex >= 0 ?
+        <button
+            className=" bg-white border rounded cursor-pointer w-10"
+            onClick={() => previousMove(currentIndex)}
+        >
+            {'<'}
+        </button>
+        :
+        <button
+            className=" bg-white border rounded w-10 opacity-50"
+            onClick={() => previousMove(currentIndex)}
+            disabled
+        >
+            {'<'}
+        </button>
+
+    const nextButton = currentIndex + 2 <= formatedResults.length ?
+        <button
+            className=" bg-white border rounded cursor-pointer w-10"
+            onClick={() => nextMove(currentIndex)}
+        >
+            {'>'}
+        </button>
+        :
+        <button
+            className=" bg-white border rounded w-10 opacity-50"
+            onClick={() => nextMove(currentIndex)}
+            disabled
+        >
+            {'>'}
+        </button>
 
     // TODO: Ajouter un bouton '<' et un bouton '>' pour faire défiler les coups de l'analyse
     const buttonsComponent =
-        <div className="flex justify-center items-center gap-2 w-full h-fit" >
+        <div className="flex justify-center items-center gap-5 w-full h-fit" >
+            {previousButton}
             {switchButton}
+            {nextButton}
         </div>
 
     const boardComponent = 
