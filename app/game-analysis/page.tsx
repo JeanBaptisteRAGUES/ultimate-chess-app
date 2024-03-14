@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 'use client'
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Engine from "../engine/Engine";
 import GameToolBox from "../game-toolbox/GameToolbox";
 import { AnalysisChart } from "../components/AnalysisChart";
@@ -25,17 +25,16 @@ type AnalysisProps = {
     }
 }
 
-// TODO: Problème d'url trop longue si pgn très grand (beaucoup de coups joués) ? 
 const GameAnalysisPage = ({searchParams}: AnalysisProps) => {
     const engine = useRef<Engine>();
     const toolbox = new GameToolBox();
     const game = new Chess();
     
     const [chartHistoryData, setChartHistoryData] = useState<number[]>([]);
-    const [analysisResults, setAnalysisResults] = useState<EvalResult[]>([]);
     const [analysisProgress, setAnalysisProgress] = useState(0);
     const [showChartHistory, setShowChartHistory] = useState(false);
     const [currentFen, setCurrentFen] = useState('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+    const [formatedResults, setFormatedResults] = useState<JSX.Element[]>([])
     const [playerColor, setPlayerColor] = useState('w');
     const [winrate, setWinrate] = useState({
         white: 50,
@@ -66,26 +65,27 @@ const GameAnalysisPage = ({searchParams}: AnalysisProps) => {
         return results.map((res) => evalToNumber(res.evalAfter));
     }
 
-    // TODO: Régler le problème avec le dernier coup du pgn lors de l'analyse
-    // TODO: Essayer d'utiliser un Observable plutôt qu'une Promise
     function launchStockfishAnalysis(pgn: string, depth: number) {
         if(!engine.current) return;
         // pgn -> history (san) -> history (uci) : 1.e4 e5 -> ['e4', 'e5'] -> ['e2e4', 'e7e5']
         const historyUci = toolbox.convertHistorySanToUci(toolbox.convertPgnToHistory(pgn));
+        const timestampStart = performance.now();
         engine.current.launchGameAnalysis(historyUci, depth, setAnalysisProgress).then((results: EvalResult[]) => {
+            console.log(`Durée de l'analyse: ${(performance.now() - timestampStart)/1000}s`);
             console.log(results);
             setChartHistoryData(analysisResultsToHistoryData(results));
-            setAnalysisResults(results);
             setShowChartHistory(true);
+            formatAnalyseResults(searchParams.pgn, results);
         });
     }
 
-    function formatAnalyseResults(pgn: string) {
+    function formatAnalyseResults(pgn: string, analysisResults: EvalResult[]) {
         //console.log(analysisResults);
+        const timestampStart = performance.now();
         const pgnArray = toolbox.convertPgnToArray(pgn);
         const history = toolbox.convertPgnToHistory(pgn);
 
-        return analysisResults.map((result: EvalResult, i: number) => {
+        const results = analysisResults.map((result: EvalResult, i: number) => {
             const bestMoveSan = toolbox.convertMoveUciToSan2(history, i, result.bestMove);
             const movePlayed = pgnArray[i];
             const bestMoveSpan = result.quality !== '' ? 
@@ -105,19 +105,19 @@ const GameAnalysisPage = ({searchParams}: AnalysisProps) => {
             if(result.quality === '?!') return <span onClick={() => showMovePosition(movePlayed, i)} key={i} className=" text-yellow-400 cursor-pointer" >{bestMoveSpan}</span>;
             return <span onClick={() => showMovePosition(movePlayed, i)} key={i} className=" text-white cursor-pointer" >{bestMoveSpan}</span>;
         });
-
+        console.log(`Durée du formatage: ${(performance.now() - timestampStart)/1000}s`);
+        setFormatedResults(results);
     }
   
     const showMovePosition = (move: string | undefined, moveIndex: number) =>{
         if(!move) return;
         const newGame = new Chess();
-        //console.log(game.pgn());
-        //console.log(movesHistorySan(game.pgn()).slice(0, moveIndex+1).join(' '));
         let positionArray = toolbox.convertPgnToArray(searchParams.pgn).slice(0, moveIndex);
         positionArray.push(move);
         const positionPGN = positionArray.join(' ');
         newGame.loadPgn(positionPGN);
         setCurrentFen(newGame.fen());
+        console.log('Changement de position');
     }
 
     function onDrop(sourceSquare: Square, targetSquare: Square, piece: Piece) {
@@ -135,7 +135,7 @@ const GameAnalysisPage = ({searchParams}: AnalysisProps) => {
                 <AnalysisChart historyData={chartHistoryData} className=" " />
             </div>
             <div className="  w-full h-full overflow-y-auto flex flex-row flex-wrap justify-start items-start gap-2" >
-                {formatAnalyseResults(searchParams.pgn)}
+                {formatedResults}
             </div>
             </div>
         </div>
@@ -157,7 +157,7 @@ const GameAnalysisPage = ({searchParams}: AnalysisProps) => {
             :
             <div className=" flex justify-center items-center w-1/2 h-full">
                 <div className=" bg-fuchsia-600 text-white h-5 flex justify-center items-center rounded" style={{width: `${Math.round(analysisProgress*100)}%`}} >
-                    {(analysisProgress*100) > 10 ? Math.round(analysisProgress*100) + '%' : ''}
+                    {(analysisProgress*100) > 3 ? Math.round(analysisProgress*100) + '%' : ''}
                 </div>
             </div>
 
@@ -170,10 +170,11 @@ const GameAnalysisPage = ({searchParams}: AnalysisProps) => {
       Switch
     </button>
 
+    // TODO: Ajouter un bouton '<' et un bouton '>' pour faire défiler les coups de l'analyse
     const buttonsComponent =
-    <div className="flex justify-center items-center gap-2 w-full h-fit" >
-        {switchButton}
-    </div>
+        <div className="flex justify-center items-center gap-2 w-full h-fit" >
+            {switchButton}
+        </div>
 
     const boardComponent = 
         <div className=" flex flex-col justify-center items-center h-[500px] w-[500px] my-10" >
