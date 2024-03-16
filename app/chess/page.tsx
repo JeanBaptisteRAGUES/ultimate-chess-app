@@ -62,7 +62,7 @@ const ChessPage = () => {
     const scoreHistory = useRef(new Array());
     const analysisChart = useRef();
     const ctxRef = useRef(null);
-    const movesTypeRef = useRef(new Array()); // 0(blanc): joueur, 1(jaune): lichess, 2(vert clair): stockfish, 3(vert foncé): stockfish forcé, 4(rouge): random
+    const movesTypeRef = useRef(new Array()); // -1: erreur, 0(blanc): joueur, 1(jaune): lichess, 2(vert clair): stockfish, 3(vert foncé): stockfish forcé, 4(rouge): random
     const evalRegex = /cp\s-?[0-9]*|mate\s-?[0-9]*/;
     const bestMoveRegex = /bestmove\s(\w*)/;
     const firstEvalMoveRegex = /pv\s[a-h][1-8]/;

@@ -3,7 +3,7 @@ const pvMoveRegex = /\spv\s\w*/;
 const evalRegex = /cp\s-?[0-9]*|mate\s-?[0-9]*/; 
 const firstEvalMoveRegex = /pv\s[a-h][1-8]/;
 
-type EvalResult = {
+export type EvalResult = {
     bestMove: string,
     movePlayed: string,
     evalBefore: string,
@@ -11,7 +11,7 @@ type EvalResult = {
     quality: string,
 }
 
-type EvalResultSimplified = {
+export type EvalResultSimplified = {
     bestMove: string,
     eval: string,
 }
@@ -55,7 +55,7 @@ class Engine {
     }
 
     
-    findBestMove(fen: string, depth: number, skillValue: number) {
+    findBestMove(fen: string, depth: number, skillValue: number): Promise<string> {
         return new Promise((resolve, reject) => {
             this.stockfish.postMessage(`position fen ${fen}`);
             this.stockfish.postMessage(`setoption name Skill Level value ${skillValue}`);
@@ -114,7 +114,7 @@ class Engine {
 
     //TODO: Afficher les lignes en entier, en plus du meilleur coup : (c7e5 g1f3 d7d6 d2d4 ...)
     //TODO: Prendre en compte quand l'utilisateur veut afficher plusieurs lignes de coups (MultiPv > 1)
-    evalPositionFromFen(fen: string, depth: number) {
+    evalPositionFromFen(fen: string, depth: number): Promise<EvalResultSimplified> {
         let coeff = fen.includes(' w ') ? 1 : -1;
 
         return new Promise((resolve, reject) => {
@@ -135,7 +135,7 @@ class Engine {
 
                     resolve({
                         eval: evaluationStr,
-                        pv: bestMove
+                        bestMove: bestMove
                     });
                 }
             }

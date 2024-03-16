@@ -1,9 +1,14 @@
-import { Chess, DEFAULT_POSITION } from "chess.js";
+import { Chess, Color, DEFAULT_POSITION } from "chess.js";
 class GameToolBox {
     game: Chess;
 
     constructor() {
         this.game = new Chess();
+    }
+
+    getMateValue(mateEval: string, playerColor: Color) {
+        const coeff = playerColor === 'w' ? 1 : -1;
+        return eval(mateEval.replace('M', ''))*coeff;
     }
 
     // uci ~= lan (long algebric notation), 'f1c4' -> 'Bc4'
