@@ -155,8 +155,9 @@ class Engine {
             this.stockfish.onmessage = function(event: any) {
                 if(event.data === "info depth 0 score mate 0"){
                     console.log(event.data);
+                    console.log(`#${-coeff}`);
                     resolve({
-                        eval: '#' + coeff,
+                        eval: `#${-coeff}`,
                         pv: ''
                     });
                 }
@@ -198,8 +199,8 @@ class Engine {
     }
 
     //Test avec : movesArray = ['e2e4', 'e7e5', 'g1f3', 'b8c6', 'f1b5'];
-    // TODO: Voir s'il ne faudrait pas utiliser un Observable plutôt qu'une promesse (pour gérer la barre de progression)
-    // TODO: Régler le problème avec le dernier coup du pgn lors de l'analyse
+    // TODO: Erreur sur l'évaluation du dernier coup lors de l'analyse pour ce pgn : #-1 au lieu de #1
+    // 1.e4 e5 2.Nf3 Bc5 3.d4 exd4 4.Nxd4 Qf6 5.Be3 Nc6 6.c3 Bxd4 7.cxd4 Qh4 8.Nc3 Nf6 9.e5 Ne4 10.g3 Nxc3 11.bxc3 Qd8 12.Qd2 d5 13.Bg2 Rb8 14.O-O b6 15.Rfe1 Be6 16.Rad1 Bg4 17.Rc1 Bf5 18.c4 Ne7 19.cxd5 O-O 20.d6 Rc8 21.dxe7 Qxe7 22.d5 Rfd8 23.Bf4 Be6 24.d6 cxd6 25.exd6 Qf8 26.Rxc8 Re8 27.Rxe8 Qxe8 28.Rd1 h6 29.d7 Qxd7 30.Qxd7 a6 31.Qd8+ Kh7 32.Be4+ f5 33.Bc2 g6 34.Qe7+ Bf7 35.Qxf7+ Kh8 36.Be5#
     async launchGameAnalysis(movesListUci: Array<string>, depth: number, callback: (progress: number) => void) {
         console.log('Start Game Anaysis');
         let results = [];

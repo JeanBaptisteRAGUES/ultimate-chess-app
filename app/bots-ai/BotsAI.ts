@@ -4,6 +4,7 @@ import { Chess, Color } from "chess.js";
 import { fetchLichessDatabase } from "../libs/fetchLichess";
 import Engine, { EvalResultSimplified } from "../engine/Engine";
 import GameToolBox from "../game-toolbox/GameToolbox";
+import { useEffect, useRef } from "react";
 
 // Bots "humains"
 // TODO: Jouent les coups trouvés dans la BDD de lichess puis stockfish prend le relai (déjà implanté)
@@ -38,7 +39,7 @@ import GameToolBox from "../game-toolbox/GameToolbox";
 // TODO: Un bot qui joue les meilleurs coups mais à une profondeur très faible (Ne semble pas marcher)
 // TODO: Un bot qui ne fait que des coups aléatoires
 
-type Move = {
+export type Move = {
     notation: string,
     type: number
 }
@@ -291,18 +292,13 @@ function initDefaultBotParams(level: string): DefaultBotParams {
     }
 }
 
-// TODO: Un peu trop d'arguments
-// TODO: Initier les paramètres par défaut dans le constructeur de la classe et directement les passer en paramètre
-// TODO: makeStockfishMove() ne doit pas s'occuper de la génération des coups aléatoires
-async function makeStockfishMove(level: string, lastRandomMove: number, game: Chess, engine: Engine, toolbox: GameToolBox): Promise<Move> {
-    console.log('Make Stockfish Move');
+async function makeForcedStockfishMove(botParams: DefaultBotParams, game: Chess, engine: Engine, toolbox: GameToolBox): Promise<Move> {
     const playerColor = game.turn() === 'w' ? 'b' : 'w';
-    const botParams = initDefaultBotParams(level);
     let stockfishMove: Move = {
         notation: '',
         type: -1
     }  
-    
+
     if(await isNearCheckmate(botParams.playForcedMate, game, engine, toolbox)){
         console.log('Play Forced Checkmate !');
         const stockfishRes = await engine.findBestMove(game.fen(), 12, 20);
@@ -316,30 +312,40 @@ async function makeStockfishMove(level: string, lastRandomMove: number, game: Ch
         stockfishMove.notation = stockfishRes;
         stockfishMove.type = 3;
     }
+
+    return stockfishMove;
+} 
+
+function isRandomMovePlayable (botParams: DefaultBotParams, level: string, lastRandomMove: number): Boolean {
+    let rand = Math.random()*100;
+    const levelIsNotAtMax = level !== 'Maximum';
+    const lastRandomMoveTooFar = lastRandomMove <= -botParams.randMoveInterval;
+    const randomMoveChance = rand <= botParams.randMoveChance && lastRandomMove < 1;
+
+    return levelIsNotAtMax && (lastRandomMoveTooFar || randomMoveChance);
+}
+
+// TODO: Un peu trop d'arguments
+// TODO: Initier les paramètres par défaut dans le constructeur de la classe et directement les passer en paramètre
+// TODO: makeStockfishMove() ne doit pas s'occuper de la génération des coups aléatoires
+async function makeStockfishMove(botParams: DefaultBotParams, game: Chess, engine: Engine): Promise<Move> {
+    console.log('Make Stockfish Move');
+    let stockfishMove: Move = {
+        notation: '',
+        type: -1
+    }
     
-    // TODO: Voir s'il faut sortir ce bout de code de la fonction makeStockfishMove()
-    if(level !== 'Maximum' && lastRandomMove <= -botParams.randMoveInterval){
+    /* if(level !== 'Maximum' && lastRandomMove <= -botParams.randMoveInterval){
         console.log('Play Forced Random Move !');
         console.log(`Random Move Interval: ${botParams.randMoveInterval}, Last Random Move: ${lastRandomMove}`);
         const randomRes = makeRandomMove(botParams.filterLevel, botParams.securityLvl > 1, game);
         stockfishMove.notation = randomRes.notation;
         stockfishMove.type = randomRes.type;
-    }
-    
-    // TODO: Supprimer le quasi doublon avec la condition au dessus
-    let rand = Math.random()*100;
-    if(level !== 'Maximum' && rand <= botParams.randMoveChance && lastRandomMove < 1){
-        console.log('Play Random Move !');
-        console.log(`Random Move Interval: ${botParams.randMoveInterval}, Last Random Move: ${lastRandomMove}`);
-        const randomRes = makeRandomMove(botParams.filterLevel, botParams.securityLvl > 1, game);
-        stockfishMove.notation = randomRes.notation;
-        stockfishMove.type = randomRes.type;
-    }else{
-        console.log('Play Stockfish Best Move !');
-        const stockfishRes = await engine.findBestMove(game.fen(), botParams.skillValue, botParams.depth);
-        stockfishMove.notation = stockfishRes;
-        stockfishMove.type = 2;
-    }
+    } */
+
+    const stockfishRes = await engine.findBestMove(game.fen(), botParams.skillValue, botParams.depth);
+    stockfishMove.notation = stockfishRes;
+    stockfishMove.type = 2;
 
     return stockfishMove;
 }
@@ -367,7 +373,80 @@ async function makeLichessMove(movesList: string[], databaseRating: string, fen:
 }
 
 class BotsAI {
+    engine: Engine;
+    toolbox: GameToolBox;
+    defaultBotParams: DefaultBotParams;
+    behaviour: string; // default / pawn pusher / botez gambit etc..
+    botLevel: string;
+    lastRandomMove: number;
 
+    constructor(level: string, behaviour: string) {
+        this.engine = new Engine();
+        this.toolbox = new GameToolBox();
+        this.botLevel = level;
+        this.behaviour = behaviour;
+        this.lastRandomMove = 0;
+        this.engine.init();
+        this.defaultBotParams = initDefaultBotParams(level);
+    }
+
+    async makeDefaultMove(game: Chess): Promise<Move> {
+        console.log('Bot AI: Default behaviour');
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+        const movesList = this.toolbox.convertHistorySanToLan(this.toolbox.convertPgnToHistory(game.pgn()));
+
+        const lichessMove = await makeLichessMove(movesList, this.botLevel, '');
+        if(lichessMove.type >= 0){
+            this.lastRandomMove-1;
+            return lichessMove;
+        } 
+
+        const forcedStockfishMove = await makeForcedStockfishMove(this.defaultBotParams, game, this.engine, this.toolbox);
+        if(forcedStockfishMove.type >= 0) {
+            this.lastRandomMove-1;
+            return forcedStockfishMove;
+        } 
+
+        if(isRandomMovePlayable(this.defaultBotParams, this.botLevel, this.lastRandomMove)) {
+            this.lastRandomMove = this.defaultBotParams.randMoveInterval;
+            return makeRandomMove(this.defaultBotParams.filterLevel, this.defaultBotParams.securityLvl > 1, game);
+        }
+
+        const stockfishMove = await makeStockfishMove(this.defaultBotParams, game, this.engine);
+        if(stockfishMove.type >= 0) {
+            this.lastRandomMove-1;
+            return stockfishMove;
+        } 
+
+        return move;
+    }
+
+    async makeMove(game: Chess): Promise<Move> {
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+
+        switch (this.behaviour) {
+            case "default":
+                move = await this.makeDefaultMove(game);
+                break;
+        
+            default:
+                move = await this.makeDefaultMove(game);
+                break;
+        }
+
+        console.log('Bot move : ');
+        console.log(move);
+
+        return move;
+    }
 }
+
+export default BotsAI;
 
 

@@ -1,92 +1,47 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 'use client'
-import { useEffect, useMemo, useRef, useState } from "react";
-import {BLACK, Chess} from "chess.js";
+import { useEffect, useRef, useState } from "react";
+import {Chess} from "chess.js";
 import { Chessboard } from "react-chessboard";
 import { Piece, Square } from "react-chessboard/dist/chessboard/types";
-import { fetchLichessDatabase } from "../libs/fetchLichess";
-import { Chart } from "chart.js";
-import { AnalysisChart } from "../components/AnalysisChart";
-import Draggable, { DraggableCore } from "react-draggable";
 import EvalAndWinrate from "../components/EvalAndWinrate";
 import Clock from "../components/Clock";
 import Engine from "../engine/Engine";
-import GameToolBox from "../game-toolbox/GameToolbox";
 import Link from "next/link";
-//import 'remote-web-worker';
-
-type EvalResult = {
-  bestMove: string,
-  movePlayed: string,
-  evalBefore: string,
-  evalAfter: string,
-  quality: string,
-}
+import BotsAI, { Move } from "../bots-ai/BotsAI";
 
 
 const ChessPage = () => {
     const gameActive = useRef(true);
     const [game, setGame] = useState(new Chess());
-    const toolbox = new GameToolBox();
     const engine = useRef<Engine>();
-    const gameTest = new Chess();
+    const botAI = useRef<BotsAI>();
     const [playerColor, setPlayerColor] = useState('w');
-    const [ponderArrow, setPonderArrow] = useState<Square[][]>([]);
-    const [positionEvaluation, setPositionEvalutation] = useState("");
-    const [possibleMate, setPossibleMate] = useState("");
-    const [showPonderHint, setShowPonderHint] = useState("");
-    const [count, setCount] = useState(0);
     const [gameStarted, setGameStarted] = useState(false);
     const [currentTimeout, setCurrentTimeout] = useState<NodeJS.Timeout>();
     const [databaseRating, setDatabaseRating] = useState('Master');
-    const [opening, setOpening] = useState('');
-    const [startingFen, setStartingFen] = useState('');
     const [currentFen, setCurrentFen] = useState('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
     const [winrate, setWinrate] = useState({
       white: 50,
       draws: 0,
       black: 50
     });
-    const [evaluation, setEvaluation] = useState('0.3');
-    const [useStockfish, setUseStockfish] = useState(false);
-    const [stockfishReady, setStockfishReady] = useState(false);
-    const [bestMove, setBestMove] = useState('');
     const [engineEval, setEngineEval] = useState('0.3');
     const [showEval, setShowEval] = useState(true);
-    const [lastRandomMove, setLastRandomMove] = useState(0);
-    const engineRef = useRef();
-    const analysisRef = useRef();
-    const movesHistoryRef = useRef();
-    const bestMovesRef = useRef(new Array());
-    const colorRef = useRef('w');
     const scoreHistory = useRef(new Array());
-    const analysisChart = useRef();
-    const ctxRef = useRef(null);
     const movesTypeRef = useRef(new Array()); // -1: erreur, 0(blanc): joueur, 1(jaune): lichess, 2(vert clair): stockfish, 3(vert foncé): stockfish forcé, 4(rouge): random
-    const evalRegex = /cp\s-?[0-9]*|mate\s-?[0-9]*/;
-    const bestMoveRegex = /bestmove\s(\w*)/;
-    const firstEvalMoveRegex = /pv\s[a-h][1-8]/;
-    const [chartHistoryData, setChartHistoryData] = useState<number[]>([]);
-    const [analysisResults, setAnalysisResults] = useState<EvalResult[]>([]);
-    const [showChartHistory, setShowChartHistory] = useState(false);
     const [showGameoverWindow, setShowGameoverWindow] = useState(false);
-    const [showAnalysisProgress, setShowAnalysisProgress] = useState(false);
-    const [analysisProgress, setAnalysisProgress] = useState(0);
     const [winner, setWinner] = useState(''); // 'w' -> blancs gagnent, 'b' -> noirs gagnent, 'd' -> draw
-    const timestampStart = useRef(0);
-    const timestampEnd = useRef(0);
     const whiteTimeControl = useRef({
       startingTime: 600,
       increment: 0,
       timeElapsed: 0,
     });
-    const [whiteTimestamp, setWhiteTimestamp] = useState('10:00');
     const blackTimeControl = useRef({
       startingTime: 600,
       increment: 0,
       timeElapsed: 0,
     });
-    const [blackTimestamp, setBlackTimestamp] = useState('10:00');
     const timeControls = new Map([
       ['1+0', {startingTime: 60, increment: 0}],
       ['3+0', {startingTime: 180, increment: 0}],
@@ -104,59 +59,18 @@ const ChessPage = () => {
     }, []);
 
     useEffect(() => {
-        if(winner) return;
-        //@ts-ignore
-        engineRef.current = new Worker('stockfish.js#stockfish.wasm');
-
-        //@ts-ignore
-        engineRef.current.postMessage('uci');
-
-        //@ts-ignore
-        engineRef.current.onmessage = function(event: any) {
-          if(event.data === 'uciok'){
-            console.log('Engine ok');
-            //@ts-ignore
-            engineRef.current.postMessage('setoption name MultiPV value 1');
-            setStockfishReady(true);
-          }
-
-          if((event.data.match(bestMoveRegex)) !== null){
-            console.log(event.data);
-            console.log(event.data.match(bestMoveRegex)[1]);
-            const newBestMove = event.data.match(bestMoveRegex)[1];
-            console.log(`Game Turn: ${game.turn()}, Player Color: ${playerColor}`);
-            if(newBestMove !== null){
-              //playMoveAtCertainLevel(databaseRating, newBestMove);
-              //game.move(newBestMove);
-              gameMove(newBestMove);
-              if(checkGameOver()) return;
-              console.log('Not Game Over');
-              setCurrentFen(game.fen());
-              setBestMove(newBestMove);
-            } 
-          }
-        }
-    }, []);
-
-    useEffect(() => {
       console.log('New Level : ' + databaseRating);
-      //@ts-ignore
-      if(databaseRating === "Maximum") engineRef.current.postMessage('setoption name Use NNUE value on_use_NNUE');
-      //@ts-ignore
-      if(databaseRating !== "Maximum") engineRef.current.postMessage('setoption name Use NNUE value false');
+      botAI.current = new BotsAI(databaseRating, 'default');
     }, [databaseRating]);
 
-    const gameMove = (move: string) => {
-      //addIncrement(game.turn());
-      game.move(move);
+    const gameMove = (moveNotation: string, moveType: number) => {
+      game.move(moveNotation);
       setCurrentFen(game.fen());
+      movesTypeRef.current.push(moveType);
     }
   
     function checkGameOver() {
-      console.log('Check Game Over');
-      // exit if the game is over
       if(!gameActive.current) return false;
-      console.log("Game is active");
       if (game.isGameOver()){
         console.log('Game Over !');
         console.log(game.pgn());
@@ -179,21 +93,6 @@ const ChessPage = () => {
       }
       return false;
     }
-  
-    function movesHistory() {
-      const movesObj = game.history({verbose: true});
-      //console.log(movesObj);
-  
-      const movesStr: Array<string> = [];
-  
-      movesObj.forEach(move => (
-        movesStr.push(move.lan)
-      ));
-  
-      //console.log(JSON.stringify(movesStr));
-  
-      return movesStr;
-    }
 
     function movesHistorySan(gamePGN: string){
       let pgnAfter = gamePGN.replaceAll(/\d*\.\s/gm, (test) => test.trim());
@@ -201,556 +100,12 @@ const ChessPage = () => {
       return pgnAfter.split(' ');
     }
 
-    function scoreToPercentage(score: number, isMate: boolean) {
-      if(isMate){
-        if(score < 0) return 0;
-        return 100;
-      } 
-      const scoreLimit = Math.min(4.5,(Math.max(-4.5,score)));
-      console.log(`Score: ${score}, Score Limit: ${scoreLimit}`);
-      return (5+scoreLimit)/0.1;
-    }
-
-    function uciToSan(uci: string, testFen: string) {
-      gameTest.load(testFen);
-      gameTest.move(uci);
-
-      const lastMove = gameTest.history({verbose: true}).pop();
-      //console.log(lastMove);
-
-      return lastMove?.san;
-    }
-
-    //TODO: Éliminer les doublons
-    function scoreToPercentage2(score: number, isMate: boolean) {
-      if(isMate){
-        if(score < 0) return -5;
-        return 5;
-      } 
-      const scoreLimit = Math.min(4.5,(Math.max(-4.5,score)));
-      //console.log(`Score: ${score}, Score Limit: ${scoreLimit}`);
-      return scoreLimit;
-    }
-
-    function getBestMove(evalData: string) {
-      const bestMoveObject = (/pv\s([a-h][1-8][a-h][1-8])/).exec(evalData);
-      //console.log(bestMoveObject);
-      return bestMoveObject ? bestMoveObject[1] : '';
-    }
-    
-    //TODO: Erreur à la fin de l'analyse (pour le dernier coup ?)
-    //TODO: Les "meilleurs coups" de stockfish dans l'ouverture sont parfois très mauvais -> essayer d'utiliser l'option Ownbook
-    //TODO: Erreurs lors de l'analyse profonde mais pas avec l'analyse rapide (en fin d'analyse donc sur les premiers coups)
-    function launchStockfishAnalysis(depth: number) {
-      //1. e4 c6 2. d4 d5 3. e5 c5 4. dxc5 Nc6 5. Nf3 Bg4 6. c3 e6 7. Be3 Nxe5 8. Qa4+ Nc6 9. Qxg4 Nf6 10. Be2
-      //Temps d'analyse sans avoir rien modifié: 3.5s
-      //Temps d'analyse en mode analyse: 3.5s
-      //Temps d'analyse en mode analyse et 2 threads: ~4s
-      //Temps d'analyse en mode analyse et 4 threads: ~4.2s
-      const score12CpRegex = /\sdepth\s12.*cp\s(-?\d*)/gm;
-      const score12MateRegex = /\sdepth\s12.*mate\s(-?\d*)|mate\s(0)/gm;
-      const score16CpRegex = /\sdepth\s16.*cp\s(-?\d*)/gm;
-      const score16MateRegex = /\sdepth\s16.*mate\s(-?\d*)|mate\s(0)/gm;
-      let scoreCpRegex = score12CpRegex;
-      let scoreMateRegex = score12MateRegex;
-      let useNNUE = false;
-      if(depth >= 16){
-        depth = 16;
-        scoreCpRegex = score16CpRegex;
-        scoreMateRegex = score16MateRegex;
-        useNNUE = true;
-      }
-
-      setChartHistoryData([]);
-      scoreHistory.current = [];
-      bestMovesRef.current = [];
-
-      //@ts-ignore
-      analysisRef.current = new Worker('stockfish.js#stockfish.wasm');
-
-      //@ts-ignore
-      analysisRef.current.postMessage('uci');
-
-      //@ts-ignore
-      movesHistoryRef.current = game.history({verbose: true});
-
-      //@ts-ignore
-      analysisRef.current.onmessage = function(event: any) {
-        //console.log(event.data);
-        if(event.data === 'uciok'){
-          console.log('Analysis ok');
-          timestampStart.current = performance.now();
-          //@ts-ignore
-          analysisRef.current.postMessage('setoption name MultiPV value 1');
-          //@ts-ignore
-          analysisRef.current.postMessage('setoption name UCI_AnalyseMode value true');
-          if(useNNUE){
-            console.log('Use NNUE !');
-            //@ts-ignore
-            analysisRef.current.postMessage('setoption name Use NNUE value on_use_NNUE');
-          }else{
-            //@ts-ignore
-            analysisRef.current.postMessage('setoption name Use NNUE value false');
-          } 
-          /* //@ts-ignore
-          analysisRef.current.postMessage('setoption name Threads value 4'); */
-          //console.log(movesHistoryRef.current);
-          //@ts-ignore
-          const lastMove = movesHistoryRef.current.pop();
-          colorRef.current = lastMove.color;
-          //console.log(lastMove.after);
-          //@ts-ignore
-          analysisRef.current.postMessage(`position fen ${lastMove.after}`);
-          //@ts-ignore
-          analysisRef.current.postMessage(`go depth ${depth}`);
-        }
-
-        if(event.data.match(scoreCpRegex)){
-          //console.log(event.data);
-          //console.log(event.data.match(score12CpRegex));
-          //@ts-ignore
-          let analysisEval = eval(((scoreCpRegex).exec(event.data))[1])/100.0;
-          //const analysisColor = (/.*\s(b)|.*\s(w)/gm).exec(event.data);
-          if(colorRef.current === 'w') analysisEval =  (-1)*analysisEval;
-          //console.log(colorRef.current); 
-          //console.log(analysisEval); 
-
-          //scoreHistory.current.unshift(analysisEval);
-          scoreHistory.current.unshift(scoreToPercentage2(analysisEval, false));
-          //console.log(analysisColor);
-          //@ts-ignore
-          const lastMove = movesHistoryRef.current.pop();
-
-          const bestMoveUci = getBestMove(event.data);
-          if(bestMoveUci?.length > 0 && bestMovesRef.current.length > 0) {
-            bestMovesRef.current[0].pvSan = uciToSan(bestMoveUci, bestMovesRef.current[0].fenBefore);
-            bestMovesRef.current[0].pvScoreBefore = analysisEval.toString();
-          } 
-
-          //@ts-ignore
-          setAnalysisProgress(Math.min(100, (scoreHistory.current.length/game.history().length)*100));
-          //setAnalysisProgress(Math.random()*100);
-          //@ts-ignore
-          //console.log(`scoreHistory.current.length: ${scoreHistory.current.length}, movesHistoryRef.current.length: ${movesHistoryRef.current.length}`);
-          if(lastMove){
-            const lastFen = lastMove.after;
-            colorRef.current = lastMove.color;
-            //console.log(lastMove);
-            bestMovesRef.current.unshift({lastMove: lastMove.san, fenBefore: lastMove.after, pvSan: '', pvScoreBefore: '', pvScoreAfter: analysisEval.toString()});
-            //bestMovesRef.current.unshift(uciToSan(lastMove.san, lastFen));
-            //@ts-ignore
-            analysisRef.current.postMessage(`position fen ${lastFen}`);
-            //@ts-ignore
-            if(movesHistoryRef.current.length <= 5){
-              //@ts-ignore
-              analysisRef.current.postMessage(`go depth ${depth+4}`);
-            }else{
-              //@ts-ignore
-              analysisRef.current.postMessage(`go depth ${depth}`);
-            }
-          }else{
-            console.log(scoreHistory.current);
-            timestampEnd.current = performance.now();
-            console.log('Analysis time: ' + (timestampEnd.current - timestampStart.current)/1000 + 's');
-            console.log(game.pgn());
-            //@ts-ignore
-            analysisRef.current.postMessage('stop');
-            bestMovesRef.current.unshift('');
-            console.log(bestMovesRef.current);
-            //@ts-ignore
-            setChartHistoryData(scoreHistory.current);
-            setShowChartHistory(true);
-          }
-        }
-        if(event.data.match(scoreMateRegex)){
-          //console.log(event.data);
-          //console.log(((score12MateRegex).exec(event.data))?.length);
-          //@ts-ignore
-          const lastMove = movesHistoryRef.current.pop();
-          let regexResult = ((scoreMateRegex).exec(event.data));
-          //console.log(regexResult);
-          let analysisEval = 0;
-          let analysisEvalPercentage = 0;
-          if(regexResult && regexResult[1] !== undefined && regexResult[1] !== null) analysisEval = eval(regexResult[1]);
-
-          const bestMoveUci = getBestMove(event.data);
-          //console.log('Best Move UCI: ' + bestMoveUci);
-          if(bestMoveUci?.length > 0 && bestMovesRef.current.length > 0) {
-            bestMovesRef.current[0].pvSan = uciToSan(bestMoveUci, bestMovesRef.current[0].fenBefore);
-            bestMovesRef.current[0].pvScoreBefore = `M${analysisEval}`;
-          } 
-
-          //@ts-ignore
-          if(colorRef.current === 'w' && analysisEval !== 0) analysisEval =  (-1)*analysisEval;
-          if(colorRef.current === 'w' && analysisEval === 0) analysisEval =  100;
-          if(colorRef.current === 'b' && analysisEval === 0) analysisEval =  -100;
-          //console.log(colorRef.current); 
-          //console.log(analysisEval);
-
-          //@ts-ignore
-          scoreHistory.current.unshift(scoreToPercentage2(analysisEval, true));
-          //console.log(analysisColor);
-          //@ts-ignore
-          setAnalysisProgress(Math.min(100, (scoreHistory.current.length/game.history().length)*100));
-
-          if(lastMove){
-            const lastFen = lastMove.after;
-            colorRef.current = lastMove.color;
-            //console.log(lastMove);
-            bestMovesRef.current.unshift({fenBefore: lastMove.after, pvSan: '', pvScoreBefore: '', pvScoreAfter: `M${analysisEval}`});
-            //bestMovesRef.current.unshift(uciToSan(lastMove.san, lastFen));
-            //@ts-ignore
-            analysisRef.current.postMessage(`position fen ${lastFen}`);
-            //@ts-ignore
-            if(movesHistoryRef.current.length <= 5){
-              //@ts-ignore
-              analysisRef.current.postMessage(`go depth ${depth+4}`);
-            }else{
-              //@ts-ignore
-              analysisRef.current.postMessage(`go depth ${depth}`);
-            }
-          }else{
-            console.log(scoreHistory.current);
-            timestampEnd.current = performance.now();
-            console.log('Analysis time: ' + (timestampEnd.current - timestampStart.current)/1000 + 's');
-            console.log(game.pgn());
-            //@ts-ignore
-            analysisRef.current.postMessage('stop');
-            bestMovesRef.current.unshift('');
-            console.log(bestMovesRef.current);
-            //@ts-ignore
-            setChartHistoryData(scoreHistory.current);
-          }
-        }
-      }
-
-
-    }
-
-    function evalToNumber(evalScore: string): number {
-      if(evalScore.includes('#')){
-        if(evalScore.includes('-')) return -7;
-        return 7;
-      }
-      return Math.min(eval(evalScore), 6.5);
-    }
-
-    function analysisResultsToHistoryData(results: EvalResult[]): number[] {
-      return results.map((res) => evalToNumber(res.evalAfter));
-    }
-
-    function launchStockfishAnalysis2(pgn: string, depth: number) {
-      console.log('Fonction lancée depuis la mauvaise page !');
-      /* if(!engine.current) return;
-      // pgn -> history (san) -> history (uci) : 1.e4 e5 -> ['e4', 'e5'] -> ['e2e4', 'e7e5']
-      const historyUci = toolbox.convertHistorySanToUci(toolbox.convertPgnToHistory(pgn));
-      engine.current.launchGameAnalysis(historyUci, depth).then((results: EvalResult[]) => {
-        console.log(results);
-        setChartHistoryData(analysisResultsToHistoryData(results));
-        setAnalysisResults(results);
-        setShowChartHistory(true);
-      }); */
-    }
-  
-    function makeRandomMove(filterLevel: number, safeMoves: boolean) {
-      if(checkGameOver()) return;
-      console.log('Make Random Move');
-      // Minimise le risque que l'IA joue un coup aléatoire trop catastrophique en l'empechant de jouer certaines pièces
-      const filter = [
-        /noFilter/gm, // Beginner - Ban List [rien]
-        /[Q][a-z]*[1-9]/gm, // Casual - Ban List [Queen]
-        /[QK][a-z]*[1-9]/gm, // Intermediate - Ban List [Queen, King]
-        /[QKR][a-z]*[1-9]/gm, // Advanced - Ban List [Queen, King, Rook]
-        /[QKRNB][a-z]*[1-9]/gm, // Master - Ban List [Queen, King, Rook, Knight, Bishop]
-      ]
-      const possibleMoves = game.moves();
-      console.log(possibleMoves);
-      let possiblesMovesFiltered = possibleMoves.filter(move => !move.match(filter[filterLevel]));
-
-      console.log(possiblesMovesFiltered);
-
-      if(possiblesMovesFiltered.length < 1) possiblesMovesFiltered = possibleMoves;
-
-      let safePossibleMoves = [possiblesMovesFiltered[0]];
-
-      if(safeMoves) {
-        const isPawn = (move: string) => !move.match(/[QKRNB][a-z]*[1-9]/gm);
-        const isDestinationDefended = (move: string) => {
-          //@ts-ignore
-          return game.isAttacked(getMoveDestination(move), playerColor);
-        }
-        
-        //@ts-ignore
-        safePossibleMoves = possiblesMovesFiltered.filter(pMove => isPawn(pMove) || !isDestinationDefended(pMove));
-        console.log(safePossibleMoves);
-        if(safePossibleMoves.length < 1) safePossibleMoves = possiblesMovesFiltered;
-      }
-  
-      const randomIndex = Math.floor(Math.random() * safePossibleMoves.length);
-      console.log(safePossibleMoves[randomIndex]);
-      //makeLichessMove();
-      if(safePossibleMoves.length <= 0) return;
-      movesTypeRef.current.push(4);
-      //game.move(safePossibleMoves[randomIndex]);
-      gameMove(safePossibleMoves[randomIndex]);
-      //setCount(0);
-      setCurrentFen(game.fen());
-    }
-
-    function getMoveDestination(move: string) {
-      //Qd4 -> d4, Ngf3 -> f3, exd4 -> d4, Bb5+ -> b5, Re8# -> e8, e4 -> e4
-      //return move.replaceAll(/[+#]/gm, '').slice(-2);
-      return move.match(/[a-h][1-8]/);
-    }
-
-    function isLastMoveDangerous() {
-      const history = JSON.parse(JSON.stringify(game.history({verbose: true})));
-      const lastMove = history.pop();
-
-      if(lastMove === null || lastMove === undefined) return false;
-
-      //console.log(lastMove);
-
-      // Si le dernier coup est une capture, il faut obligatoirement réagir
-      if(lastMove.san.match(/[x]/gm)) return true;
-
-      const previousFen = lastMove.before;
-      //const currentFen = lastMove.after;
-
-      gameTest.load(previousFen);
-      gameTest.remove(lastMove.from);
-      gameTest.put({type: lastMove.piece, color: lastMove.color}, lastMove.to);
-      const pieceMoves = gameTest.moves({square: lastMove.to});
-      //gameTest.load(currentFen);
-
-      console.log(pieceMoves);
-
-      let danger = false;
-
-      //testF('getMoveDestination');
-
-      pieceMoves.forEach(pieceMove => {
-        const attackedCase = getMoveDestination(pieceMove);
-        //console.log(attackedCase);
-        //@ts-ignore
-        const squareInfos = game.get(attackedCase);
-        //console.log(squareInfos);
-        if(squareInfos && squareInfos?.type !== 'p' && squareInfos?.color !== playerColor) {
-          danger = true;
-        }
-      });
-
-      console.log(`Is last move \x1B[34m(${lastMove.san})\x1B[0m dangerous: \x1B[31m` + danger);
-
-      return danger;
-    }
-
-    function checkmateOpponent() {
-      const allMoves = game.moves();
-      let isCheckmate = false;
-      
-      allMoves.forEach((testMove) => {
-        if(!isCheckmate){
-          gameTest.load(game.fen());
-          gameTest.move(testMove);
-          isCheckmate = gameTest.isCheckmate();
-          //console.log(`Move (${testMove}) is checkmate: ${isCheckmate}`);
-          if(isCheckmate){
-            movesTypeRef.current.push(3);
-            //game.move(testMove);
-            gameMove(testMove);
-            setCurrentFen(game.fen());
-          } 
-        }
-      });
-
-      return isCheckmate;
-    }
-
-    function makeStockfishMove(level: string) {
-      if(checkGameOver()) return;
-      console.log('Make Stockfish Move');
-      let randMoveChance = 0;
-      let skillValue = 0;
-      let depth = 5;
-      let filterLevel = 0; // Empèche de jouer certaines pièces lors d'un coup aléatoire
-      let securityLvl = 0; // 0: Pas de sécurité, 1: Réagit dernier coup adversaire, 2: Coup aléatoire -> case non défendue
-
-      // Empeche d'avoir un deuxième coup aléatoire avant le Xème coup
-      let randMoveInterval = 5;
-
-      //TODO: à implémenter
-      let playForcedMate = 1; // Empèche de louper les mats en x quand x < ou = à playForcedMate
-
-      //TODO: à implémenter quand le reste sera fait: plus il y a de pièces attaquées, plus la charge mentale augmente, plus 
-      // les chances de commettre une erreur (randomMove) augmentent. Echanger des pièces réduit la charge mentale, maintenir
-      // un clouage au contraire maintient cette charge mentale. Plus la partie avance, plus la charge mentale augmente (légèrement)
-      let mentalChargeLimit = 100;
-      /* //@ts-ignore
-      evalRef.current.postMessage('stop');
-      //@ts-ignore
-      evalRef.current.postMessage(`position fen ${game.fen()}`);
-      //@ts-ignore
-      evalRef.current.postMessage('go depth 18'); */
-
-
-      //@ts-ignore
-      engineRef.current.postMessage(`position fen ${game.fen()}`);
-      console.log(databaseRating);
-
-      console.log(level);
-
-      switch (level) {
-        case 'Beginner':
-          // ~900 Elo (Bot chess.com)
-          randMoveChance = 20; 
-          randMoveInterval = 3; 
-          filterLevel = 0;
-          securityLvl = 0;
-          skillValue = 0;
-          depth = 10;
-          playForcedMate = 1;
-          break;
-        case 'Casual':
-          // ~1400 bot chess.com
-          randMoveChance = 20;
-          randMoveInterval = 5;
-          filterLevel = 1;
-          securityLvl = 2;
-          skillValue = 2;
-          depth = 10;
-          playForcedMate = 2;
-          break;
-        case 'Intermediate':
-          // 1700~1800 bot chess.comm
-          randMoveChance = 10; 
-          randMoveInterval = 10;
-          filterLevel = 2;
-          securityLvl = 2; 
-          skillValue = 5; 
-          depth = 12;
-          playForcedMate = 3;
-          break;
-        case 'Advanced':
-          // ~2000 bot chess.com
-          randMoveChance = 3;
-          randMoveInterval = 15;
-          filterLevel = 3;
-          securityLvl = 2;
-          skillValue = 10;
-          depth = 12;
-          playForcedMate = 4;
-          break;
-        case 'Master':
-          // ???
-          randMoveChance = 1;
-          randMoveInterval = 20;
-          filterLevel = 4;
-          securityLvl = 2;
-          skillValue = 15;
-          depth = 16;
-          playForcedMate = 5;
-          break;
-        case 'Maximum':
-          randMoveChance = 0;
-          randMoveInterval = 0;
-          filterLevel = 0;
-          securityLvl = 0;
-          skillValue = 20;
-          depth = 20;
-          break;
-        default:
-          randMoveChance = 10;
-          skillValue = 10;
-          depth = 10;
-          break;
-      }
-      let rand = Math.random()*100;
-
-      if(checkmateOpponent()){
-        console.log('Play Forced Checkmate !');
-        setLastRandomMove(lastRandomMove-1);
-        return;
-      }
-
-      if(securityLvl > 0 && isLastMoveDangerous()){
-        console.log('Play Forced Stockfish Best Move !');
-        movesTypeRef.current.push(3);
-        setLastRandomMove(lastRandomMove-1);
-        console.log(lastRandomMove);
-        //@ts-ignore
-        engineRef.current.postMessage(`setoption name Skill Level value ${skillValue}`);
-        //@ts-ignore
-        engineRef.current.postMessage(`go depth ${depth}`);
-        return;
-      }
-
-      if(databaseRating !== 'Maximum' && lastRandomMove <= -randMoveInterval){
-        console.log('Play Forced Random Move !');
-        console.log(`Random Move Interval: ${randMoveInterval}, Last Random Move: ${lastRandomMove}`);
-        setLastRandomMove(randMoveInterval);
-        makeRandomMove(filterLevel, securityLvl > 1);
-        return;
-      }
-
-      if(databaseRating !== 'Maximum' && rand <= randMoveChance && lastRandomMove < 1){
-        console.log('Play Random Move !');
-        console.log(`Random Move Interval: ${randMoveInterval}, Last Random Move: ${lastRandomMove}`);
-        setLastRandomMove(randMoveInterval);
-        makeRandomMove(filterLevel, securityLvl > 1);
-      }else{
-        console.log('Play Stockfish Best Move !');
-        movesTypeRef.current.push(2);
-        setLastRandomMove(lastRandomMove-1);
-        console.log(lastRandomMove);
-        //@ts-ignore
-        engineRef.current.postMessage(`setoption name Skill Level value ${skillValue}`);
-        //@ts-ignore
-        engineRef.current.postMessage(`go depth ${depth}`);
-      }
-    }
-  
-    async function makeLichessMove(fen = "") {
-      if(!gameActive.current) return;
-      console.log('Make Lichess Move');
-      let lichessMove = {san: "", uci: "", winrate: {white: 33, draws: 33, black: 33}};
-  
-      lichessMove = fen === "" ? await fetchLichessDatabase(movesHistory(), databaseRating, startingFen) : await fetchLichessDatabase(movesHistory(), databaseRating, fen);
-  
-      console.log(lichessMove);
-  
-      if(databaseRating !== 'Maximum' && lichessMove?.san !== "" && lichessMove?.san !== undefined){
-        movesTypeRef.current.push(1);
-        //game.move(lichessMove.san);
-        gameMove(lichessMove.san);
-        setWinrate(lichessMove.winrate);
-        console.log(lichessMove.winrate);
-        //setCurrentFen(game.fen());
-        setBestMove(lichessMove.san);
-        if(checkGameOver()) return;
-        //setUseStockfish(true);
-        return;
-      }
-      
-      console.log("No more moves in the database !");
-      if(stockfishReady) {
-        makeStockfishMove(databaseRating);
-      }else{
-        console.log('Make Random Move !');
-        makeRandomMove(0, false);
-      }
-      
-    }
-
     function getTimeControlDelay() {
       if(timeControl === 'infinite') return 300;
-      //@ts-ignore
+      //@ts-expect-error
       let rawDelay = (timeControls.get(timeControl)?.startingTime/60);
-      console.log("Raw Delay before : " + rawDelay);
       if(game.history().length <= 10) rawDelay =  Math.min(5,rawDelay/4); // On joue plus vite dans l'ouverture
       if(game.turn() === 'w'){
-        console.log(whiteTimeControl.current.startingTime - whiteTimeControl.current.timeElapsed);
-        console.log(whiteTimeControl.current.startingTime*0.2);
         if((whiteTimeControl.current.startingTime - whiteTimeControl.current.timeElapsed) < whiteTimeControl.current.startingTime*0.2){
           rawDelay/=2;
           console.log("Les blancs ont 20% ou moins de leur temps initial !");
@@ -760,8 +115,6 @@ const ChessPage = () => {
           console.log("Les blancs ont 10% ou moins de leur temps initial !");
         }
       }else{
-        console.log(blackTimeControl.current.startingTime - blackTimeControl.current.timeElapsed);
-        console.log(blackTimeControl.current.startingTime*0.2);
         if((blackTimeControl.current.startingTime - blackTimeControl.current.timeElapsed) < blackTimeControl.current.startingTime*0.2){
           rawDelay/=2;
           console.log("Les noirs ont 20% ou moins de leur temps initial !");
@@ -771,61 +124,32 @@ const ChessPage = () => {
           console.log("Les noirs ont 10% ou moins de leur temps initial !");
         }
       }
-      console.log("Raw Delay after : " + rawDelay);
       let randDelay = Math.max(rawDelay,Math.random()*rawDelay*2)*1000;
-      console.log("Random Delay : " + randDelay);
-      console.log(game.history().length);
-      //@ts-ignore
       return randDelay;
+    }
+
+    async function playComputerMove() {
+      console.log('Play computer move');
+      const move: Move | undefined = await botAI.current?.makeMove(game);
+
+      if(move && move.type >= 0){
+        gameMove(move.notation, move.type);
+        return;
+      } 
+      console.log("Erreur lors de la génération d'un coup par l'ordinateur");
     }
   
     function onDrop(sourceSquare: Square, targetSquare: Square, piece: Piece) {
-      //const gameCopy = { ...game };
+      gameMove(sourceSquare + targetSquare, 0);
   
-      const gameCopy = game; // gameCopy = {...game} as Game ?
-      const gameTurn = game.turn();
-      const move = gameCopy.move({
-        from: sourceSquare,
-        to: targetSquare,
-        promotion: piece[1].toLowerCase() ?? "q",
-      });
-  
-      setGame(gameCopy);
-      setCurrentFen(gameCopy.fen());
-      //setCount(count+1);
-  
-      // illegal move
-      if (move === null) return false;
-      //addIncrement(gameTurn);
-
-      movesTypeRef.current.push(0);
-  
-      // store timeout so it can be cleared on undo/reset
-      //const newTimeout = setTimeout(makeRandomMove, 2000);
       let delay = getTimeControlDelay();
       if(databaseRating === 'Maximum') delay = 0;
-      //console.log('Delay: ' + delay);
       if(!checkGameOver() && gameStarted){
-        const newTimeout = setTimeout(makeLichessMove, delay);
+        const newTimeout = setTimeout(playComputerMove, delay);
         setCurrentTimeout(newTimeout);
       }
       
       return true;
-    }
-    
-    //TODO: Appliquer showMovePosition() sur le meilleur coup suggéré
-    function analyseMoveByMove3(pgn: string) {
-      //console.log(analysisResults);
-      const pgnArray = toolbox.convertPgnToArray(pgn);
-      const history = toolbox.convertPgnToHistory(pgn);
-
-      return analysisResults.map((result: EvalResult, i: number) => {
-        if(result.quality === '??') return <span onClick={() => showMovePosition(i)} key={i} className=" text-red-600 cursor-pointer" >{pgnArray[i]}?? ({toolbox.convertMoveUciToSan2(history, i,result.bestMove)} was best)</span>;
-        if(result.quality === '?') return <span onClick={() => showMovePosition(i)} key={i} className=" text-orange-500 cursor-pointer" >{pgnArray[i]}? ({toolbox.convertMoveUciToSan2(history, i,result.bestMove)} was best)</span>;
-        if(result.quality === '?!') return <span onClick={() => showMovePosition(i)} key={i} className=" text-yellow-400 cursor-pointer" >{pgnArray[i]}?! ({toolbox.convertMoveUciToSan2(history, i,result.bestMove)} was best)</span>;
-        return <span onClick={() => showMovePosition(i)} key={i} className=" text-white cursor-pointer" >{pgnArray[i]}</span>;
-      });
-
     }
 
     const moveColor = (moveType: number, move: string, i: number) => {
@@ -848,8 +172,6 @@ const ChessPage = () => {
     const showMovePosition = (moveIndex: number) =>{
       console.log("Move index: " + moveIndex);
       const newGame = new Chess();
-      //console.log(game.pgn());
-      //console.log(movesHistorySan(game.pgn()).slice(0, moveIndex+1).join(' '));
       const positionPGN = movesHistorySan(game.pgn()).slice(0, moveIndex+1).join(' ');
       newGame.loadPgn(positionPGN);
       setCurrentFen(newGame.fen());
@@ -867,110 +189,37 @@ const ChessPage = () => {
               </div>
             )
           } 
-          /* return moveColor(movesTypeRef.current[i], move, i); */
         }
       )
     }
 
-    function testPromise() {
-      return new Promise(function(resolve, reject) {
-        //@ts-ignore
-        let engine = new Worker('stockfish.js#stockfish.wasm');
-
-        //@ts-ignore
-        engine.postMessage('uci');
-
-        //@ts-ignore
-        engine.onmessage = function(event: any) {
-          if(event.data === 'uciok'){
-            console.log('Test Engine ok');
-            //@ts-ignore
-            engine.postMessage('go depth 16');
-          }
-          if((event.data.match(bestMoveRegex)) !== null){
-            /* console.log(event.data);
-            console.log(event.data.match(bestMoveRegex)[1]); */
-            const newBestMove = event.data.match(bestMoveRegex)[1];
-            if(newBestMove !== null){
-              resolve("Meilleur coup: " + newBestMove);
-            } 
-          }
-        }
-      })
-    }
-
-    /* function launchStockfishAnalysis2(depth: number){
-      let engine = new Engine();
-      engine.init().then((res) => {
-        console.log(res);
-        //let movesArray = ['e2e4', 'e7e5', 'g1f3', 'b8c6', 'f1b5'];
-        let movesArray = ['e2e4', 'e7e5', 'd1h5', 'g7g6', 'h5e5', 'd8e7', 'e5h8', 'f8g7', 'g1f3', 'g7h8'];
-        engine.launchGameAnalysis(movesArray, depth).then(() => {
-          testGameToolbox();
-        })
-      });
-    } */
-
-    function testGameToolbox() {
-      let toolbox = new GameToolBox();
-      toolbox.testAllMethods();
-    }
-
-    const analysisMenu = !showAnalysisProgress ?
+    const analysisMenu =
       <div className=" flex flex-col justify-center items-center gap-5">
-        <button
+        <Link
           className=" m-4 p-1 bg-fuchsia-600 text-white border rounded cursor-pointer"
-          onClick={() => {
-            launchStockfishAnalysis2(game.pgn(), 12);
-            /* launchStockfishAnalysis(12); */
-            setShowAnalysisProgress(true);
+          href = {{
+            pathname: '/game-analysis',
+            query: {
+              pgn: game.pgn(),
+              depth: 12
+            }
           }}
         >
           Analyse rapide
-        </button>
-        <button
+        </Link>
+        <Link
           className=" m-4 p-1 bg-fuchsia-600 text-white border rounded cursor-pointer"
-          onClick={() => {
-            launchStockfishAnalysis2(game.pgn(), 16);
-            /* launchStockfishAnalysis(16); */
-            setShowAnalysisProgress(true);
+          href = {{
+            pathname: '/game-analysis',
+            query: {
+              pgn: game.pgn(),
+              depth: 16
+            }
           }}
         >
           Analyse approfondie
-        </button>
+        </Link>
       </div>
-      :
-      <div className=" h-6 w-2/3 flex flex-row justify-start items-center bg-gray-600 rounded relative">
-        <div className=" bg-fuchsia-600 text-white h-full flex justify-center items-center rounded" style={{width: `${Math.round(analysisProgress)}%`}} >
-          {analysisProgress > 10 ? Math.round(analysisProgress) + '%' : ''}
-        </div>
-        <p></p>
-      </div>
-    
-    const chartHistoryComponent =
-      <div className=" flex justify-center items-center w-full h-full" >
-        <div className=" relative flex flex-col justify-start items-center w-11/12 h-full pt-5" >
-          {/* <button 
-            className=" text-white font-extrabold absolute top-2 left-5" 
-            onClick={() => {setShowAnalysisProgress(false); setAnalysisProgress(0); setShowChartHistory(false);}}>
-            X
-          </button> */}
-          <div className=" flex justify-center items-center w-full h-fit" >
-            <AnalysisChart historyData={chartHistoryData} className=" " />
-          </div>
-          <div className="  w-full h-full overflow-y-auto flex flex-row flex-wrap justify-start items-start gap-2" >
-            {analyseMoveByMove3(game.pgn())}
-          </div>
-        </div>
-      </div>
-  
-    
-    const chartHistoryContainer = showChartHistory ? 
-      <div className=" flex justify-center items-center w-1/2 h-full">
-        {chartHistoryComponent}
-      </div>
-    :
-      null
 
     const gameOverWindow = showGameoverWindow ? 
       <div className=" flex justify-center items-center w-full h-full absolute top-0 left-0" >
@@ -1003,19 +252,18 @@ const ChessPage = () => {
       {"Niveau de l adversaire: " + databaseRating}
     </h4>
 
-    const pgnComponent = !showChartHistory ?
+    const pgnComponent =
       <div className=" text-white w-1/4 h-full flex flex-col flex-wrap">
         {gamePGN()}
       </div>
-    :
-      null
 
-    const boardComponent = playerColor === 'w' ?
+    // TODO: Problème d'horloge lorsqu'on switch de position, le temps défile pour le mauvais joueur
+    const boardComponent =
       <div className=" flex flex-col justify-center items-center h-[500px] w-[500px] my-10" >
           <Clock 
             game={game} 
             turnColor={game.turn()} 
-            clockColor="b" 
+            clockColor={playerColor === 'w' ? 'b' : 'w'}
             timeControl={timeControl} 
             timeControls={timeControls}
             setEngineEval={setEngineEval}
@@ -1033,7 +281,7 @@ const ChessPage = () => {
           <Clock 
             game={game} 
             turnColor={game.turn()} 
-            clockColor="w" 
+            clockColor={playerColor === 'w' ? 'w' : 'b'}
             timeControl={timeControl} 
             timeControls={timeControls}
             setEngineEval={setEngineEval}
@@ -1042,49 +290,6 @@ const ChessPage = () => {
             gameStarted={gameStarted} 
             gameActive={gameActive}
           />
-      </div>
-    :
-      <div className=" flex flex-col justify-center items-center h-[500px] w-[500px] my-10" >
-          {/* <div className=" flex justify-end items-center w-full" >
-            <div className=" bg-slate-200 text-slate-900">
-              {whiteTimestamp}
-            </div>
-          </div> */}
-          <Clock 
-            game={game} 
-            turnColor={game.turn()} 
-            clockColor="w" 
-            timeControl={timeControl} 
-            timeControls={timeControls}
-            setEngineEval={setEngineEval}
-            setWinner={setWinner}
-            setShowGameoverWindow={setShowGameoverWindow}
-            gameStarted={gameStarted}
-            gameActive={gameActive} 
-          />
-          <Chessboard 
-            id="PlayVsRandom"
-            position={currentFen}
-            onPieceDrop={onDrop} 
-            boardOrientation={playerColor === 'w' ? 'white' : 'black'}
-          />
-          <Clock 
-            game={game} 
-            turnColor={game.turn()} 
-            clockColor="b" 
-            timeControl={timeControl} 
-            timeControls={timeControls}
-            setEngineEval={setEngineEval}
-            setWinner={setWinner}
-            setShowGameoverWindow={setShowGameoverWindow}
-            gameStarted={gameStarted} 
-            gameActive={gameActive}
-          />
-          {/* <div className=" flex justify-end items-center w-full" >
-            <div className=" bg-slate-900 text-slate-200">
-              {blackTimestamp}
-            </div>
-          </div> */}
       </div>
 
     const resetButton = <button
@@ -1092,9 +297,7 @@ const ChessPage = () => {
       onClick={() => {
         game.reset();
         clearTimeout(currentTimeout);
-        setCount(-1);
         setGameStarted(false);
-        setChartHistoryData([]);
         scoreHistory.current = [];
         setWinner('');
       }}
@@ -1128,14 +331,14 @@ const ChessPage = () => {
 
     const startGameButton = !gameStarted ? 
       <button
-        className=" bg-white border rounded cursor-pointer"
+        className=" bg-white border rounded cursor-pointer flex flex-none"
         onClick={() => {
           setGameStarted(true);
           gameActive.current = true;
           setShowEval(false);
           if(game.turn() !== playerColor){
-            makeLichessMove();
-            //game.loadPgn('1. e4 c5 2. f4 d5 3. exd5 Nf6 4. c4 e6 5. dxe6 Bxe6 6. Nf3 Nc6 7. d3 Nd4 8. Nbd2 Be7 9. Nxd4 cxd4 10. Be2 O-O 11. g4 Qc7 12. f5 Bc8 13. O-O b6 14. Ne4 Bb7 15. Bf4 Qc6 16. g5 Nxe4 17. Bf3')
+            //makeLichessMove();
+            playComputerMove();
           }
         }}
       >
@@ -1171,7 +374,7 @@ const ChessPage = () => {
         Analyse PGN
       </Link>
 
-    const buttonsComponent = !showChartHistory ?
+    const buttonsComponent =
       <div className="flex justify-center items-center gap-2 w-full h-fit" >
         {resetButton}
         {selectDifficultyButton}
@@ -1183,8 +386,6 @@ const ChessPage = () => {
           //TODO: faire un bouton 'hint' / 'indice'
         }
       </div>
-    :
-      null
 
     const gameComponent = 
       <div className="flex flex-col justify-start items-center h-full">
@@ -1202,12 +403,8 @@ const ChessPage = () => {
         {buttonsComponent}
       </div>
 
-    const gameContainer = showChartHistory ?
+    const gameContainer =
       <div className="flex flex-row justify-center items-center w-1/2 h-full pl-5" >
-        {gameComponent}
-      </div>
-    :
-      <div className="flex flex-row justify-start items-center w-3/4 h-full pl-5" >
         {gameComponent}
       </div>
 
@@ -1216,7 +413,6 @@ const ChessPage = () => {
           {pgnComponent}
           {gameContainer}
           {gameOverWindow}
-          {chartHistoryContainer}
       </div>
     )
 }

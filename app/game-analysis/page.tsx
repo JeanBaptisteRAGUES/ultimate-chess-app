@@ -69,7 +69,7 @@ const GameAnalysisPage = ({searchParams}: AnalysisProps) => {
     function launchStockfishAnalysis(pgn: string, depth: number) {
         if(!engine.current) return;
         // pgn -> history (san) -> history (uci) : 1.e4 e5 -> ['e4', 'e5'] -> ['e2e4', 'e7e5']
-        const historyUci = toolbox.convertHistorySanToUci(toolbox.convertPgnToHistory(pgn));
+        const historyUci = toolbox.convertHistorySanToLan(toolbox.convertPgnToHistory(pgn));
         const timestampStart = performance.now();
         engine.current.launchGameAnalysis(historyUci, depth, setAnalysisProgress).then((results: EvalResult[]) => {
             console.log(`Durée de l'analyse: ${(performance.now() - timestampStart)/1000}s`);
@@ -88,7 +88,7 @@ const GameAnalysisPage = ({searchParams}: AnalysisProps) => {
         const history = toolbox.convertPgnToHistory(pgn);
 
         const results = analysisResults.map((result: EvalResult, i: number) => {
-            const bestMoveSan = toolbox.convertMoveUciToSan2(history, i, result.bestMove);
+            const bestMoveSan = toolbox.convertMoveLanToSan2(history, i, result.bestMove);
             const movePlayed = pgnArray[i];
             const bestMoveSpan = result.quality !== '' ? 
                 <span>
