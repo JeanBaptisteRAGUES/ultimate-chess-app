@@ -44,7 +44,7 @@ export type Move = {
     type: number
 }
 
-export type Behaviour = 'default' | 'pawn-pusher' | 'fianchetto-enjoyer' | 'shy' | 'blundering' | 'drawish' | 'sacrifice-enjoyer' | 'exchanges-lover' | 'exchanges-hater' | 'queen-player' | 'botez-gambit' | 'pawn-stormer' | 'strategy-stranger' | 'openings-lover' | 'openings-hater' | 'random-player';
+export type Behaviour = 'default' | 'pawn-pusher' | 'fianchetto-enjoyer' | 'shy' | 'blundering' | 'drawish' | 'sacrifice-enjoyer' | 'exchanges-lover' | 'exchanges-hater' | 'queen-player' | 'botez-gambit' | 'castle-destroyer' | 'strategy-stranger' | 'openings-lover' | 'openings-hater' | 'random-player';
 
 type DefaultBotParams = {
     randMoveChance: number, 
@@ -366,13 +366,17 @@ async function makeLichessMove(movesList: string[], databaseRating: string, fen:
     }
 }
 
+function compareEval(evalA: EvalResultSimplified, evalB: EvalResultSimplified) {
+    return eval(evalB.eval) - eval(evalA.eval);
+}
+
 // TODO: Vérifier la fonction qui permet de jouer un mat en x si x < limite
 // TODO: Vérifier que le bot joue bien les coups aléatoires aussi souvent qu'attendu
 class BotsAI {
     #engine: Engine;
     #toolbox: GameToolBox;
     #defaultBotParams: DefaultBotParams;
-    #behaviour: string; // default / pawn pusher / botez gambit etc.. TODO: Faire un type
+    #behaviour: Behaviour; // default / pawn pusher / botez gambit etc.. TODO: Faire un type
     #botLevel: string;
     #lastRandomMove: number;
 
@@ -421,6 +425,44 @@ class BotsAI {
         return move;
     }
 
+    /**
+     * Joue le plus possible des coups de pions, souvent au détriment du développement de ses pièces.
+     */
+    async #makePawnPusherMove(game: Chess): Promise<Move> {
+        console.log('Bot AI: Pawn Pusher');
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+
+        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, 20, 50, false);
+        //const bestEval = eval(stockfishMoves[0].eval);
+        console.log('Stockfish moves raw');
+        console.log(stockfishMoves);
+
+        // TODO: Faire un bonus plus grand pour les coups de pions qui vont plus loin
+        // TODO: Faire une fonction qui calcule la distance entre la case de départ et la case d'arrivée
+        stockfishMoves = stockfishMoves.map((evalRes) => {
+            const randBonus = Math.max(0.5, Math.random());
+            if(this.#toolbox.getMovePiece(evalRes.bestMove, game.fen()).type === 'p') {
+                evalRes.eval = (eval(evalRes.eval) + randBonus).toString();
+            }
+            return evalRes;
+        });
+        console.log('Stockfish moves ajusted');
+        console.log(stockfishMoves);
+
+        stockfishMoves.sort(compareEval);
+
+        console.log('Stockfish moves sorted');
+        console.log(stockfishMoves);
+
+        move.notation = stockfishMoves[0].bestMove;
+        move.type = 2;
+
+        return move;
+    }
+
     async makeMove(game: Chess): Promise<Move> {
         let move: Move = {
             notation: '',
@@ -430,6 +472,10 @@ class BotsAI {
         switch (this.#behaviour) {
             case "default":
                 move = await this.#makeDefaultMove(game);
+                break;
+
+            case "pawn-pusher":
+                move = await this.#makePawnPusherMove(game);
                 break;
         
             default:

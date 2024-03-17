@@ -60,7 +60,7 @@ const ChessPage = () => {
 
     useEffect(() => {
       console.log('New Level : ' + databaseRating);
-      botAI.current = new BotsAI(databaseRating, 'default');
+      botAI.current = new BotsAI(databaseRating, 'pawn-pusher');
     }, [databaseRating]);
 
     // TODO: Problème lors de la promotion d'un pion (promeut automatiquement en cavalier)
@@ -141,6 +141,14 @@ const ChessPage = () => {
       console.log("Erreur lors de la génération d'un coup par l'ordinateur");
     }
 
+    /**
+     * Si la pièce de départ est un pion, et qu'à l'arrivée ce n'est plus un pion,
+     * celà veut dire qu'il y a eu promotion.
+     * On récupère donc la pièce d'arrivée pour déterminer la promotion.
+     * @param sourceSquare La case de départ de la pièce
+     * @param piece La pièce à l'arrivée
+     * @returns 
+     */
     function getPromotion(sourceSquare: Square, piece: Piece) {
       if(game.get(sourceSquare).type === 'p' && piece.charAt(1) !== 'P'){
         return piece.charAt(1).toLowerCase();

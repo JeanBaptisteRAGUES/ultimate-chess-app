@@ -1,7 +1,9 @@
-const bestMoveRegex = /bestmove\s(\w*)/;
-const pvMoveRegex = /\spv\s\w*/;
-const evalRegex = /cp\s-?[0-9]*|mate\s-?[0-9]*/; 
-const firstEvalMoveRegex = /pv\s[a-h][1-8]/;
+export const bestMoveRegex = /bestmove\s(\w*)/;
+export const pvMoveRegex = /\spv\s\w*/;
+export const evalRegex = /cp\s-?[0-9]*|mate\s-?[0-9]*/; 
+export const cpRegex = /cp\s-?[0-9]*/;
+export const mateRegex = /mate\s-?[0-9]*/; 
+export const firstEvalMoveRegex = /pv\s[a-h][1-8]/;
 
 export type EvalResult = {
     bestMove: string,
@@ -76,8 +78,10 @@ class Engine {
 
     
 
-    findBestMoves(fen: string, depth: number, skillValue: number, multiPv: number) {
+    findBestMoves(fen: string, depth: number, skillValue: number, multiPv: number, useCoeff: boolean): Promise<EvalResultSimplified[]> {
+        console.log('Find Best Moves');
         let coeff = fen.includes(' w ') ? 1 : -1;
+        if(!useCoeff) coeff = 1;
 
         return new Promise((resolve, reject) => {
             let bestMoves: EvalResultSimplified[] = [];
@@ -87,19 +91,25 @@ class Engine {
             this.stockfish.postMessage(`go depth ${depth}`);
 
             this.stockfish.onmessage = function(event: any) {
-                if(event.data.includes(`info depth ${depth} `)){
+                if(event.data.includes(`info depth ${depth} seldepth`)){
+                    console.log(event.data);
                     let evaluationStr: string | null = getEvalFromData(event.data, coeff);
                     let bestMove: string | null = getBestMoveFromData(event.data);
+                    console.log(bestMove + ': ' + evaluationStr);
 
                     if(!evaluationStr || !bestMove || !event.data.match(firstEvalMoveRegex)){
+                        //console.log(event.data);
                         reject("Erreur lors de l'évaluation");
                         return;
                     }
 
-                    bestMoves.push({
-                        eval: evaluationStr,
-                        bestMove: bestMove
-                    });
+                    if(!bestMoves.some((move) => move.bestMove === bestMove)){
+                        console.log(bestMove + ': ' + evaluationStr);
+                        bestMoves.push({
+                            eval: evaluationStr,
+                            bestMove: bestMove
+                        });
+                    }
                 }
                 if((event.data.match(bestMoveRegex)) !== null){
                     if(event.data.match(bestMoveRegex)[1]){

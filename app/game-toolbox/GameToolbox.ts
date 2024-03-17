@@ -1,4 +1,4 @@
-import { Chess, Color, DEFAULT_POSITION } from "chess.js";
+import { Chess, Color, DEFAULT_POSITION, Piece, Square } from "chess.js";
 
 // TODO: Faire un type pour les coups de type san ou uci/lan
 // TODO: Faire attention aux complications que celà peut amener (conversion, méthodes string inutilisables etc..)
@@ -33,6 +33,17 @@ class GameToolBox {
     getMateValue(mateEval: string, playerColor: Color, mateChar: MateChar): number {
         const coeff = playerColor === 'w' ? -1 : 1;
         return eval(mateEval.replace(mateChar, ''))*coeff;
+    }
+
+    /**
+     * Retourne la pièce et sa couleur en fonction du coup donné en entrée.
+     * @param move Le coup en notation Lan (ex: 'g1f3')
+     * @param fen La fen de la partie
+     * @returns La pièce qui va jouer le coup (ex: {color: 'w', type: 'n'})
+     */
+    getMovePiece(move: string, fen: string): Piece {
+        this.game.load(fen);
+        return this.game.get(move.slice(0, 2) as any as Square);
     }
 
     // uci ~= lan (long algebric notation), 'f1c4' -> 'Bc4'
