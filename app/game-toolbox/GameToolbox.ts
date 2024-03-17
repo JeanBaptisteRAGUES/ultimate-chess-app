@@ -13,6 +13,9 @@ import { Chess, Color, DEFAULT_POSITION } from "chess.js";
 function testF(param: San2) {
     if(param.includes('M')) console.log('This is mate');
 } */
+
+export type MateChar = '#' | 'M';
+
 class GameToolBox {
     game: Chess;
 
@@ -27,9 +30,9 @@ class GameToolBox {
      * @param playerColor Color -> 'w' / 'b'
      * @returns Number -> 5 / -5
      */
-    getMateValue(mateEval: string, playerColor: Color): number {
-        const coeff = playerColor === 'w' ? 1 : -1;
-        return eval(mateEval.replace('M', ''))*coeff;
+    getMateValue(mateEval: string, playerColor: Color, mateChar: MateChar): number {
+        const coeff = playerColor === 'w' ? -1 : 1;
+        return eval(mateEval.replace(mateChar, ''))*coeff;
     }
 
     // uci ~= lan (long algebric notation), 'f1c4' -> 'Bc4'

@@ -67,6 +67,7 @@ const ChessPage = () => {
       game.move(moveNotation);
       setCurrentFen(game.fen());
       movesTypeRef.current.push(moveType);
+      checkGameOver();
     }
   
     function checkGameOver() {
@@ -144,7 +145,7 @@ const ChessPage = () => {
   
       let delay = getTimeControlDelay();
       if(databaseRating === 'Maximum') delay = 0;
-      if(!checkGameOver() && gameStarted){
+      if(gameStarted){
         const newTimeout = setTimeout(playComputerMove, delay);
         setCurrentTimeout(newTimeout);
       }

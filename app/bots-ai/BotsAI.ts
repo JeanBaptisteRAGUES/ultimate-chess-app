@@ -44,6 +44,8 @@ export type Move = {
     type: number
 }
 
+export type Behaviour = 'default' | 'pawn-pusher' | 'fianchetto-enjoyer' | 'shy' | 'blundering' | 'drawish' | 'sacrifice-enjoyer' | 'exchanges-lover' | 'exchanges-hater' | 'queen-player' | 'botez-gambit' | 'pawn-stormer' | 'strategy-stranger' | 'openings-lover' | 'openings-hater' | 'random-player';
+
 type DefaultBotParams = {
     randMoveChance: number, 
     randMoveInterval: number, 
@@ -158,17 +160,19 @@ function isLastMoveDangerous(game: Chess, playerColor: Color) {
     return danger;
 }
 
+// TODO: Vérifier la fonction qui permet de jouer un mat en x si x < limite
 async function isNearCheckmate(maxMateValue: number, game: Chess, engine: Engine, toolbox: GameToolBox) {
+    console.log('Test if Near Checkmate');
     const playerColor = game.turn() === 'w' ? 'b' : 'w';
     const positionEval: EvalResultSimplified = await engine.evalPositionFromFen(game.fen(), 8);
+    console.log(positionEval);
+    if(!positionEval.eval.includes('#')) return false;
 
-    if(!positionEval.eval.includes('M')) return false;
-
-    const mateValue = toolbox.getMateValue(positionEval.eval, playerColor);
-
+    const mateValue = toolbox.getMateValue(positionEval.eval, playerColor, '#');
+    console.log(playerColor);
+    console.log(mateValue);
+    console.log(maxMateValue);
     return mateValue > 0 && mateValue <= maxMateValue;
-
-    return positionEval;
 }
 
 // TODO: Remplacer par stockfish puissance max si valeur checkmate <= valeur limite
@@ -224,7 +228,7 @@ function initDefaultBotParams(level: string): DefaultBotParams {
         securityLvl = 0;
         skillValue = 0;
         depth = 10;
-        playForcedMate = 1;
+        playForcedMate = 0;
         break;
         case 'Casual':
         // ~1400 bot chess.com
@@ -234,7 +238,7 @@ function initDefaultBotParams(level: string): DefaultBotParams {
         securityLvl = 2;
         skillValue = 2;
         depth = 10;
-        playForcedMate = 2;
+        playForcedMate = 1;
         break;
         case 'Intermediate':
         // 1700~1800 bot chess.comm
@@ -244,7 +248,7 @@ function initDefaultBotParams(level: string): DefaultBotParams {
         securityLvl = 2; 
         skillValue = 5; 
         depth = 12;
-        playForcedMate = 3;
+        playForcedMate = 2;
         break;
         case 'Advanced':
         // ~2000 bot chess.com
@@ -254,7 +258,7 @@ function initDefaultBotParams(level: string): DefaultBotParams {
         securityLvl = 2;
         skillValue = 10;
         depth = 12;
-        playForcedMate = 4;
+        playForcedMate = 3;
         break;
         case 'Master':
         // ???
@@ -264,7 +268,7 @@ function initDefaultBotParams(level: string): DefaultBotParams {
         securityLvl = 2;
         skillValue = 15;
         depth = 16;
-        playForcedMate = 5;
+        playForcedMate = 4;
         break;
         case 'Maximum':
         randMoveChance = 0;
@@ -293,6 +297,7 @@ function initDefaultBotParams(level: string): DefaultBotParams {
 }
 
 async function makeForcedStockfishMove(botParams: DefaultBotParams, game: Chess, engine: Engine, toolbox: GameToolBox): Promise<Move> {
+    console.log('Search Forced Stockfish Move');
     const playerColor = game.turn() === 'w' ? 'b' : 'w';
     let stockfishMove: Move = {
         notation: '',
@@ -325,23 +330,12 @@ function isRandomMovePlayable (botParams: DefaultBotParams, level: string, lastR
     return levelIsNotAtMax && (lastRandomMoveTooFar || randomMoveChance);
 }
 
-// TODO: Un peu trop d'arguments
-// TODO: Initier les paramètres par défaut dans le constructeur de la classe et directement les passer en paramètre
-// TODO: makeStockfishMove() ne doit pas s'occuper de la génération des coups aléatoires
 async function makeStockfishMove(botParams: DefaultBotParams, game: Chess, engine: Engine): Promise<Move> {
     console.log('Make Stockfish Move');
     let stockfishMove: Move = {
         notation: '',
         type: -1
     }
-    
-    /* if(level !== 'Maximum' && lastRandomMove <= -botParams.randMoveInterval){
-        console.log('Play Forced Random Move !');
-        console.log(`Random Move Interval: ${botParams.randMoveInterval}, Last Random Move: ${lastRandomMove}`);
-        const randomRes = makeRandomMove(botParams.filterLevel, botParams.securityLvl > 1, game);
-        stockfishMove.notation = randomRes.notation;
-        stockfishMove.type = randomRes.type;
-    } */
 
     const stockfishRes = await engine.findBestMove(game.fen(), botParams.skillValue, botParams.depth);
     stockfishMove.notation = stockfishRes;
@@ -372,15 +366,17 @@ async function makeLichessMove(movesList: string[], databaseRating: string, fen:
     }
 }
 
+// TODO: Vérifier la fonction qui permet de jouer un mat en x si x < limite
+// TODO: Vérifier que le bot joue bien les coups aléatoires aussi souvent qu'attendu
 class BotsAI {
     engine: Engine;
     toolbox: GameToolBox;
     defaultBotParams: DefaultBotParams;
-    behaviour: string; // default / pawn pusher / botez gambit etc..
+    behaviour: string; // default / pawn pusher / botez gambit etc.. TODO: Faire un type
     botLevel: string;
     lastRandomMove: number;
 
-    constructor(level: string, behaviour: string) {
+    constructor(level: string, behaviour: Behaviour) {
         this.engine = new Engine();
         this.toolbox = new GameToolBox();
         this.botLevel = level;
@@ -390,6 +386,7 @@ class BotsAI {
         this.defaultBotParams = initDefaultBotParams(level);
     }
 
+    // TODO: Déplacer en dehors de la classe ?
     async makeDefaultMove(game: Chess): Promise<Move> {
         console.log('Bot AI: Default behaviour');
         let move: Move = {
@@ -410,6 +407,7 @@ class BotsAI {
             return forcedStockfishMove;
         } 
 
+        // TODO: Vérifier que les coups aléatoires soient bien joués comme attendu
         if(isRandomMovePlayable(this.defaultBotParams, this.botLevel, this.lastRandomMove)) {
             this.lastRandomMove = this.defaultBotParams.randMoveInterval;
             return makeRandomMove(this.defaultBotParams.filterLevel, this.defaultBotParams.securityLvl > 1, game);
