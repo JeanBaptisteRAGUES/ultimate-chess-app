@@ -63,6 +63,7 @@ const ChessPage = () => {
       botAI.current = new BotsAI(databaseRating, 'default');
     }, [databaseRating]);
 
+    // TODO: Problème lors de la promotion d'un pion (promeut automatiquement en cavalier)
     const gameMove = (moveNotation: string, moveType: number) => {
       game.move(moveNotation);
       setCurrentFen(game.fen());
@@ -139,9 +140,17 @@ const ChessPage = () => {
       } 
       console.log("Erreur lors de la génération d'un coup par l'ordinateur");
     }
+
+    function getPromotion(sourceSquare: Square, piece: Piece) {
+      if(game.get(sourceSquare).type === 'p' && piece.charAt(1) !== 'P'){
+        return piece.charAt(1).toLowerCase();
+      }
+      return '';
+    }
   
     function onDrop(sourceSquare: Square, targetSquare: Square, piece: Piece) {
-      gameMove(sourceSquare + targetSquare, 0);
+      const promotion = getPromotion(sourceSquare, piece);
+      gameMove(sourceSquare + targetSquare + promotion, 0);
   
       let delay = getTimeControlDelay();
       if(databaseRating === 'Maximum') delay = 0;

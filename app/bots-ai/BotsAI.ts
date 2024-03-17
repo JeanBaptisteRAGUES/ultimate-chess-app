@@ -369,53 +369,52 @@ async function makeLichessMove(movesList: string[], databaseRating: string, fen:
 // TODO: Vérifier la fonction qui permet de jouer un mat en x si x < limite
 // TODO: Vérifier que le bot joue bien les coups aléatoires aussi souvent qu'attendu
 class BotsAI {
-    engine: Engine;
-    toolbox: GameToolBox;
-    defaultBotParams: DefaultBotParams;
-    behaviour: string; // default / pawn pusher / botez gambit etc.. TODO: Faire un type
-    botLevel: string;
-    lastRandomMove: number;
+    #engine: Engine;
+    #toolbox: GameToolBox;
+    #defaultBotParams: DefaultBotParams;
+    #behaviour: string; // default / pawn pusher / botez gambit etc.. TODO: Faire un type
+    #botLevel: string;
+    #lastRandomMove: number;
 
     constructor(level: string, behaviour: Behaviour) {
-        this.engine = new Engine();
-        this.toolbox = new GameToolBox();
-        this.botLevel = level;
-        this.behaviour = behaviour;
-        this.lastRandomMove = 0;
-        this.engine.init();
-        this.defaultBotParams = initDefaultBotParams(level);
+        this.#engine = new Engine();
+        this.#toolbox = new GameToolBox();
+        this.#botLevel = level;
+        this.#behaviour = behaviour;
+        this.#lastRandomMove = 0;
+        this.#engine.init();
+        this.#defaultBotParams = initDefaultBotParams(level);
     }
 
-    // TODO: Déplacer en dehors de la classe ?
-    async makeDefaultMove(game: Chess): Promise<Move> {
+    async #makeDefaultMove(game: Chess): Promise<Move> {
         console.log('Bot AI: Default behaviour');
         let move: Move = {
             notation: '',
             type: -1,
         };
-        const movesList = this.toolbox.convertHistorySanToLan(this.toolbox.convertPgnToHistory(game.pgn()));
+        const movesList = this.#toolbox.convertHistorySanToLan(this.#toolbox.convertPgnToHistory(game.pgn()));
 
-        const lichessMove = await makeLichessMove(movesList, this.botLevel, '');
+        const lichessMove = await makeLichessMove(movesList, this.#botLevel, '');
         if(lichessMove.type >= 0){
-            this.lastRandomMove-1;
+            this.#lastRandomMove = this.#lastRandomMove-1;
             return lichessMove;
         } 
 
-        const forcedStockfishMove = await makeForcedStockfishMove(this.defaultBotParams, game, this.engine, this.toolbox);
+        const forcedStockfishMove = await makeForcedStockfishMove(this.#defaultBotParams, game, this.#engine, this.#toolbox);
         if(forcedStockfishMove.type >= 0) {
-            this.lastRandomMove-1;
+            this.#lastRandomMove = this.#lastRandomMove-1;
             return forcedStockfishMove;
         } 
 
         // TODO: Vérifier que les coups aléatoires soient bien joués comme attendu
-        if(isRandomMovePlayable(this.defaultBotParams, this.botLevel, this.lastRandomMove)) {
-            this.lastRandomMove = this.defaultBotParams.randMoveInterval;
-            return makeRandomMove(this.defaultBotParams.filterLevel, this.defaultBotParams.securityLvl > 1, game);
+        if(isRandomMovePlayable(this.#defaultBotParams, this.#botLevel, this.#lastRandomMove)) {
+            this.#lastRandomMove = this.#defaultBotParams.randMoveInterval;
+            return makeRandomMove(this.#defaultBotParams.filterLevel, this.#defaultBotParams.securityLvl > 1, game);
         }
 
-        const stockfishMove = await makeStockfishMove(this.defaultBotParams, game, this.engine);
+        const stockfishMove = await makeStockfishMove(this.#defaultBotParams, game, this.#engine);
         if(stockfishMove.type >= 0) {
-            this.lastRandomMove-1;
+            this.#lastRandomMove = this.#lastRandomMove-1;
             return stockfishMove;
         } 
 
@@ -428,13 +427,13 @@ class BotsAI {
             type: -1,
         };
 
-        switch (this.behaviour) {
+        switch (this.#behaviour) {
             case "default":
-                move = await this.makeDefaultMove(game);
+                move = await this.#makeDefaultMove(game);
                 break;
         
             default:
-                move = await this.makeDefaultMove(game);
+                move = await this.#makeDefaultMove(game);
                 break;
         }
 
