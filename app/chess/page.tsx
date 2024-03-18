@@ -61,7 +61,7 @@ const ChessPage = () => {
     useEffect(() => {
       console.log('New Level : ' + databaseRating);
       const botColor = playerColor === 'w' ? 'b' : 'w';
-      botAI.current = new BotsAI('botez-gambit', databaseRating, botColor);
+      botAI.current = new BotsAI('random-player', databaseRating, botColor);
     }, [databaseRating, playerColor]);
 
     // TODO: Problème lors de la promotion d'un pion (promeut automatiquement en cavalier)
@@ -133,6 +133,7 @@ const ChessPage = () => {
 
     async function playComputerMove() {
       console.log('Play computer move');
+      if(game.pgn().includes('#')) return;
       const move: Move | undefined = await botAI.current?.makeMove(game);
 
       if(move && move.type >= 0){
