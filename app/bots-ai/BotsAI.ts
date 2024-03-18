@@ -1,6 +1,6 @@
 // TODO: Niveaux de difficulté Beginner, Casual, Intermediate, Advanced, Master, Maximum
 
-import { Chess, Color } from "chess.js";
+import { Chess, Color, Square } from "chess.js";
 import { fetchLichessDatabase } from "../libs/fetchLichess";
 import Engine, { EvalResultSimplified } from "../engine/Engine";
 import GameToolBox from "../game-toolbox/GameToolbox";
@@ -18,10 +18,6 @@ import { useEffect, useRef } from "react";
 // Bots à gimmick
 // MultiPv 100, 'Classical' -> depth 14, 'Rapide' -> depth 12, 'Blitz' -> depth 10, 'Bullet' -> depth 8
 // TODO: Lister les coups qui remplissent l'objectif désiré et piocher un coup dans un intervalle d'éval estimé en fonction de la difficulté
-// TODO: Un bot qui joue beaucoup de coups de pions
-// TODO: Un bot qui aime jouer des fianchettos
-// TODO: Un bot qui n'aime pas prendre de l'espace (style hippo/hedgehog/etc..)
-// TODO: Un bot qui joue les pires coups possibles
 // TODO: Un bot qui joue les coups qui amènent à la position la plus égale possible (éval ~ 0)
 // TODO: Un bot qui aime jouer des sacrifices (sur le roque si possible) même quand ce n'est pas très bon
 // TODO: Un bot qui adore échanger les pièces
@@ -160,45 +156,17 @@ function isLastMoveDangerous(game: Chess, playerColor: Color) {
     return danger;
 }
 
-// TODO: Vérifier la fonction qui permet de jouer un mat en x si x < limite
-async function isNearCheckmate(maxMateValue: number, game: Chess, engine: Engine, toolbox: GameToolBox) {
+async function isNearCheckmate(maxMateValue: number, botColor: Color, game: Chess, engine: Engine, toolbox: GameToolBox) {
     console.log('Test if Near Checkmate');
-    const playerColor = game.turn() === 'w' ? 'b' : 'w';
     const positionEval: EvalResultSimplified = await engine.evalPositionFromFen(game.fen(), 8);
     console.log(positionEval);
     if(!positionEval.eval.includes('#')) return false;
 
-    const mateValue = toolbox.getMateValue(positionEval.eval, playerColor, '#');
-    console.log(playerColor);
+    const mateValue = toolbox.getMateValue(positionEval.eval, botColor, '#');
+    console.log(botColor);
     console.log(mateValue);
     console.log(maxMateValue);
     return mateValue > 0 && mateValue <= maxMateValue;
-}
-
-// TODO: Remplacer par stockfish puissance max si valeur checkmate <= valeur limite
-function checkmateOpponent(game: Chess): Move {
-    const allMoves = game.moves();
-    let isCheckmate = false;
-    const gameTest = new Chess();
-    let checkMateMove = '';
-    let moveType = -1;
-
-    allMoves.forEach((testMove) => {
-        if(!isCheckmate){
-        gameTest.load(game.fen());
-        gameTest.move(testMove);
-        isCheckmate = gameTest.isCheckmate();
-        if(isCheckmate){
-            moveType = 3;
-            checkMateMove = testMove;  
-        } 
-        }
-    });
-
-    return {
-        notation: checkMateMove,
-        type: moveType
-    }
 }
 
 function initDefaultBotParams(level: string): DefaultBotParams {
@@ -296,7 +264,7 @@ function initDefaultBotParams(level: string): DefaultBotParams {
     }
 }
 
-async function makeForcedStockfishMove(botParams: DefaultBotParams, game: Chess, engine: Engine, toolbox: GameToolBox): Promise<Move> {
+async function makeForcedStockfishMove(botParams: DefaultBotParams, botColor: Color, game: Chess, engine: Engine, toolbox: GameToolBox): Promise<Move> {
     console.log('Search Forced Stockfish Move');
     const playerColor = game.turn() === 'w' ? 'b' : 'w';
     let stockfishMove: Move = {
@@ -304,7 +272,7 @@ async function makeForcedStockfishMove(botParams: DefaultBotParams, game: Chess,
         type: -1
     }  
 
-    if(await isNearCheckmate(botParams.playForcedMate, game, engine, toolbox)){
+    if(await isNearCheckmate(botParams.playForcedMate, botColor, game, engine, toolbox)){
         console.log('Play Forced Checkmate !');
         const stockfishRes = await engine.findBestMove(game.fen(), 12, 20);
         stockfishMove.notation = stockfishRes;
@@ -367,11 +335,17 @@ async function makeLichessMove(movesList: string[], databaseRating: string, fen:
 }
 
 function compareEval(evalA: EvalResultSimplified, evalB: EvalResultSimplified) {
+    console.log(evalA);
+    console.log(evalB);
     return eval(evalB.eval) - eval(evalA.eval);
 }
 
-// TODO: Vérifier la fonction qui permet de jouer un mat en x si x < limite
-// TODO: Vérifier que le bot joue bien les coups aléatoires aussi souvent qu'attendu
+function evalMove(move: EvalResultSimplified, botColor: Color, toolbox: GameToolBox): number {
+    const baseValue = botColor === 'w' ? 100 : -100;
+    if(move.eval.includes('#')) return baseValue/toolbox.getMateValue(move.eval, botColor, '#');
+    return eval(move.eval);
+}
+
 class BotsAI {
     #engine: Engine;
     #toolbox: GameToolBox;
@@ -379,13 +353,15 @@ class BotsAI {
     #behaviour: Behaviour; // default / pawn pusher / botez gambit etc.. TODO: Faire un type
     #botLevel: string;
     #lastRandomMove: number;
+    #botColor: Color;
 
-    constructor(level: string, behaviour: Behaviour) {
+    constructor(behaviour: Behaviour, level: string, botColor: Color) {
         this.#engine = new Engine();
         this.#toolbox = new GameToolBox();
         this.#botLevel = level;
         this.#behaviour = behaviour;
         this.#lastRandomMove = 0;
+        this.#botColor = botColor;
         this.#engine.init();
         this.#defaultBotParams = initDefaultBotParams(level);
     }
@@ -404,7 +380,7 @@ class BotsAI {
             return lichessMove;
         } 
 
-        const forcedStockfishMove = await makeForcedStockfishMove(this.#defaultBotParams, game, this.#engine, this.#toolbox);
+        const forcedStockfishMove = await makeForcedStockfishMove(this.#defaultBotParams, this.#botColor, game, this.#engine, this.#toolbox);
         if(forcedStockfishMove.type >= 0) {
             this.#lastRandomMove = this.#lastRandomMove-1;
             return forcedStockfishMove;
@@ -436,21 +412,248 @@ class BotsAI {
         };
 
         let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, 20, 50, false);
-        //const bestEval = eval(stockfishMoves[0].eval);
-        console.log('Stockfish moves raw');
-        console.log(stockfishMoves);
 
-        // TODO: Faire un bonus plus grand pour les coups de pions qui vont plus loin
-        // TODO: Faire une fonction qui calcule la distance entre la case de départ et la case d'arrivée
         stockfishMoves = stockfishMoves.map((evalRes) => {
-            const randBonus = Math.max(0.5, Math.random());
+            let randBonus = Math.max(0.1, Math.random()/2);
+            randBonus = randBonus*this.#toolbox.getMoveDistance(evalRes.bestMove);
             if(this.#toolbox.getMovePiece(evalRes.bestMove, game.fen()).type === 'p') {
-                evalRes.eval = (eval(evalRes.eval) + randBonus).toString();
+                evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + randBonus).toString();
+                return evalRes;
             }
+            evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox)).toString();
             return evalRes;
         });
-        console.log('Stockfish moves ajusted');
+
+        stockfishMoves.sort(compareEval);
+
+        console.log('Stockfish moves sorted');
         console.log(stockfishMoves);
+
+        move.notation = stockfishMoves[0].bestMove;
+        move.type = 2;
+
+        return move;
+    }
+
+    /**
+     * Joue le plus possible des fianchettos.
+     */
+    async #makeFianchettoEnjoyerMove(game: Chess): Promise<Move> {
+        console.log('Bot AI: Fianchetto Enjoyer');
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+        const pawnsCases: Square[] = ['b3', 'b6', 'g3', 'g6'];
+        const bishopCases: Square[] = ['b2', 'b7', 'g2', 'g7'];
+
+        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, 20, 50, false);
+
+        stockfishMoves = stockfishMoves.map((evalRes) => {
+            const moveDestination = this.#toolbox.getMoveDestination(evalRes.bestMove);
+            if(!moveDestination){
+                evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox)).toString();
+                return evalRes;
+            }
+            let randBonus = Math.max(0.1, Math.random());
+
+            // Si le coup est un coup de pion sur une case qui permet un fianchetto, on ajoute un bonus
+            if(this.#toolbox.getMovePiece(evalRes.bestMove, game.fen()).type === 'p' && pawnsCases.includes(moveDestination)) {
+                evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + randBonus).toString();
+                return evalRes;
+            }
+
+            // Si le coup est le placement d'un fou en fianchetto, on ajoute un gros bonus
+            if(this.#toolbox.getMovePiece(evalRes.bestMove, game.fen()).type === 'b' && bishopCases.includes(moveDestination)) {
+                evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + 2*randBonus).toString();
+                return evalRes;
+            }
+            evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox)).toString();
+            return evalRes;
+        });
+
+        stockfishMoves.sort(compareEval);
+
+        console.log('Stockfish moves sorted');
+        console.log(stockfishMoves);
+
+        move.notation = stockfishMoves[0].bestMove;
+        move.type = 2;
+
+        return move;
+    }
+
+    /**
+     * Joue des coups très près les uns des autres.
+     */
+    async #makeShyMove(game: Chess): Promise<Move> {
+        console.log('Bot AI: shy');
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+
+        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, 20, 50, false);
+
+        stockfishMoves = stockfishMoves.map((evalRes) => {
+            const moveDistance = this.#toolbox.getMoveDistance(evalRes.bestMove);
+            let randBonus = Math.max(0.5, Math.random());
+            randBonus = -randBonus*moveDistance;
+
+            evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + randBonus).toString();
+            return evalRes;
+        });
+
+        stockfishMoves.sort(compareEval);
+
+        console.log('Stockfish moves sorted');
+        console.log(stockfishMoves);
+
+        move.notation = stockfishMoves[0].bestMove;
+        move.type = 2;
+
+        return move;
+    }
+
+    /**
+     * Joue les pires coups possibles.
+     */
+    async #makeBlunderMove(game: Chess): Promise<Move> {
+        console.log('Bot AI: Blundering');
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+
+        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, 20, 50, false);
+
+        stockfishMoves = stockfishMoves.map((evalRes) => {
+            evalRes.eval = (-evalMove(evalRes, this.#botColor, this.#toolbox)).toString();
+            return evalRes;
+        });
+
+        stockfishMoves.sort(compareEval);
+
+        console.log('Stockfish moves sorted');
+        console.log(stockfishMoves);
+
+        move.notation = stockfishMoves[0].bestMove;
+        move.type = 2;
+
+        return move;
+    }
+
+    /**
+     * Joue les coups dont l'évaluation est la plus proche de 0.
+     */
+    async #makeDrawishMove(game: Chess): Promise<Move> {
+        console.log('Bot AI: Drawish');
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+
+        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, 20, 50, false);
+
+        stockfishMoves = stockfishMoves.map((evalRes) => {
+            let moveEvalMalus = Math.abs(evalMove(evalRes, this.#botColor, this.#toolbox))*10;
+            evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) - moveEvalMalus).toString();
+            return evalRes;
+        });
+
+        stockfishMoves.sort(compareEval);
+
+        console.log('Stockfish moves sorted');
+        console.log(stockfishMoves);
+
+        move.notation = stockfishMoves[0].bestMove;
+        move.type = 2;
+
+        return move;
+    }
+
+    /**
+     * Joue le plus possible des coups de dame, souvent au détriment du développement de ses pièces.
+     */
+    async #makeQueenPlayerMove(game: Chess): Promise<Move> {
+        console.log('Bot AI: Queen Player');
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+        const pawnsCases: Square[] = ['c3', 'c4', 'c5', 'c6', 'e3', 'e4', 'e6', 'e5'];
+
+        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, 20, 50, false);
+
+        stockfishMoves = stockfishMoves.map((evalRes) => {
+            const moveDestination = this.#toolbox.getMoveDestination(evalRes.bestMove);
+            let randBonus = Math.max(0.1, Math.random());
+            if(!moveDestination){
+                evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox)).toString();
+                return evalRes;
+            }
+            
+            if(this.#toolbox.getMovePiece(evalRes.bestMove, game.fen()).type === 'p' && pawnsCases.includes(moveDestination)) {
+                evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + randBonus/2).toString();
+                return evalRes;
+            }
+
+            if(this.#toolbox.getMovePiece(evalRes.bestMove, game.fen()).type === 'q') {
+                evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + randBonus).toString();
+                return evalRes;
+            }
+
+            evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox)).toString();
+            return evalRes;
+        });
+
+        stockfishMoves.sort(compareEval);
+
+        console.log('Stockfish moves sorted');
+        console.log(stockfishMoves);
+
+        move.notation = stockfishMoves[0].bestMove;
+        move.type = 2;
+
+        return move;
+    }
+
+    /**
+     * Aime sacrifier sa dame le plus rapidement possible.
+     */
+    async #makeBotezGambitMove(game: Chess): Promise<Move> {
+        console.log('Bot AI: Botez Gambit');
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+        const pawnsCases: Square[] = ['c3', 'c4', 'c5', 'c6', 'e3', 'e4', 'e6', 'e5'];
+
+        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, 20, 50, false);
+
+        stockfishMoves = stockfishMoves.map((evalRes) => {
+            const moveDestination = this.#toolbox.getMoveDestination(evalRes.bestMove);
+            let randBonus = Math.max(0.1, Math.random());
+            if(!moveDestination){
+                evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox)).toString();
+                return evalRes;
+            }
+            
+            if(this.#toolbox.getMovePiece(evalRes.bestMove, game.fen()).type === 'p' && pawnsCases.includes(moveDestination)) {
+                evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + randBonus/2).toString();
+                return evalRes;
+            }
+
+            if(this.#toolbox.getMovePiece(evalRes.bestMove, game.fen()).type === 'q') {
+                // Si game.get() ne renvoie pas null, alors la dame va sur une case occupée, c'est donc une capture
+                if(game.get(moveDestination)) randBonus = 20;
+                evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + 2*randBonus).toString();
+                return evalRes;
+            }
+
+            evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox)).toString();
+            return evalRes;
+        });
 
         stockfishMoves.sort(compareEval);
 
@@ -477,7 +680,31 @@ class BotsAI {
             case "pawn-pusher":
                 move = await this.#makePawnPusherMove(game);
                 break;
-        
+
+            case "fianchetto-enjoyer":
+                move = await this.#makeFianchettoEnjoyerMove(game);
+                break;
+
+            case "shy":
+                move = await this.#makeShyMove(game);
+                break;
+
+            case "blundering":
+                move = await this.#makeBlunderMove(game);
+                break;
+
+            case "drawish":
+                move = await this.#makeDrawishMove(game);
+                break;
+
+            case "queen-player":
+                move = await this.#makeQueenPlayerMove(game);
+                break;
+
+            case "botez-gambit":
+                move = await this.#makeBotezGambitMove(game);
+                break;
+
             default:
                 move = await this.#makeDefaultMove(game);
                 break;

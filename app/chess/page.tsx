@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 'use client'
 import { useEffect, useRef, useState } from "react";
-import {Chess} from "chess.js";
+import {Chess, Color} from "chess.js";
 import { Chessboard } from "react-chessboard";
 import { Piece, Square } from "react-chessboard/dist/chessboard/types";
 import EvalAndWinrate from "../components/EvalAndWinrate";
@@ -16,7 +16,7 @@ const ChessPage = () => {
     const [game, setGame] = useState(new Chess());
     const engine = useRef<Engine>();
     const botAI = useRef<BotsAI>();
-    const [playerColor, setPlayerColor] = useState('w');
+    const [playerColor, setPlayerColor] = useState<Color>('w');
     const [gameStarted, setGameStarted] = useState(false);
     const [currentTimeout, setCurrentTimeout] = useState<NodeJS.Timeout>();
     const [databaseRating, setDatabaseRating] = useState('Master');
@@ -60,8 +60,9 @@ const ChessPage = () => {
 
     useEffect(() => {
       console.log('New Level : ' + databaseRating);
-      botAI.current = new BotsAI(databaseRating, 'pawn-pusher');
-    }, [databaseRating]);
+      const botColor = playerColor === 'w' ? 'b' : 'w';
+      botAI.current = new BotsAI('botez-gambit', databaseRating, botColor);
+    }, [databaseRating, playerColor]);
 
     // TODO: Problème lors de la promotion d'un pion (promeut automatiquement en cavalier)
     const gameMove = (moveNotation: string, moveType: number) => {

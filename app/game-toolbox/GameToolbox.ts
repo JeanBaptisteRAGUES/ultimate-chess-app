@@ -24,6 +24,49 @@ class GameToolBox {
     }
 
     /**
+     * Prend un coup en entrée et renvoie la distance parcourue par la pièce
+     * @param move Un coup au format Lan (ex: g1f3, e2e4 etc..)
+     * @returns Retourne la distance parcourue par la pièce
+     */
+    getMoveDistance(move: string): number {
+        if(!move.match(/[a-z]\d[a-z]\d/)){
+            console.log('Erreur avec le format du coup');
+            return 0;
+        }
+        const letterDiff = Math.abs(move[0].charCodeAt(0) - move[2].charCodeAt(0));
+        const digitDiff = Math.abs(eval(move[1]) - eval(move[3]))
+        return letterDiff + digitDiff;
+    }
+
+    /**
+     * Prend un coup au format lan en entrée et retourne la case de départ de ce coup.
+     * Ex: g1f3 -> g1
+     * @param move Coup au format lan (ex: g1f3, e2e4 etc..)
+     * @returns Retourne la case de départ (ex: g1, e2 etc..)
+     */
+    getMoveOrigin(move: string): Square | undefined {
+        if(!move.match(/[a-z]\d[a-z]\d/)){
+            console.log('Erreur avec le format du coup');
+            return;
+        }
+        return (move[0] + move[1]) as Square;
+    }
+
+    /**
+     * Prend un coup au format lan en entrée et retourne la case d'arrivée de ce coup.
+     * Ex: g1f3 -> f3
+     * @param move Coup au format lan (ex: g1f3, e2e4 etc..)
+     * @returns Retourne la case de d'arrivée (ex: f3, e4 etc..)
+     */
+    getMoveDestination(move: string): Square | undefined {
+        if(!move.match(/[a-z]\d[a-z]\d/)){
+            console.log('Erreur avec le format du coup');
+            return;
+        }
+        return (move[2] + move[3]) as Square;
+    }
+
+    /**
      * Retourne la valeur de l'échec et mat de l'évaluation passée en paramètre.
      * Ex: 'M5' -> 5
      * @param mateEval string -> ex: 'M5' / '-M5'
@@ -31,7 +74,7 @@ class GameToolBox {
      * @returns Number -> 5 / -5
      */
     getMateValue(mateEval: string, playerColor: Color, mateChar: MateChar): number {
-        const coeff = playerColor === 'w' ? -1 : 1;
+        const coeff = playerColor === 'w' ? 1 : -1;
         return eval(mateEval.replace(mateChar, ''))*coeff;
     }
 

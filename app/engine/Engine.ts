@@ -92,10 +92,10 @@ class Engine {
 
             this.stockfish.onmessage = function(event: any) {
                 if(event.data.includes(`info depth ${depth} seldepth`)){
-                    console.log(event.data);
+                    //console.log(event.data);
                     let evaluationStr: string | null = getEvalFromData(event.data, coeff);
                     let bestMove: string | null = getBestMoveFromData(event.data);
-                    console.log(bestMove + ': ' + evaluationStr);
+                    //console.log(bestMove + ': ' + evaluationStr);
 
                     if(!evaluationStr || !bestMove || !event.data.match(firstEvalMoveRegex)){
                         //console.log(event.data);
@@ -104,7 +104,7 @@ class Engine {
                     }
 
                     if(!bestMoves.some((move) => move.bestMove === bestMove)){
-                        console.log(bestMove + ': ' + evaluationStr);
+                        //console.log(bestMove + ': ' + evaluationStr);
                         bestMoves.push({
                             eval: evaluationStr,
                             bestMove: bestMove
