@@ -8,7 +8,7 @@ import EvalAndWinrate from "../components/EvalAndWinrate";
 import Clock from "../components/Clock";
 import Engine from "../engine/Engine";
 import Link from "next/link";
-import BotsAI, { Move } from "../bots-ai/BotsAI";
+import BotsAI, { Behaviour, Move } from "../bots-ai/BotsAI";
 
 
 const ChessPage = () => {
@@ -20,6 +20,7 @@ const ChessPage = () => {
     const [gameStarted, setGameStarted] = useState(false);
     const [currentTimeout, setCurrentTimeout] = useState<NodeJS.Timeout>();
     const [databaseRating, setDatabaseRating] = useState('Master');
+    const [botBehaviour, setBotBehaviour] = useState<Behaviour>('default');
     const [currentFen, setCurrentFen] = useState('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
     const [winrate, setWinrate] = useState({
       white: 50,
@@ -61,8 +62,8 @@ const ChessPage = () => {
     useEffect(() => {
       console.log('New Level : ' + databaseRating);
       const botColor = playerColor === 'w' ? 'b' : 'w';
-      botAI.current = new BotsAI('castle-destroyer', databaseRating, botColor);
-    }, [databaseRating, playerColor]);
+      botAI.current = new BotsAI(botBehaviour, databaseRating, botColor);
+    }, [botBehaviour, databaseRating, playerColor]);
 
     // TODO: Problème lors de la promotion d'un pion (promeut automatiquement en cavalier)
     const gameMove = (moveNotation: string, moveType: number) => {
@@ -349,6 +350,35 @@ const ChessPage = () => {
         <option value="90+30">90+30</option>
       </select>
 
+    // 'default' | 'pawn-pusher' | 'fianchetto-sniper' | 'shy' | 'blundering' | 'drawish' | 'sacrifice-enjoyer' | 'exchanges-lover' 
+    //| 'exchanges-hater' | 'queen-player' | 'botez-gambit' | 'castle-destroyer' | 'strategy-stranger' | 'openings-master' 
+    //| 'openings-beginner' | 'random-player' | 'copycat' | 'bongcloud' | 'gambit-fanatic' | 'cow-lover' | 'hyper-aggressive';
+    const selectBotBehaviourButton = 
+      <select id="behaviour" onChange={(e) => setBotBehaviour(e.target.value as Behaviour)} value={botBehaviour}>
+        <option value="" >Sélectionnez l'IA du Bot</option>
+        <option value='default' >Default</option>
+        <option value="pawn-pusher" >Pawn Pusher</option>
+        <option value="fianchetto-sniper" >Fianchetto Sniper</option>
+        <option value="shy" >Shy</option>
+        <option value="blundering" >Blundering</option>
+        <option value="drawish" >Drawish</option>
+        <option value="sacrifice-enjoyer" >Sacrifice Enjoyer</option>
+        <option value="exchanges-lover" >Exchanges Lover</option>
+        <option value="exchanges-hater" >Exchanges Hater</option>
+        <option value="queen-player" >Queen Player</option>
+        <option value="botez-gambit" >Botez Gambit</option>
+        <option value="castle-destroyer" >Castle Destroyer</option>
+        <option value="strategy-stranger" >Strategy Stranger</option>
+        <option value="openings-master" >Openings Master</option>
+        <option value="openings-beginner" >Openings Beginner</option>
+        <option value="random-player" >Random Player</option>
+        <option value="copycat" >Copycat</option>
+        <option value="bongcloud" >Bongcloud</option>
+        <option value="gambit-fanatic" >Gambit Fanatic</option>
+        <option value="cow-lover" >Cow Lover</option>
+        <option value="hyper-aggressive" >Hyper Aggressive</option>
+      </select>
+
     const startGameButton = !gameStarted ? 
       <button
         className=" bg-white border rounded cursor-pointer flex flex-none"
@@ -397,6 +427,7 @@ const ChessPage = () => {
     const buttonsComponent =
       <div className="flex justify-center items-center gap-2 w-full h-fit" >
         {resetButton}
+        {selectBotBehaviourButton}
         {selectDifficultyButton}
         {selectTimeControlButton}
         {startGameButton}

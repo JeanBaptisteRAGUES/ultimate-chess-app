@@ -361,6 +361,42 @@ class BotsAI {
         this.#defaultBotParams = initDefaultBotParams(level);
     }
 
+    async #defaultMoveLogic(game: Chess, useDatabase: Boolean, useRandom: Boolean): Promise<Move> {
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+
+        if(useDatabase) {
+            const movesList = this.#toolbox.convertHistorySanToLan(this.#toolbox.convertPgnToHistory(game.pgn()));
+
+            const lichessMove = await makeLichessMove(movesList, this.#botLevel, '');
+            if(lichessMove.type >= 0){
+                this.#lastRandomMove = this.#lastRandomMove-1;
+                return lichessMove;
+            } 
+        }
+
+        const forcedStockfishMove = await makeForcedStockfishMove(this.#defaultBotParams, this.#botColor, game, this.#engine, this.#toolbox);
+        if(forcedStockfishMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return forcedStockfishMove;
+        } 
+
+        if(useRandom && isRandomMovePlayable(this.#defaultBotParams, this.#botLevel, this.#lastRandomMove)) {
+            this.#lastRandomMove = this.#defaultBotParams.randMoveInterval;
+            return makeRandomMove(this.#defaultBotParams.filterLevel, this.#defaultBotParams.securityLvl > 1, game);
+        }
+
+        const stockfishMove = await makeStockfishMove(this.#defaultBotParams, game, this.#engine);
+        if(stockfishMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return stockfishMove;
+        } 
+
+        return move;
+    }
+
     async #makeDefaultMove(game: Chess): Promise<Move> {
         console.log('Bot AI: Default behaviour');
         let move: Move = {
@@ -381,7 +417,6 @@ class BotsAI {
             return forcedStockfishMove;
         } 
 
-        // TODO: Vérifier que les coups aléatoires soient bien joués comme attendu
         if(isRandomMovePlayable(this.#defaultBotParams, this.#botLevel, this.#lastRandomMove)) {
             this.#lastRandomMove = this.#defaultBotParams.randMoveInterval;
             return makeRandomMove(this.#defaultBotParams.filterLevel, this.#defaultBotParams.securityLvl > 1, game);
@@ -396,15 +431,15 @@ class BotsAI {
         return move;
     }
 
-    /**
-     * Joue le plus possible des coups de pions, souvent au détriment du développement de ses pièces.
-     */
-    async #makePawnPusherMove(game: Chess): Promise<Move> {
-        console.log('Bot AI: Pawn Pusher');
+    async #pawnPusherLogic(game: Chess): Promise<Move> {
         let move: Move = {
             notation: '',
             type: -1,
         };
+
+        if(game.history().length > 20) {
+            return move;
+        }
 
         let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, 20, 50, false);
 
@@ -431,18 +466,44 @@ class BotsAI {
     }
 
     /**
-     * Joue le plus possible des fianchettos.
+     * Joue le plus possible des coups de pions, souvent au détriment du développement de ses pièces.
      */
-    async #makeFianchettoEnjoyerMove(game: Chess): Promise<Move> {
-        console.log('Bot AI: Fianchetto Sniper');
+    async #makePawnPusherMove(game: Chess): Promise<Move> {
+        console.log('Bot AI: Pawn Pusher');
         let move: Move = {
             notation: '',
             type: -1,
         };
+
+        const gimmickMove = await this.#pawnPusherLogic(game);
+        if(gimmickMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return gimmickMove;
+        } 
+
+        const defaultMove = await this.#defaultMoveLogic(game, false, true);
+        if(defaultMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return defaultMove;
+        }
+
+        return move;
+    }
+
+    async #fianchettoEnjoyerLogic(game: Chess): Promise<Move> {
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+
+        if(game.history().length > 10) {
+            return move;
+        }
+
         const pawnsCases: Square[] = ['b3', 'b6', 'g3', 'g6'];
         const bishopCases: Square[] = ['b2', 'b7', 'g2', 'g7'];
 
-        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, 20, 50, false);
+        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, this.#defaultBotParams.skillValue, 50, false);
 
         stockfishMoves = stockfishMoves.map((evalRes) => {
             const moveDestination = this.#toolbox.getMoveDestination(evalRes.bestMove);
@@ -479,16 +540,41 @@ class BotsAI {
     }
 
     /**
-     * Joue des coups très près les uns des autres.
+     * Joue le plus possible des fianchettos.
      */
-    async #makeShyMove(game: Chess): Promise<Move> {
-        console.log('Bot AI: shy');
+    async #makeFianchettoEnjoyerMove(game: Chess): Promise<Move> {
+        console.log('Bot AI: Fianchetto Sniper');
         let move: Move = {
             notation: '',
             type: -1,
         };
 
-        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, 20, 50, false);
+        const gimmickMove = await this.#fianchettoEnjoyerLogic(game);
+        if(gimmickMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return gimmickMove;
+        }
+
+        const defaultMove = await this.#defaultMoveLogic(game, true, true);
+        if(defaultMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return defaultMove;
+        }
+
+        return move;
+    }
+
+    async #shyLogic(game: Chess): Promise<Move> {
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+
+        if(game.history().length > 20) {
+            return move;
+        }
+
+        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, this.#defaultBotParams.skillValue, 50, false);
 
         stockfishMoves = stockfishMoves.map((evalRes) => {
             const moveDistance = this.#toolbox.getMoveDistance(evalRes.bestMove);
@@ -511,10 +597,31 @@ class BotsAI {
     }
 
     /**
-     * Joue les pires coups possibles.
+     * Joue des coups très près les uns des autres.
      */
-    async #makeBlunderMove(game: Chess): Promise<Move> {
-        console.log('Bot AI: Blundering');
+    async #makeShyMove(game: Chess): Promise<Move> {
+        console.log('Bot AI: shy');
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+
+        const gimmickMove = await this.#shyLogic(game);
+        if(gimmickMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return gimmickMove;
+        }
+
+        const defaultMove = await this.#defaultMoveLogic(game, true, true);
+        if(defaultMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return defaultMove;
+        }
+
+        return move;
+    }
+
+    async #blunderLogic(game: Chess): Promise<Move> {
         let move: Move = {
             notation: '',
             type: -1,
@@ -539,14 +646,33 @@ class BotsAI {
     }
 
     /**
-     * Joue les coups dont l'évaluation est la plus proche de 0.
+     * Joue les pires coups possibles.
      */
-    async #makeDrawishMove(game: Chess): Promise<Move> {
-        console.log('Bot AI: Drawish');
+    async #makeBlunderMove(game: Chess): Promise<Move> {
+        console.log('Bot AI: Blundering');
         let move: Move = {
             notation: '',
             type: -1,
         };
+
+        const gimmickMove = await this.#blunderLogic(game);
+        if(gimmickMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return gimmickMove;
+        }
+
+        return move;
+    }
+
+    async #drawishLogic(game: Chess): Promise<Move> {
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+
+        if(game.history().length < 1 || game.history().length > 4) {
+            return move;
+        }
 
         let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, 20, 50, false);
 
@@ -568,17 +694,37 @@ class BotsAI {
     }
 
     /**
-     * Joue le plus possible des coups de dame, souvent au détriment du développement de ses pièces.
+     * Joue les coups dont l'évaluation est la plus proche de 0.
      */
-    async #makeQueenPlayerMove(game: Chess): Promise<Move> {
-        console.log('Bot AI: Queen Player');
+    async #makeDrawishMove(game: Chess): Promise<Move> {
+        console.log('Bot AI: Drawish');
         let move: Move = {
             notation: '',
             type: -1,
         };
+
+        const gimmickMove = await this.#drawishLogic(game);
+        if(gimmickMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return gimmickMove;
+        }
+
+        return move;
+    }
+
+    async #queenPlayerLogic(game: Chess): Promise<Move> {
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+
+        if(game.history().length > 20) {
+            return move;
+        }
+
         const pawnsCases: Square[] = ['c3', 'c4', 'c5', 'c6', 'e3', 'e4', 'e6', 'e5'];
 
-        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, 20, 50, false);
+        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, this.#defaultBotParams.skillValue, 50, false);
 
         stockfishMoves = stockfishMoves.map((evalRes) => {
             const moveDestination = this.#toolbox.getMoveDestination(evalRes.bestMove);
@@ -614,14 +760,40 @@ class BotsAI {
     }
 
     /**
-     * Aime sacrifier sa dame le plus rapidement possible.
+     * Joue le plus possible des coups de dame, souvent au détriment du développement de ses pièces.
      */
-    async #makeBotezGambitMove(game: Chess): Promise<Move> {
-        console.log('Bot AI: Botez Gambit');
+    async #makeQueenPlayerMove(game: Chess): Promise<Move> {
+        console.log('Bot AI: Queen Player');
         let move: Move = {
             notation: '',
             type: -1,
         };
+
+        const gimmickMove = await this.#queenPlayerLogic(game);
+        if(gimmickMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return gimmickMove;
+        }
+
+        const defaultMove = await this.#defaultMoveLogic(game, false, true);
+        if(defaultMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return defaultMove;
+        }
+
+        return move;
+    }
+
+    async #botezGambitLogic(game: Chess): Promise<Move> {
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+
+        if(game.history().length > 40) {
+            return move;
+        }
+
         const pawnsCases: Square[] = ['c3', 'c4', 'c5', 'c6', 'e3', 'e4', 'e6', 'e5'];
 
         let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, 20, 50, false);
@@ -662,10 +834,31 @@ class BotsAI {
     }
 
     /**
-     * Aime sortir l'adversaire de la théorie en jouant des Gambits dans l'ouverture.
+     * Aime sacrifier sa dame le plus rapidement possible.
      */
-    async #makeGambitFanaticMove(game: Chess): Promise<Move> {
-        console.log('Bot AI: Gambit Fanatic');
+    async #makeBotezGambitMove(game: Chess): Promise<Move> {
+        console.log('Bot AI: Botez Gambit');
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+
+        const gimmickMove = await this.#botezGambitLogic(game);
+        if(gimmickMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return gimmickMove;
+        }
+
+        const defaultMove = await this.#defaultMoveLogic(game, false, true);
+        if(defaultMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return defaultMove;
+        }
+
+        return move;
+    }
+
+    async #gambitFanaticLogic(game: Chess): Promise<Move> {
         let move: Move = {
             notation: '',
             type: -1,
@@ -674,8 +867,6 @@ class BotsAI {
         let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, 20, 50, false);
         console.log(game.history({verbose: true}));
         if(game.history().length < 1 || game.history().length > 4) {
-            move.notation = stockfishMoves[0].bestMove;
-            move.type = 2;
             return move;
         }
         
@@ -710,22 +901,48 @@ class BotsAI {
     }
 
     /**
-     * Aime copier les coups de l'adversaire.
+     * Aime sortir l'adversaire de la théorie en jouant des Gambits dans l'ouverture.
      */
-    async #makeCopycatMove(game: Chess): Promise<Move> {
-        console.log('Bot AI: Copycat');
+    async #makeGambitFanaticMove(game: Chess): Promise<Move> {
+        console.log('Bot AI: Gambit Fanatic');
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+        
+        const gimmickMove = await this.#gambitFanaticLogic(game);
+        if(gimmickMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return gimmickMove;
+        } 
+
+        const defaultMove = await this.#defaultMoveLogic(game, true, true);
+        if(defaultMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return defaultMove;
+        }
+
+        return move;
+    }
+
+    async #copycatLogic(game: Chess): Promise<Move> {
         let move: Move = {
             notation: '',
             type: -1,
         };
 
-        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, 20, 50, false);
-        console.log(game.history({verbose: true}));
+        if(game.history().length > 20) {
+            return move;
+        }
+
         if(game.history().length < 1) {
             move.notation = 'g1f3';
             move.type = 2;
             return move;
         }
+
+        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, 20, 50, false);
+        
         console.log('Game history length: ' + game.history().length);
         const lastOpponentMove = game.history({verbose: true})[game.history().length-1].lan;
         const lastOpponentPiece = game.history({verbose: true})[game.history().length-1].piece;
@@ -760,14 +977,39 @@ class BotsAI {
     }
 
     /**
-     * Joue le bongcloud.
+     * Aime copier les coups de l'adversaire.
      */
-    async #makeBongcloudMove(game: Chess): Promise<Move> {
-        console.log('Bot AI: Bongcloud');
+    async #makeCopycatMove(game: Chess): Promise<Move> {
+        console.log('Bot AI: Copycat');
         let move: Move = {
             notation: '',
             type: -1,
         };
+
+        const gimmickMove = await this.#copycatLogic(game);
+        if(gimmickMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return gimmickMove;
+        }
+
+        const defaultMove = await this.#defaultMoveLogic(game, true, true);
+        if(defaultMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return defaultMove;
+        }
+
+        return move;
+    }
+
+    async #bongcloudLogic(game: Chess): Promise<Move> {
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+
+        if(game.history().length > 10) {
+            return move;
+        }
 
         let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, 20, 50, false);
         console.log(game.history({verbose: true}));
@@ -811,16 +1053,37 @@ class BotsAI {
     }
 
     /**
-     * Adore échanger les pièces.
+     * Joue le bongcloud.
      */
-    async #makeExchangesLoverMove(game: Chess): Promise<Move> {
-        console.log('Bot AI: Exchange Lover');
+    async #makeBongcloudMove(game: Chess): Promise<Move> {
+        console.log('Bot AI: Bongcloud');
         let move: Move = {
             notation: '',
             type: -1,
         };
 
-        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, 20, 50, false);
+        const gimmickMove = await this.#bongcloudLogic(game);
+        if(gimmickMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return gimmickMove;
+        }
+
+        const defaultMove = await this.#defaultMoveLogic(game, true, true);
+        if(defaultMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return defaultMove;
+        }
+
+        return move;
+    }
+
+    async #exchangesLoverLogic(game: Chess): Promise<Move> {
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+
+        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, this.#defaultBotParams.skillValue, 50, false);
 
         stockfishMoves = stockfishMoves.map((evalRes) => {
             const moveDestination = this.#toolbox.getMoveDestination(evalRes.bestMove);
@@ -852,16 +1115,31 @@ class BotsAI {
     }
 
     /**
-     * Évite les échanges autant que possible.
+     * Adore échanger les pièces.
      */
-    async #makeExchangesHaterMove(game: Chess): Promise<Move> {
-        console.log('Bot AI: Exchange Hater');
+    async #makeExchangesLoverMove(game: Chess): Promise<Move> {
+        console.log('Bot AI: Exchange Lover');
         let move: Move = {
             notation: '',
             type: -1,
         };
 
-        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, 20, 50, false);
+        const gimmickMove = await this.#exchangesLoverLogic(game);
+        if(gimmickMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return gimmickMove;
+        }
+
+        return move;
+    }
+
+    async #exchangesHaterLogic(game: Chess): Promise<Move> {
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+
+        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, this.#defaultBotParams.skillValue, 50, false);
 
         stockfishMoves = stockfishMoves.map((evalRes) => {
             const moveDestination = this.#toolbox.getMoveDestination(evalRes.bestMove);
@@ -893,14 +1171,34 @@ class BotsAI {
     }
 
     /**
-     * Joue la cow opening.
+     * Évite les échanges autant que possible.
      */
-    async #makeCowLoverMove(game: Chess): Promise<Move> {
-        console.log('Bot AI: Cow Lover');
+    async #makeExchangesHaterMove(game: Chess): Promise<Move> {
+        console.log('Bot AI: Exchange Hater');
         let move: Move = {
             notation: '',
             type: -1,
         };
+
+        const gimmickMove = await this.#exchangesHaterLogic(game);
+        if(gimmickMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return gimmickMove;
+        }
+
+        return move;
+    }
+
+    async #cowLoverLogic(game: Chess): Promise<Move> {
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+
+        if(game.history().length > 16) {
+            return move;
+        }
+
         const pawnsCases: Square[] = ['e3', 'e6', 'd3', 'd6'];
         const knightCases: Square[] = ['e2', 'e7', 'd2', 'd7', 'b3', 'b6', 'g3', 'g6'];
         const badStartingCases: Square[] = ['b3', 'b6', 'g3', 'g6'];
@@ -944,6 +1242,31 @@ class BotsAI {
     }
 
     /**
+     * Joue la cow opening.
+     */
+    async #makeCowLoverMove(game: Chess): Promise<Move> {
+        console.log('Bot AI: Cow Lover');
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+
+        const gimmickMove = await this.#cowLoverLogic(game);
+        if(gimmickMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return gimmickMove;
+        }
+
+        const defaultMove = await this.#defaultMoveLogic(game, false, true);
+        if(defaultMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return defaultMove;
+        }
+
+        return move;
+    }
+
+    /**
      * Joue très bien les ouvertures, mais assez mal le reste de la partie.
      */
     async #makeOpeningsMasterMove(game: Chess): Promise<Move> {
@@ -957,7 +1280,7 @@ class BotsAI {
             randMoveInterval: 3, 
             filterLevel: 0,
             securityLvl: 0,
-            skillValue: 0,
+            skillValue: 2,
             depth: 12,
             playForcedMate: 0,
         }
@@ -1016,18 +1339,17 @@ class BotsAI {
         return move;
     }
 
-    /**
-     * Attend que l'adversaire soit roqué pour roquer du côté opposé puis lui envoyer une marée de pions sur son roque.
-     */
-    // TODO: À améliorer
-    async #makeCastleDestroyerMove(game: Chess): Promise<Move> {
-        console.log('Bot AI: Castle Destroyer');
+    async #castleDestroyerLogic(game: Chess): Promise<Move> {
         let move: Move = {
             notation: '',
             type: -1,
         };
 
-        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, 20, 50, false);
+        if(game.history().length > 40) {
+            return move;
+        }
+
+        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, Math.max(10, this.#defaultBotParams.skillValue), 50, false);
         const opponentKingColor: Color = this.#botColor === 'w' ? 'b' : 'w';
         const kingsideCastleFiles = ['f', 'g', 'h'];
         const queensideCastleFiles = ['a', 'b', 'c', 'd'];
@@ -1069,6 +1391,10 @@ class BotsAI {
                     return evalRes;
                 }
                 if(botHasCastled && this.#toolbox.getMovePiece(evalRes.bestMove, game.fen()).type === 'p') {
+                    if(evalRes.bestMove.charAt(0) === 'd' || evalRes.bestMove.charAt(0) === 'e'){
+                        evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + 0.3).toString();
+                        return evalRes;
+                    }
                     if(opponentCastledKingside && kingsideCastleFiles.includes(evalRes.bestMove.charAt(0))){
                         randBonus = randBonus * this.#toolbox.getMoveDistance(evalRes.bestMove);
                         evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + randBonus).toString();
@@ -1085,9 +1411,9 @@ class BotsAI {
             // Si le bot n'a pas encore roqué, il cherche à développer ses pièces pour roquer
             if(!botHasCastled && this.#toolbox.getMovePiece(evalRes.bestMove, game.fen()).type !== 'p') {
                 console.log(evalRes.bestMove + ': ' + eval(evalRes.bestMove.charAt(1)));
-                if(eval(evalRes.bestMove.charAt(1)) === 1 || eval(evalRes.bestMove.charAt(1)) === 8){
+                if((eval(evalRes.bestMove.charAt(1)) === 1 && eval(evalRes.bestMove.charAt(3)) !== 1) || (eval(evalRes.bestMove.charAt(1)) === 8 && eval(evalRes.bestMove.charAt(3)) !== 8)){
                     randBonus = randBonus * this.#toolbox.getMoveDistance(evalRes.bestMove);
-                    evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + 0.1).toString();
+                    evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + 0.2).toString();
                     return evalRes;
                 }
             }
@@ -1107,6 +1433,33 @@ class BotsAI {
         return move;
     }
 
+    /**
+     * Attend que l'adversaire soit roqué pour roquer du côté opposé puis lui envoyer une marée de pions sur son roque.
+     */
+    // TODO: À améliorer
+    async #makeCastleDestroyerMove(game: Chess): Promise<Move> {
+        console.log('Bot AI: Castle Destroyer');
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+
+        const gimmickMove = await this.#castleDestroyerLogic(game);
+        if(gimmickMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return gimmickMove;
+        }
+
+        const defaultMove = await this.#defaultMoveLogic(game, false, true);
+        if(defaultMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return defaultMove;
+        }
+
+        return move;
+    }
+
+    // TODO: Choisir le behaviour directement puis l'interface utilisateur
     async makeMove(game: Chess): Promise<Move> {
         let move: Move = {
             notation: '',
