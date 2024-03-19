@@ -28,10 +28,7 @@ import { useEffect, useRef } from "react";
 /* TODO: Un bot qui détériore forcément sa position à chaque coup tant qu'on joue des coups solides, mais joue le meilleur coup si
  *       on blunder. Un fois la blunder passée, si on ne reblunder pas, le bot recommence à détériorer sa position.
  */
-// TODO: Un bot qui joue très bien l'ouverture mais pas très bien le milieu de jeu et les finales
-// TODO: Un bot qui joue mal l'ouverture mais plutôt bien le milieu de jeu et les finales
 // TODO: Un bot qui joue les meilleurs coups mais à une profondeur très faible (Ne semble pas marcher)
-// TODO: Un bot qui ne fait que des coups aléatoires
 // TODO: Un bot hyper agressif: mélange de gambit + sacrifice sur le roque
 
 export type Move = {
@@ -304,7 +301,8 @@ async function makeStockfishMove(botParams: DefaultBotParams, game: Chess, engin
         type: -1
     }
 
-    const stockfishRes = await engine.findBestMove(game.fen(), botParams.skillValue, botParams.depth);
+    const stockfishRes = await engine.findBestMove(game.fen(), botParams.depth, botParams.skillValue);
+    console.log(stockfishRes);
     stockfishMove.notation = stockfishRes;
     stockfishMove.type = 2;
 
@@ -945,6 +943,170 @@ class BotsAI {
         return move;
     }
 
+    /**
+     * Joue très bien les ouvertures, mais assez mal le reste de la partie.
+     */
+    async #makeOpeningsMasterMove(game: Chess): Promise<Move> {
+        console.log('Bot AI: Openings Master');
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+        const openingsMasterParams: DefaultBotParams = {
+            randMoveChance: 20, 
+            randMoveInterval: 3, 
+            filterLevel: 0,
+            securityLvl: 0,
+            skillValue: 0,
+            depth: 12,
+            playForcedMate: 0,
+        }
+        const movesList = this.#toolbox.convertHistorySanToLan(this.#toolbox.convertPgnToHistory(game.pgn()));
+
+        const lichessMove = await makeLichessMove(movesList, 'Master', '');
+        if(lichessMove.type >= 0){
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return lichessMove;
+        }
+
+        const stockfishMove = await makeStockfishMove(openingsMasterParams, game, this.#engine);
+        console.log(stockfishMove);
+        if(stockfishMove.type >= 0) {
+            //this.#lastRandomMove = this.#lastRandomMove-1;
+            return stockfishMove;
+        } 
+
+        return move;
+    }
+
+    /**
+     * Joue très mal les ouvertures, mais assez bien le reste de la partie.
+     */
+    async #makeOpeningsBeginnerMove(game: Chess): Promise<Move> {
+        console.log('Bot AI: Openings Beginner');
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+        const openingsBeginnerParams: DefaultBotParams = {
+            randMoveChance: 3, 
+            randMoveInterval: 15, 
+            filterLevel: 3,
+            securityLvl: 2,
+            skillValue: 10,
+            depth: 12,
+            playForcedMate: 3,
+        }
+
+        const movesList = this.#toolbox.convertHistorySanToLan(this.#toolbox.convertPgnToHistory(game.pgn()));
+
+        const lichessMove = await makeLichessMove(movesList, 'Beginner', '');
+        if(lichessMove.type >= 0){
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return lichessMove;
+        }
+
+        const stockfishMove = await makeStockfishMove(openingsBeginnerParams, game, this.#engine);
+        console.log(stockfishMove);
+        if(stockfishMove.type >= 0) {
+            //this.#lastRandomMove = this.#lastRandomMove-1;
+            return stockfishMove;
+        } 
+
+        return move;
+    }
+
+    /**
+     * Attend que l'adversaire soit roqué pour roquer du côté opposé puis lui envoyer une marée de pions sur son roque.
+     */
+    // TODO: À améliorer
+    async #makeCastleDestroyerMove(game: Chess): Promise<Move> {
+        console.log('Bot AI: Castle Destroyer');
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+
+        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, 20, 50, false);
+        const opponentKingColor: Color = this.#botColor === 'w' ? 'b' : 'w';
+        const kingsideCastleFiles = ['f', 'g', 'h'];
+        const queensideCastleFiles = ['a', 'b', 'c', 'd'];
+
+        const kingsideCastleMoves = ['e1g1', 'e8g8'];
+        const queensideCastleMoves = ['e1c1', 'e8c8'];
+        const castleMoves = kingsideCastleMoves.concat(queensideCastleMoves);
+
+        let opponentCastledKingside = kingsideCastleFiles.includes(this.#toolbox.getKingSquare(game.fen(), opponentKingColor).charAt(0));
+        let opponentCastledQueenside = queensideCastleFiles.includes(this.#toolbox.getKingSquare(game.fen(), opponentKingColor).charAt(0));
+        let opponentHasCastled = opponentCastledKingside || opponentCastledQueenside;
+        let botHasCastled = this.#toolbox.getKingSquare(game.fen(), this.#botColor).charAt(0) !== 'e';
+        console.log("L'adversaire a fait un petit roque: " + opponentCastledKingside);
+        console.log("L'adversaire a fait un grand roque: " + opponentCastledQueenside);
+
+        stockfishMoves = stockfishMoves.map((evalRes) => {
+            let randBonus = Math.max(0.5, Math.random());
+
+            if(!opponentHasCastled){
+                if(castleMoves.includes(evalRes.bestMove)) {
+                    evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) - 2).toString();
+                    return evalRes;
+                }
+            }else{
+                if(opponentCastledKingside && queensideCastleMoves.includes(evalRes.bestMove)){
+                    evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + 3).toString();
+                    return evalRes;
+                }
+                if(opponentCastledKingside && kingsideCastleMoves.includes(evalRes.bestMove)){
+                    evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) - 2).toString();
+                    return evalRes;
+                }
+                if(opponentCastledQueenside && kingsideCastleMoves.includes(evalRes.bestMove)){
+                    evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + 3).toString();
+                    return evalRes;
+                }
+                if(opponentCastledQueenside && queensideCastleMoves.includes(evalRes.bestMove)){
+                    evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) - 2).toString();
+                    return evalRes;
+                }
+                if(botHasCastled && this.#toolbox.getMovePiece(evalRes.bestMove, game.fen()).type === 'p') {
+                    if(opponentCastledKingside && kingsideCastleFiles.includes(evalRes.bestMove.charAt(0))){
+                        randBonus = randBonus * this.#toolbox.getMoveDistance(evalRes.bestMove);
+                        evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + randBonus).toString();
+                        return evalRes;
+                    }
+                    if(opponentCastledQueenside && queensideCastleFiles.includes(evalRes.bestMove.charAt(0))){
+                        randBonus = randBonus * this.#toolbox.getMoveDistance(evalRes.bestMove);
+                        evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + randBonus).toString();
+                        return evalRes;
+                    }
+                }
+            }
+
+            // Si le bot n'a pas encore roqué, il cherche à développer ses pièces pour roquer
+            if(!botHasCastled && this.#toolbox.getMovePiece(evalRes.bestMove, game.fen()).type !== 'p') {
+                console.log(evalRes.bestMove + ': ' + eval(evalRes.bestMove.charAt(1)));
+                if(eval(evalRes.bestMove.charAt(1)) === 1 || eval(evalRes.bestMove.charAt(1)) === 8){
+                    randBonus = randBonus * this.#toolbox.getMoveDistance(evalRes.bestMove);
+                    evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + 0.1).toString();
+                    return evalRes;
+                }
+            }
+            
+            evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox)).toString();
+            return evalRes;
+        });
+
+        stockfishMoves.sort(compareEval);
+
+        console.log('Stockfish moves sorted');
+        console.log(stockfishMoves);
+
+        move.notation = stockfishMoves[0].bestMove;
+        move.type = 2;
+
+        return move;
+    }
+
     async makeMove(game: Chess): Promise<Move> {
         let move: Move = {
             notation: '',
@@ -1010,6 +1172,18 @@ class BotsAI {
 
             case 'random-player':
                 move = makeRandomMove(2, true, game);
+                break;
+
+            case 'openings-master':
+                move = await this.#makeOpeningsMasterMove(game);
+                break;
+
+            case 'openings-beginner':
+                move = await this.#makeOpeningsBeginnerMove(game);
+                break;
+
+            case 'castle-destroyer':
+                move = await this.#makeCastleDestroyerMove(game);
                 break;
 
             default:

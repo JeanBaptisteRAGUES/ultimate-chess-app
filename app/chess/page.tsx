@@ -61,7 +61,7 @@ const ChessPage = () => {
     useEffect(() => {
       console.log('New Level : ' + databaseRating);
       const botColor = playerColor === 'w' ? 'b' : 'w';
-      botAI.current = new BotsAI('random-player', databaseRating, botColor);
+      botAI.current = new BotsAI('castle-destroyer', databaseRating, botColor);
     }, [databaseRating, playerColor]);
 
     // TODO: Problème lors de la promotion d'un pion (promeut automatiquement en cavalier)

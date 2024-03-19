@@ -89,6 +89,19 @@ class GameToolBox {
         return this.game.get(move.slice(0, 2) as any as Square);
     }
 
+    getKingSquare(fen: string, kingColor: Color): Square {
+        this.game.load(fen);
+        let kingSquare: Square = 'e1';
+
+        this.game.board().forEach(rank => {
+            rank.forEach(square => {
+                if(square?.type === 'k' && square.color === kingColor) kingSquare = square.square;
+            })
+        });
+
+        return kingSquare;
+    }
+
     // uci ~= lan (long algebric notation), 'f1c4' -> 'Bc4'
     /**
      * Lan (Long Algebric Notation) vers San (Short Algebric Notation)

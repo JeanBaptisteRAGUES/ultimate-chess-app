@@ -61,6 +61,7 @@ class Engine {
         return new Promise((resolve, reject) => {
             this.stockfish.postMessage(`position fen ${fen}`);
             this.stockfish.postMessage(`setoption name Skill Level value ${skillValue}`);
+            this.stockfish.postMessage(`setoption name MultiPv value 1`);
             this.stockfish.postMessage(`go depth ${depth}`);
 
             this.stockfish.onmessage = function(event: any) {
