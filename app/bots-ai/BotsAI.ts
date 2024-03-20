@@ -670,10 +670,6 @@ class BotsAI {
             type: -1,
         };
 
-        if(game.history().length < 1 || game.history().length > 4) {
-            return move;
-        }
-
         let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, 20, 50, false);
 
         stockfishMoves = stockfishMoves.map((evalRes) => {
