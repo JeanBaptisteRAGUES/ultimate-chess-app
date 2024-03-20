@@ -9,9 +9,13 @@ import Clock from "../components/Clock";
 import Engine from "../engine/Engine";
 import Link from "next/link";
 import BotsAI, { Behaviour, Move } from "../bots-ai/BotsAI";
+import { useSearchParams } from "next/navigation";
 
 
 const ChessPage = () => {
+    const searchParams = useSearchParams();
+    const databaseRating = searchParams.get('difficulty') || 'Master';
+    const botBehaviour: Behaviour = searchParams.get('behaviour') as Behaviour || 'default';
     const gameActive = useRef(true);
     const [game, setGame] = useState(new Chess());
     const engine = useRef<Engine>();
@@ -19,8 +23,8 @@ const ChessPage = () => {
     const [playerColor, setPlayerColor] = useState<Color>('w');
     const [gameStarted, setGameStarted] = useState(false);
     const [currentTimeout, setCurrentTimeout] = useState<NodeJS.Timeout>();
-    const [databaseRating, setDatabaseRating] = useState('Master');
-    const [botBehaviour, setBotBehaviour] = useState<Behaviour>('default');
+    //const [databaseRating, setDatabaseRating] = useState('Master');
+    //const [botBehaviour, setBotBehaviour] = useState<Behaviour>('default');
     const [currentFen, setCurrentFen] = useState('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
     const [winrate, setWinrate] = useState({
       white: 50,
@@ -57,13 +61,17 @@ const ChessPage = () => {
     useEffect(() => {
         engine.current = new Engine();
         engine.current.init();
+        const botColor = playerColor === 'w' ? 'b' : 'w';
+        botAI.current = new BotsAI(botBehaviour, databaseRating, botColor);
+        console.log("Difficulty: " + databaseRating);
+        console.log("Bot Behaviour: " + botBehaviour);
     }, []);
 
     useEffect(() => {
       console.log('New Level : ' + databaseRating);
       const botColor = playerColor === 'w' ? 'b' : 'w';
       botAI.current = new BotsAI(botBehaviour, databaseRating, botColor);
-    }, [botBehaviour, databaseRating, playerColor]);
+    }, [playerColor]);
 
     // TODO: Problème lors de la promotion d'un pion (promeut automatiquement en cavalier)
     const gameMove = (moveNotation: string, moveType: number) => {
@@ -273,14 +281,19 @@ const ChessPage = () => {
       {"Niveau de l adversaire: " + databaseRating}
     </h4>
 
-    const pgnComponent =
-      <div className=" text-white w-1/4 h-full flex flex-col flex-wrap">
+    const pgnComponentDesktop =
+      <div className=" text-white w-1/4 hidden h-full md:flex flex-col flex-wrap">
+        {gamePGN()}
+      </div>
+    
+    const pgnComponentSmartphone =
+      <div className=" text-white overflow-y-auto w-full md:hidden h-full flex flex-col flex-wrap mt-10">
         {gamePGN()}
       </div>
 
     // TODO: Problème d'horloge lorsqu'on switch de position, le temps défile pour le mauvais joueur
     const boardComponent =
-      <div className=" flex flex-col justify-center items-center h-[500px] w-[500px] my-10" >
+      <div className=" flex flex-col justify-center items-center h-[300px] md:h-[500px] w-[95vw] md:w-[500px] my-10" >
           <Clock 
             game={game} 
             turnColor={game.turn()} 
@@ -326,7 +339,7 @@ const ChessPage = () => {
       reset
     </button>
 
-    const selectDifficultyButton = 
+    /* const selectDifficultyButton = 
       <select id="rating" onChange={(e) => setDatabaseRating(e.target.value)} value={databaseRating}>
         <option value="" >Sélectionnez un niveau</option>
         <option value="Beginner" >Débutant</option>
@@ -335,7 +348,7 @@ const ChessPage = () => {
         <option value="Advanced" >Avancé</option>
         <option value="Master" >Maître</option>
         <option value="Maximum" >Maximum</option>
-      </select>
+      </select> */
 
     const selectTimeControlButton = 
       <select id='time-control' onChange={(e) => setTimeControl(e.target.value)} value={timeControl}>
@@ -353,7 +366,7 @@ const ChessPage = () => {
     // 'default' | 'pawn-pusher' | 'fianchetto-sniper' | 'shy' | 'blundering' | 'drawish' | 'sacrifice-enjoyer' | 'exchanges-lover' 
     //| 'exchanges-hater' | 'queen-player' | 'botez-gambit' | 'castle-destroyer' | 'strategy-stranger' | 'openings-master' 
     //| 'openings-beginner' | 'random-player' | 'copycat' | 'bongcloud' | 'gambit-fanatic' | 'cow-lover' | 'hyper-aggressive';
-    const selectBotBehaviourButton = 
+    /* const selectBotBehaviourButton = 
       <select id="behaviour" onChange={(e) => setBotBehaviour(e.target.value as Behaviour)} value={botBehaviour}>
         <option value="" >Sélectionnez l'IA du Bot</option>
         <option value='default' >Default</option>
@@ -377,7 +390,7 @@ const ChessPage = () => {
         <option value="gambit-fanatic" >Gambit Fanatic</option>
         <option value="cow-lover" >Cow Lover</option>
         <option value="hyper-aggressive" >Hyper Aggressive</option>
-      </select>
+      </select> */
 
     const startGameButton = !gameStarted ? 
       <button
@@ -425,14 +438,14 @@ const ChessPage = () => {
       </Link>
 
     const buttonsComponent =
-      <div className="flex justify-center items-center gap-2 w-full h-fit" >
-        {resetButton}
-        {selectBotBehaviourButton}
-        {selectDifficultyButton}
+      <div className="flex justify-center mt-10 md:mt-0 items-center gap-2 w-full h-fit" >
+        {/* resetButton */}
+        {/* selectBotBehaviourButton */}
+        {/* selectDifficultyButton */}
         {selectTimeControlButton}
         {startGameButton}
         {switchButton}
-        {analysisButton}
+        {/* analysisButton */}
         {
           //TODO: faire un bouton 'hint' / 'indice'
         }
@@ -455,15 +468,16 @@ const ChessPage = () => {
       </div>
 
     const gameContainer =
-      <div className="flex flex-row justify-center items-center w-1/2 h-full pl-5" >
+      <div className="flex flex-row justify-center items-center w-full md:w-1/2 h-full md:pl-5" >
         {gameComponent}
       </div>
 
     return (
-      <div className="flex flex-row justify-stretch items-start bg-cyan-900 h-screen w-full overflow-auto" >
-          {pgnComponent}
+      <div className="flex flex-col md:flex-row justify-start md:justify-stretch items-center md:items-start bg-cyan-900 h-screen w-full overflow-auto" >
+          {pgnComponentDesktop}
           {gameContainer}
           {gameOverWindow}
+          {pgnComponentSmartphone}
       </div>
     )
 }

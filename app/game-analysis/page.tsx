@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Engine from "../engine/Engine";
 import GameToolBox from "../game-toolbox/GameToolbox";
 import { AnalysisChart } from "../components/AnalysisChart";
@@ -9,6 +9,7 @@ import { Chess } from "chess.js";
 import { Chessboard } from "react-chessboard";
 import { Piece, Square } from "react-chessboard/dist/chessboard/types";
 import EvalAndWinrate from "../components/EvalAndWinrate";
+import { useSearchParams } from "next/navigation";
 
 type EvalResult = {
     bestMove: string,
@@ -18,18 +19,15 @@ type EvalResult = {
     quality: string,
 }
 
-type AnalysisProps = {
-    searchParams: {
-        pgn: string,
-        depth: number,
-    }
-}
-
-const GameAnalysisPage = ({searchParams}: AnalysisProps) => {
+const GameAnalysisPage = () => {
     const engine = useRef<Engine>();
     const toolbox = new GameToolBox();
     const game = new Chess();
     
+    const searchParams2 = useSearchParams();
+    const pgn = searchParams2.get('pgn') || '';
+    const depth: number = eval(searchParams2.get('depth') || '12');
+    //const search = searchParams2.get('search');
     const [chartHistoryData, setChartHistoryData] = useState<number[]>([]);
     const [analysisProgress, setAnalysisProgress] = useState(0);
     const [showChartHistory, setShowChartHistory] = useState(false);
@@ -46,11 +44,13 @@ const GameAnalysisPage = ({searchParams}: AnalysisProps) => {
     const gameActive = useRef(true);
     
     useEffect(() => {
-        console.log(searchParams);
+        console.log(searchParams2);
+        console.log(searchParams2.get('pgn'));
+        console.log(searchParams2.get('depth'));
         engine.current = new Engine();
         engine.current.init().then(() => {
             console.log('Launch PGN analysis');
-            launchStockfishAnalysis(searchParams.pgn, searchParams.depth);
+            launchStockfishAnalysis(pgn, depth);
         });
     }, []);
     
@@ -69,6 +69,7 @@ const GameAnalysisPage = ({searchParams}: AnalysisProps) => {
     function launchStockfishAnalysis(pgn: string, depth: number) {
         if(!engine.current) return;
         // pgn -> history (san) -> history (uci) : 1.e4 e5 -> ['e4', 'e5'] -> ['e2e4', 'e7e5']
+        console.log('Pgn: ' + pgn);
         const historyUci = toolbox.convertHistorySanToLan(toolbox.convertPgnToHistory(pgn));
         const timestampStart = performance.now();
         engine.current.launchGameAnalysis(historyUci, depth, setAnalysisProgress).then((results: EvalResult[]) => {
@@ -76,7 +77,7 @@ const GameAnalysisPage = ({searchParams}: AnalysisProps) => {
             console.log(results);
             setChartHistoryData(analysisResultsToHistoryData(results));
             setShowChartHistory(true);
-            formatAnalyseResults(searchParams.pgn, results);
+            formatAnalyseResults(pgn, results);
         });
     }
 
@@ -114,7 +115,7 @@ const GameAnalysisPage = ({searchParams}: AnalysisProps) => {
     const showMovePosition = (move: string | undefined, moveIndex: number) => {
         if(!move) return;
         const newGame = new Chess();
-        let positionArray = toolbox.convertPgnToArray(searchParams.pgn).slice(0, moveIndex);
+        let positionArray = toolbox.convertPgnToArray(pgn).slice(0, moveIndex);
         positionArray.push(move);
         const positionPGN = positionArray.join(' ');
         newGame.loadPgn(positionPGN);
@@ -130,8 +131,8 @@ const GameAnalysisPage = ({searchParams}: AnalysisProps) => {
         }
         const newGame = new Chess();
         console.log(moveIndex);
-        console.log(toolbox.convertPgnToArray(searchParams.pgn));
-        let positionArray = toolbox.convertPgnToArray(searchParams.pgn).slice(0, moveIndex);
+        console.log(toolbox.convertPgnToArray(pgn));
+        let positionArray = toolbox.convertPgnToArray(pgn).slice(0, moveIndex);
         console.log(positionArray);
         const positionPGN = positionArray.join(' ');
         console.log(positionPGN);
@@ -149,8 +150,8 @@ const GameAnalysisPage = ({searchParams}: AnalysisProps) => {
         const newGame = new Chess();
         console.log(moveIndex);
         console.log(moveIndex+2);
-        console.log(toolbox.convertPgnToArray(searchParams.pgn));
-        let positionArray = toolbox.convertPgnToArray(searchParams.pgn).slice(0, moveIndex+2);
+        console.log(toolbox.convertPgnToArray(pgn));
+        let positionArray = toolbox.convertPgnToArray(pgn).slice(0, moveIndex+2);
         console.log(positionArray);
         const positionPGN = positionArray.join(' ');
         console.log(positionPGN);
@@ -171,12 +172,12 @@ const GameAnalysisPage = ({searchParams}: AnalysisProps) => {
     const chartHistoryComponent = showChartHistory ?
         <div className=" flex justify-center items-center w-full h-full" >
             <div className=" relative flex flex-col justify-start items-center w-11/12 h-full pt-5" >
-            <div className=" flex justify-center items-center w-full h-fit" >
-                <AnalysisChart historyData={chartHistoryData} className=" " />
-            </div>
-            <div className="  w-full h-full overflow-y-auto flex flex-row flex-wrap justify-start items-start gap-2" >
-                {formatedResults}
-            </div>
+                <div className=" flex justify-center items-center w-full h-fit" >
+                    <AnalysisChart historyData={chartHistoryData} className=" " />
+                </div>
+                <div className="  w-full h-full overflow-y-auto flex flex-row flex-wrap justify-start items-start gap-2" >
+                    {formatedResults}
+                </div>
             </div>
         </div>
     :
@@ -184,7 +185,7 @@ const GameAnalysisPage = ({searchParams}: AnalysisProps) => {
     
     // TODO: Utiliser la balise 'progress'
     const chartHistoryContainer = showChartHistory ? 
-        <div className=" flex justify-center items-center w-1/2 h-full">
+        <div className=" flex justify-center items-center w-full md:w-1/2 h-full">
             {chartHistoryComponent}
         </div>
     :
@@ -252,7 +253,7 @@ const GameAnalysisPage = ({searchParams}: AnalysisProps) => {
         </div>
 
     const boardComponent = 
-        <div className=" flex flex-col justify-center items-center h-[500px] w-[500px] my-10" >
+        <div className=" flex flex-col justify-center items-center h-[300px] md:h-[500px] w-[300px] md:w-[500px] my-10" >
             <Chessboard 
             id="PlayVsRandom"
             position={currentFen}
@@ -281,7 +282,7 @@ const GameAnalysisPage = ({searchParams}: AnalysisProps) => {
         </div>
     
     return (
-        <div className="flex flex-row justify-stretch items-start bg-cyan-900 h-screen w-full overflow-auto" >
+        <div className="flex flex-col md:flex-row justify-start md:justify-stretch items-center md:items-start bg-cyan-900 h-screen w-full overflow-auto" >
             {gameContainer}
             {chartHistoryContainer}
         </div>

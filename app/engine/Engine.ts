@@ -156,7 +156,6 @@ class Engine {
     //TODO: Faire en sorte de calculer le coeff de manière interne
     // movesList: e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 ...
     evalPositionFromMovesList(movesListUci: string, depth: number, coeff: number) {
-        console.log(movesListUci);
         return new Promise((resolve, reject) => {
             // On stope l'analyse au cas où la position aurait changé avant qu'une précédente analyse soit terminée
             this.stockfish.postMessage('stop');
@@ -165,15 +164,12 @@ class Engine {
 
             this.stockfish.onmessage = function(event: any) {
                 if(event.data === "info depth 0 score mate 0"){
-                    console.log(event.data);
-                    console.log(`#${-coeff}`);
                     resolve({
                         eval: `#${-coeff}`,
                         pv: ''
                     });
                 }
                 if(event.data.includes(`info depth ${depth} `) && (evalRegex.exec(event.data)) !== null){
-                    console.log(event.data);
                     let evaluationStr: string | null = getEvalFromData(event.data, coeff);
                     let bestMove: string | null = getBestMoveFromData(event.data);
 
@@ -215,15 +211,11 @@ class Engine {
     async launchGameAnalysis(movesListUci: Array<string>, depth: number, callback: (progress: number) => void) {
         console.log('Start Game Anaysis');
         let results = [];
-        //let i = 0; // for(let [movesSet, i] of movesSetArray){...} ne semble pas marcher 
-        console.log(movesListUci);
         let movesSetArray = movesListUci.map((move, i) => {
             return movesListUci.slice(0, i+1).join(' ');
         });
         movesSetArray.unshift('');
-        console.log(movesSetArray);
         //Il a fallu ajouter "downlevelIteration": true dans le tsconfig.json pour que ça marche
-        //TODO: corriger l'eval pour le dernier coup de la partie
         for(let [i, movesSet] of movesSetArray.entries()){
             const coeff = i%2 === 0 ? 1 : -1;
             const result: any = await this.evalPositionFromMovesList(movesSet, depth, coeff);
