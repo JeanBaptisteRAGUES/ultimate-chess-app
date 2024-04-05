@@ -103,10 +103,10 @@ const GameAnalysisPage = () => {
                 <span>
                     {movePlayed}
                 </span>
-            if(result.quality === '??') return <span onClick={() => showMovePosition(movePlayed, i)} key={i} className=" text-red-600 cursor-pointer" >{bestMoveSpan}</span>;
-            if(result.quality === '?') return <span onClick={() => showMovePosition(movePlayed, i)} key={i} className=" text-orange-500 cursor-pointer" >{bestMoveSpan}</span>;
-            if(result.quality === '?!') return <span onClick={() => showMovePosition(movePlayed, i)} key={i} className=" text-yellow-400 cursor-pointer" >{bestMoveSpan}</span>;
-            return <span onClick={() => showMovePosition(movePlayed, i)} key={i} className=" text-white cursor-pointer" >{bestMoveSpan}</span>;
+            if(result.quality === '??') return <span onClick={() => showMovePosition(movePlayed, i)} key={i} className=" text-red-600 cursor-pointer select-none" >{bestMoveSpan}</span>;
+            if(result.quality === '?') return <span onClick={() => showMovePosition(movePlayed, i)} key={i} className=" text-orange-500 cursor-pointer select-none" >{bestMoveSpan}</span>;
+            if(result.quality === '?!') return <span onClick={() => showMovePosition(movePlayed, i)} key={i} className=" text-yellow-400 cursor-pointer select-none" >{bestMoveSpan}</span>;
+            return <span onClick={() => showMovePosition(movePlayed, i)} key={i} className=" text-white cursor-pointer select-none" >{bestMoveSpan}</span>;
         });
         console.log(`Durée du formatage: ${(performance.now() - timestampStart)/1000}s`);
         setFormatedResults(results);

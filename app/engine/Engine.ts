@@ -163,9 +163,18 @@ class Engine {
             this.stockfish.postMessage(`go depth ${depth}`);
 
             this.stockfish.onmessage = function(event: any) {
+                // Mate
                 if(event.data === "info depth 0 score mate 0"){
                     resolve({
                         eval: `#${-coeff}`,
+                        pv: ''
+                    });
+                }
+
+                // Draw
+                if(event.data === "info depth 0 score cp 0"){
+                    resolve({
+                        eval: '0',
                         pv: ''
                     });
                 }

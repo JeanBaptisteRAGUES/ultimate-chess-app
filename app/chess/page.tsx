@@ -252,7 +252,7 @@ const ChessPage = () => {
 
     const gameOverWindow = showGameoverWindow ? 
       <div className=" flex justify-center items-center w-full h-full absolute top-0 left-0" >
-        <div className=" flex flex-col justify-start items-center w-1/2 h-1/2 bg-gray-200 rounded" >
+        <div className=" flex flex-col justify-start items-center w-3/4 h-2/3 md:w-1/2 md:h-1/2 bg-gray-200 rounded" >
           <div className=" relative flex justify-center items-center w-full h-1/4 bg-fuchsia-600 text-white rounded-t" >
             <h1 className=" text-white font-bold flex justify-center items-center">
               {
@@ -339,17 +339,6 @@ const ChessPage = () => {
       reset
     </button>
 
-    /* const selectDifficultyButton = 
-      <select id="rating" onChange={(e) => setDatabaseRating(e.target.value)} value={databaseRating}>
-        <option value="" >Sélectionnez un niveau</option>
-        <option value="Beginner" >Débutant</option>
-        <option value="Casual" >Casual</option>
-        <option value="Intermediate" >Intermédiaire</option>
-        <option value="Advanced" >Avancé</option>
-        <option value="Master" >Maître</option>
-        <option value="Maximum" >Maximum</option>
-      </select> */
-
     const selectTimeControlButton = 
       <select id='time-control' onChange={(e) => setTimeControl(e.target.value)} value={timeControl}>
         <option value="">Sélectionnez une cadence</option>
@@ -362,35 +351,6 @@ const ChessPage = () => {
         <option value="30+20">30+20</option>
         <option value="90+30">90+30</option>
       </select>
-
-    // 'default' | 'pawn-pusher' | 'fianchetto-sniper' | 'shy' | 'blundering' | 'drawish' | 'sacrifice-enjoyer' | 'exchanges-lover' 
-    //| 'exchanges-hater' | 'queen-player' | 'botez-gambit' | 'castle-destroyer' | 'strategy-stranger' | 'openings-master' 
-    //| 'openings-beginner' | 'random-player' | 'copycat' | 'bongcloud' | 'gambit-fanatic' | 'cow-lover' | 'hyper-aggressive';
-    /* const selectBotBehaviourButton = 
-      <select id="behaviour" onChange={(e) => setBotBehaviour(e.target.value as Behaviour)} value={botBehaviour}>
-        <option value="" >Sélectionnez l'IA du Bot</option>
-        <option value='default' >Default</option>
-        <option value="pawn-pusher" >Pawn Pusher</option>
-        <option value="fianchetto-sniper" >Fianchetto Sniper</option>
-        <option value="shy" >Shy</option>
-        <option value="blundering" >Blundering</option>
-        <option value="drawish" >Drawish</option>
-        <option value="sacrifice-enjoyer" >Sacrifice Enjoyer</option>
-        <option value="exchanges-lover" >Exchanges Lover</option>
-        <option value="exchanges-hater" >Exchanges Hater</option>
-        <option value="queen-player" >Queen Player</option>
-        <option value="botez-gambit" >Botez Gambit</option>
-        <option value="castle-destroyer" >Castle Destroyer</option>
-        <option value="strategy-stranger" >Strategy Stranger</option>
-        <option value="openings-master" >Openings Master</option>
-        <option value="openings-beginner" >Openings Beginner</option>
-        <option value="random-player" >Random Player</option>
-        <option value="copycat" >Copycat</option>
-        <option value="bongcloud" >Bongcloud</option>
-        <option value="gambit-fanatic" >Gambit Fanatic</option>
-        <option value="cow-lover" >Cow Lover</option>
-        <option value="hyper-aggressive" >Hyper Aggressive</option>
-      </select> */
 
     const startGameButton = !gameStarted ? 
       <button
