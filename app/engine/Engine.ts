@@ -203,14 +203,16 @@ class Engine {
     evalMoveQuality(moveEval: EvalResult) {
         let evalBefore: number = moveEval.evalBefore.includes('#') ? this.mateToNumber(moveEval.evalBefore) : eval(moveEval.evalBefore);
         let evalAfter: number = moveEval.evalAfter.includes('#') ? this.mateToNumber(moveEval.evalAfter) : eval(moveEval.evalAfter);
-        let scoreDiff = Math.abs(evalAfter - evalBefore);
+        let scoreAbsoluteDiff = Math.abs(evalAfter - evalBefore);
+        let scorePercentageDiff = Math.max(Math.abs(evalBefore),Math.abs(evalAfter))/Math.min(Math.abs(evalBefore),Math.abs(evalAfter)) - 1;
         console.log(moveEval.movePlayed);
         console.log(evalBefore);
         console.log(evalAfter);
-        console.log(scoreDiff);
-        if(scoreDiff > 0.5 && moveEval.bestMove !== moveEval.movePlayed) moveEval.quality = "?!";
-        if(scoreDiff > 1 && moveEval.bestMove !== moveEval.movePlayed) moveEval.quality = "?";
-        if(scoreDiff > 2 && moveEval.bestMove !== moveEval.movePlayed) moveEval.quality = "??";
+        console.log(scoreAbsoluteDiff);
+        console.log(scorePercentageDiff);
+        if(scoreAbsoluteDiff > 0.5 && scorePercentageDiff > 0.3 && moveEval.bestMove !== moveEval.movePlayed) moveEval.quality = "?!";
+        if(scoreAbsoluteDiff > 1 && scorePercentageDiff > 1 && moveEval.bestMove !== moveEval.movePlayed) moveEval.quality = "?";
+        if(scoreAbsoluteDiff > 2 && scorePercentageDiff > 2 && moveEval.bestMove !== moveEval.movePlayed) moveEval.quality = "??";
         return moveEval;
     }
 

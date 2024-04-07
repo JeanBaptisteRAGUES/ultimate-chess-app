@@ -165,13 +165,13 @@ const GameAnalysisPage = () => {
         
         // highlight move quality (ok / inaccuracy / error / blunder)
         if(quality === '?!'){
-            inaccuracyIndexRef.current = toolbox.getCaseIndex(toolbox.getMoveDestination(evalRes.movePlayed) || 'a1', playerColor as Color);
+            inaccuracyIndexRef.current = toolbox.getCaseIndex(toolbox.getMoveDestination(lastMove) || 'a1', playerColor as Color);
         }
         if(quality === '?'){
-            errorIndexRef.current = toolbox.getCaseIndex(toolbox.getMoveDestination(evalRes.movePlayed) || 'a1', playerColor as Color);
+            errorIndexRef.current = toolbox.getCaseIndex(toolbox.getMoveDestination(lastMove) || 'a1', playerColor as Color);
         }
         if(quality === '??'){
-            blunderIndexRef.current = toolbox.getCaseIndex(toolbox.getMoveDestination(evalRes.movePlayed) || 'a1', playerColor as Color);
+            blunderIndexRef.current = toolbox.getCaseIndex(toolbox.getMoveDestination(lastMove) || 'a1', playerColor as Color);
         }
     }
   

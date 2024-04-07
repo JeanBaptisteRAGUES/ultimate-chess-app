@@ -69,7 +69,7 @@ class GameToolBox {
     getCaseIndex(myCase: Square, boardOrientation: Color): number {
         const fileValue = myCase.charCodeAt(0) - 'a'.charCodeAt(0);
         const rankValue = eval(myCase.charAt(1))-1;
-        if(boardOrientation === 'b') return rankValue*8 + fileValue;
+        if(boardOrientation === 'b') return rankValue*8 + (7-fileValue);
         return 64 - rankValue*8 - (8-fileValue);
     }
 
