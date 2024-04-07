@@ -5,11 +5,13 @@ import { useEffect, useRef, useState } from "react";
 import Engine from "../engine/Engine";
 import GameToolBox from "../game-toolbox/GameToolbox";
 import { AnalysisChart } from "../components/AnalysisChart";
-import { Chess } from "chess.js";
+import { Chess, Color } from "chess.js";
 import { Chessboard } from "react-chessboard";
 import { Piece, Square } from "react-chessboard/dist/chessboard/types";
 import EvalAndWinrate from "../components/EvalAndWinrate";
 import { useSearchParams } from "next/navigation";
+import { createRoot } from "react-dom/client";
+import { createPortal } from "react-dom";
 
 type EvalResult = {
     bestMove: string,
@@ -42,6 +44,13 @@ const GameAnalysisPage = () => {
     });
 
     const gameActive = useRef(true);
+    const board = new Array(64).fill(0);
+    const analysisResultsRef = useRef<EvalResult[]>([]);
+    const inaccuracyIndexRef = useRef(-1);
+    const errorIndexRef = useRef(-1);
+    const blunderIndexRef = useRef(-1);
+    const startCaseRef = useRef<Element | null>(null);
+    const endCaseRef = useRef<Element | null>(null);
     
     useEffect(() => {
         console.log(searchParams2);
@@ -77,6 +86,7 @@ const GameAnalysisPage = () => {
             console.log(results);
             setChartHistoryData(analysisResultsToHistoryData(results));
             setShowChartHistory(true);
+            analysisResultsRef.current = results;
             formatAnalyseResults(pgn, results);
         });
     }
@@ -95,7 +105,7 @@ const GameAnalysisPage = () => {
                 <span>
                     {movePlayed + result.quality} <span onClick={(e) => {
                             e.stopPropagation()
-                            showMovePosition(bestMoveSan, i)
+                            showMovePosition(bestMoveSan, i, false)
                         }
                     }>({bestMoveSan} was best)</span>
                 </span>
@@ -103,22 +113,81 @@ const GameAnalysisPage = () => {
                 <span>
                     {movePlayed}
                 </span>
-            if(result.quality === '??') return <span onClick={() => showMovePosition(movePlayed, i)} key={i} className=" text-red-600 cursor-pointer select-none" >{bestMoveSpan}</span>;
-            if(result.quality === '?') return <span onClick={() => showMovePosition(movePlayed, i)} key={i} className=" text-orange-500 cursor-pointer select-none" >{bestMoveSpan}</span>;
-            if(result.quality === '?!') return <span onClick={() => showMovePosition(movePlayed, i)} key={i} className=" text-yellow-400 cursor-pointer select-none" >{bestMoveSpan}</span>;
-            return <span onClick={() => showMovePosition(movePlayed, i)} key={i} className=" text-white cursor-pointer select-none" >{bestMoveSpan}</span>;
+            if(result.quality === '??') return <span onClick={() => showMovePosition(movePlayed, i, true)} key={i} className=" text-red-600 cursor-pointer select-none" >{bestMoveSpan}</span>;
+            if(result.quality === '?') return <span onClick={() => showMovePosition(movePlayed, i, true)} key={i} className=" text-orange-500 cursor-pointer select-none" >{bestMoveSpan}</span>;
+            if(result.quality === '?!') return <span onClick={() => showMovePosition(movePlayed, i, true)} key={i} className=" text-yellow-400 cursor-pointer select-none" >{bestMoveSpan}</span>;
+            return <span onClick={() => showMovePosition(movePlayed, i, true)} key={i} className=" text-white cursor-pointer select-none" >{bestMoveSpan}</span>;
         });
         console.log(`Durée du formatage: ${(performance.now() - timestampStart)/1000}s`);
         setFormatedResults(results);
+    } 
+
+    const getMoveColor = (moveQuality: string, squareColor: string): string => {
+        switch (moveQuality) {
+            case '?!':
+                return squareColor === 'white' ? 'rgb(240,220,130)' : 'rgb(220,200,80)';
+            case '?':
+                return squareColor === 'white' ? 'rgb(250,180,40)' : 'rgb(230,140,60)';
+            case '??':
+                return squareColor === 'white' ? 'rgb(250,130,130)' : 'rgb(240,110,110)';
+        
+            default:
+                return squareColor === 'white' ? 'rgb(170,210,170)' : 'rgb(140,180,140)';
+        }
+    }
+
+    const highlightMove = (lastMove: string | undefined, moveIndex: number, isMovePlayed: boolean): void => {
+        if(!lastMove) return;
+        const evalRes = analysisResultsRef.current[moveIndex];
+        const quality = isMovePlayed ? evalRes.quality : '';
+
+        // Reset previous highlight
+        inaccuracyIndexRef.current = -1;
+        errorIndexRef.current = -1;
+        blunderIndexRef.current = -1;
+        if(startCaseRef.current) startCaseRef.current.getAttribute('data-square-color') === 'white' ? 
+            startCaseRef.current.setAttribute('style', 'background-color: rgb(240,217,181)') 
+            : 
+            startCaseRef.current.setAttribute('style', 'background-color: rgb(181,136,99)');
+
+        if(endCaseRef.current) endCaseRef.current.getAttribute('data-square-color') === 'white' ? 
+            endCaseRef.current.setAttribute('style', 'background-color: rgb(240,217,181)') 
+            : 
+            endCaseRef.current.setAttribute('style', 'background-color: rgb(181,136,99)');
+
+        // Highlight move origin and destination
+        startCaseRef.current = document.querySelector(`[data-square=${toolbox.getMoveDestination(lastMove)}]`);
+        endCaseRef.current = document.querySelector(`[data-square=${toolbox.getMoveOrigin(lastMove)}]`);
+        const startCaseColor = startCaseRef.current?.getAttribute('data-square-color') || 'white';
+        const endCaseColor = endCaseRef.current?.getAttribute('data-square-color') || 'white';
+        if(startCaseRef.current) startCaseRef.current.setAttribute('style', `background-color: ${getMoveColor(quality, startCaseColor)}`);
+        if(endCaseRef.current) endCaseRef.current.setAttribute('style', `background-color: ${getMoveColor(quality, endCaseColor)}`);
+        
+        // highlight move quality (ok / inaccuracy / error / blunder)
+        if(quality === '?!'){
+            inaccuracyIndexRef.current = toolbox.getCaseIndex(toolbox.getMoveDestination(evalRes.movePlayed) || 'a1', playerColor as Color);
+        }
+        if(quality === '?'){
+            errorIndexRef.current = toolbox.getCaseIndex(toolbox.getMoveDestination(evalRes.movePlayed) || 'a1', playerColor as Color);
+        }
+        if(quality === '??'){
+            blunderIndexRef.current = toolbox.getCaseIndex(toolbox.getMoveDestination(evalRes.movePlayed) || 'a1', playerColor as Color);
+        }
     }
   
-    const showMovePosition = (move: string | undefined, moveIndex: number) => {
+    const showMovePosition = (move: string | undefined, moveIndex: number, isMovePlayed: boolean) => {
         if(!move) return;
+        // Setup board position
         const newGame = new Chess();
         let positionArray = toolbox.convertPgnToArray(pgn).slice(0, moveIndex);
         positionArray.push(move);
         const positionPGN = positionArray.join(' ');
         newGame.loadPgn(positionPGN);
+
+        // Highlight Move
+        let lastMove = newGame.history({verbose: true}).pop()?.lan;
+        highlightMove(lastMove, moveIndex, isMovePlayed);
+
         setCurrentFen(newGame.fen());
         setCurrentIndex(moveIndex);
         console.log('Changement de position');
@@ -137,6 +206,11 @@ const GameAnalysisPage = () => {
         const positionPGN = positionArray.join(' ');
         console.log(positionPGN);
         newGame.loadPgn(positionPGN);
+
+        // Highlight Move
+        let lastMove = newGame.history({verbose: true}).pop()?.lan;
+        highlightMove(lastMove, moveIndex-1, true);
+
         setCurrentFen(newGame.fen());
         setCurrentIndex(moveIndex-1);
         console.log('Changement de position');
@@ -156,6 +230,11 @@ const GameAnalysisPage = () => {
         const positionPGN = positionArray.join(' ');
         console.log(positionPGN);
         newGame.loadPgn(positionPGN);
+
+        // Highlight Move
+        let lastMove = newGame.history({verbose: true}).pop()?.lan;
+        highlightMove(lastMove, moveIndex+1, true);
+
         setCurrentFen(newGame.fen());
         setCurrentIndex(moveIndex+1);
         console.log('Changement de position');
@@ -253,13 +332,28 @@ const GameAnalysisPage = () => {
         </div>
 
     const boardComponent = 
-        <div className=" flex flex-col justify-center items-center h-[300px] md:h-[500px] w-[300px] md:w-[500px] my-10" >
+        <div className=" relative flex flex-col justify-center items-center h-[304px] md:h-[512px] w-[304px] md:w-[512px] my-10" >
             <Chessboard 
             id="PlayVsRandom"
             position={currentFen}
             onPieceDrop={onDrop} 
             boardOrientation={playerColor === 'w' ? 'white' : 'black'}
             />
+            <div className=" absolute flex flex-wrap h-[304px] md:h-[512px] w-[304px] md:w-[512px]" >
+                {
+                    board.map((e,i) => {
+                        const inaccuracyIcon = inaccuracyIndexRef.current === i ? <span className="w-5 h-5 translate-x-1 -translate-y-1 bg-yellow-500 text-white font-bold rounded-full flex justify-center items-center" >?!</span> : null;
+                        const errorIcon = errorIndexRef.current === i ? <span className="w-5 h-5 translate-x-1 -translate-y-1 bg-orange-600 text-white font-bold rounded-full flex justify-center items-center" >?</span> : null;
+                        const blunderIcon = blunderIndexRef.current === i ? <span className="w-5 h-5 translate-x-1 -translate-y-1 bg-red-600 text-white font-bold rounded-full flex justify-center items-center" >??</span>  : null;
+
+                        return <div className=" h-[38px] md:h-[64px] w-[38px] md:w-[64px] flex justify-end" key={i}>
+                            {inaccuracyIcon}
+                            {errorIcon}
+                            {blunderIcon}
+                        </div>
+                    })
+                }
+            </div>
         </div>
 
     const gameComponent = 

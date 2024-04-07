@@ -66,6 +66,13 @@ class GameToolBox {
         return (move[2] + move[3]) as Square;
     }
 
+    getCaseIndex(myCase: Square, boardOrientation: Color): number {
+        const fileValue = myCase.charCodeAt(0) - 'a'.charCodeAt(0);
+        const rankValue = eval(myCase.charAt(1))-1;
+        if(boardOrientation === 'b') return rankValue*8 + fileValue;
+        return 64 - rankValue*8 - (8-fileValue);
+    }
+
     /**
      * Retourne la valeur de l'échec et mat de l'évaluation passée en paramètre.
      * Ex: 'M5' -> 5
