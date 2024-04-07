@@ -11,6 +11,7 @@ export type EvalResult = {
     evalBefore: string,
     evalAfter: string,
     quality: string,
+    accuracy?: number,
 }
 
 export type EvalResultSimplified = {
@@ -205,14 +206,17 @@ class Engine {
         let evalAfter: number = moveEval.evalAfter.includes('#') ? this.mateToNumber(moveEval.evalAfter) : eval(moveEval.evalAfter);
         let scoreAbsoluteDiff = Math.abs(evalAfter - evalBefore);
         let scorePercentageDiff = Math.max(Math.abs(evalBefore),Math.abs(evalAfter))/Math.min(Math.abs(evalBefore),Math.abs(evalAfter)) - 1;
+        let scoreAccuracy = Math.min(Math.abs(evalBefore),Math.abs(evalAfter))/Math.max(Math.abs(evalBefore),Math.abs(evalAfter));
         console.log(moveEval.movePlayed);
         console.log(evalBefore);
         console.log(evalAfter);
         console.log(scoreAbsoluteDiff);
         console.log(scorePercentageDiff);
+        console.log(scoreAccuracy);
         if(scoreAbsoluteDiff > 0.5 && scorePercentageDiff > 0.3 && moveEval.bestMove !== moveEval.movePlayed) moveEval.quality = "?!";
         if(scoreAbsoluteDiff > 1 && scorePercentageDiff > 1 && moveEval.bestMove !== moveEval.movePlayed) moveEval.quality = "?";
         if(scoreAbsoluteDiff > 2 && scorePercentageDiff > 2 && moveEval.bestMove !== moveEval.movePlayed) moveEval.quality = "??";
+        moveEval.accuracy = scoreAccuracy;
         return moveEval;
     }
 

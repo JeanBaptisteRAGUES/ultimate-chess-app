@@ -2,7 +2,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from "react";
-import Engine from "../engine/Engine";
+import Engine, { EvalResult } from "../engine/Engine";
 import GameToolBox from "../game-toolbox/GameToolbox";
 import { AnalysisChart } from "../components/AnalysisChart";
 import { Chess, Color } from "chess.js";
@@ -13,13 +13,13 @@ import { useSearchParams } from "next/navigation";
 import { createRoot } from "react-dom/client";
 import { createPortal } from "react-dom";
 
-type EvalResult = {
+/* type EvalResult = {
     bestMove: string,
     movePlayed: string,
     evalBefore: string,
     evalAfter: string,
     quality: string,
-}
+} */
 
 const GameAnalysisPage = () => {
     const engine = useRef<Engine>();
@@ -42,6 +42,8 @@ const GameAnalysisPage = () => {
         draws: 0,
         black: 50
     });
+    const [whiteAccuracy, setWhiteAccuracy] = useState(100);
+    const [blackAccuracy, setBlackAccuracy] = useState(100);
 
     const gameActive = useRef(true);
     const board = new Array(64).fill(0);
@@ -75,6 +77,22 @@ const GameAnalysisPage = () => {
         return results.map((res) => evalToNumber(res.evalAfter));
     }
 
+    function getWhiteAccuracy(results: EvalResult[]) {
+        const whiteAccuracySum = results.reduce((acc, curr, i) => {
+            return acc + (i%2 === 0 && curr.accuracy ? 100*curr.accuracy : 0);
+        }, 0);
+        console.log("White accuracy sum: " + whiteAccuracySum);
+        return Math.round(10*whiteAccuracySum/(results.length/2))/10;
+    }
+
+    function getBlackAccuracy(results: EvalResult[]) {
+        const blackAccuracySum = results.reduce((acc, curr, i) => {
+            return acc + (i%2 !== 0 && curr.accuracy ? 100*curr.accuracy : 0);
+        }, 0);
+        console.log("White accuracy sum: " + blackAccuracySum);
+        return Math.round(10*blackAccuracySum/(results.length/2))/10;
+    }
+
     function launchStockfishAnalysis(pgn: string, depth: number) {
         if(!engine.current) return;
         // pgn -> history (san) -> history (uci) : 1.e4 e5 -> ['e4', 'e5'] -> ['e2e4', 'e7e5']
@@ -84,6 +102,9 @@ const GameAnalysisPage = () => {
         engine.current.launchGameAnalysis(historyUci, depth, setAnalysisProgress).then((results: EvalResult[]) => {
             console.log(`Durée de l'analyse: ${(performance.now() - timestampStart)/1000}s`);
             console.log(results);
+            //console.log("White accuracy: " + getWhiteAccuracy(results));
+            setWhiteAccuracy(getWhiteAccuracy(results));
+            setBlackAccuracy(getBlackAccuracy(results));
             setChartHistoryData(analysisResultsToHistoryData(results));
             setShowChartHistory(true);
             analysisResultsRef.current = results;
@@ -253,6 +274,14 @@ const GameAnalysisPage = () => {
             <div className=" relative flex flex-col justify-start items-center w-11/12 h-full pt-5" >
                 <div className=" flex justify-center items-center w-full h-fit" >
                     <AnalysisChart historyData={chartHistoryData} className=" " />
+                </div>
+                <div className="  w-full h-fit flex justify-around items-center" >
+                    <div className=" bg-slate-50 text-black text-xl h-10 w-20 flex justify-center items-center m-5 rounded" >
+                        {whiteAccuracy}%
+                    </div>
+                    <div className=" bg-slate-950 text-white text-xl h-10 w-20 flex justify-center items-center m-5 rounded" >
+                        {blackAccuracy}%
+                    </div>
                 </div>
                 <div className="  w-full h-full overflow-y-auto flex flex-row flex-wrap justify-start items-start gap-2" >
                     {formatedResults}
