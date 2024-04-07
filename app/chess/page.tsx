@@ -417,7 +417,7 @@ const ChessPage = () => {
         {/* {evalComponent} */}
         <EvalAndWinrate 
           game={game} 
-          winrate={winrate} 
+          databaseRating={databaseRating} 
           winner={winner} 
           currentFen={currentFen} 
           showEval={showEval} 

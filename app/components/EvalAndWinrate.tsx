@@ -1,19 +1,28 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { MutableRefObject, useEffect, useRef, useState } from 'react';
 import Engine from '../engine/Engine';
+import { Winrate, fetchLichessDatabase, getLichessWinrate } from '../libs/fetchLichess';
+import GameToolBox from '../game-toolbox/GameToolbox';
+import { Chess } from 'chess.js';
 
 interface EvalProps {
-    game: any,
-    winrate: any,
+    game: Chess,
+    databaseRating: string,
     winner: string,
     currentFen: string,
     showEval: boolean,
     gameActive: MutableRefObject<boolean>,
 }
 
-const EvalAndWinrate: React.FC<EvalProps> = ({game, winrate, winner, currentFen, showEval, gameActive}) => {
+const EvalAndWinrate: React.FC<EvalProps> = ({game, databaseRating, winner, currentFen, showEval, gameActive}) => {
     const engine = useRef<Engine>();
+    const toolbox = new GameToolBox();
     const [engineEval, setEngineEval] = useState('0.3');
+    const [winrate, setWinrate] = useState<Winrate>({
+        white: 50,
+        draws: 0,
+        black: 50
+      });
 
     useEffect(() => {
         engine.current = new Engine();
@@ -23,6 +32,10 @@ const EvalAndWinrate: React.FC<EvalProps> = ({game, winrate, winner, currentFen,
 
     useEffect(() => {
         if(winner || !engine.current) return;
+        const movesList = toolbox.convertHistorySanToLan(toolbox.convertPgnToHistory(game.pgn()));
+        console.log('Moves List:' + movesList);
+        console.log(game.pgn());
+        console.log(game.history());
         
         //let coeff = game.history().length %2 === 0 ? 1 : -1;
         
@@ -32,11 +45,10 @@ const EvalAndWinrate: React.FC<EvalProps> = ({game, winrate, winner, currentFen,
         }).catch((err: any) => {
             console.log(err);
         });
-        /* engine.current.evalPositionWithBestMove(game.fen(), 14, coeff).then((res: any) => {
-            console.log(res);
-        }).catch((err: any) => {
-            console.log(err);
-        }) */
+        getLichessWinrate(movesList, databaseRating, '').then((winrate) => {
+            console.log(winrate);
+            if(winrate.white) setWinrate(winrate);
+        })
     }, [currentFen]);
 
     return (

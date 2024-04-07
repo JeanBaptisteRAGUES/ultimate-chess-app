@@ -1,3 +1,9 @@
+export type Winrate = {
+    white: number,
+    draws: number,
+    black: number
+}
+
 function randomIntFromInterval(min: number, max: number) { // min and max included 
     return Math.floor(Math.random() * (max - min + 1) + min)
 }
@@ -63,6 +69,69 @@ export async function fetchLichessDatabase(moves: Array<String>, level: string, 
         uci: data.moves[moveIndex]?.uci,
         winrate: calculateWinrate(data)
     }
+}
+
+/* export function getLichessWinrate(moves: Array<String>, level: string, fen = ""): Promise<Winrate> {
+    return new Promise((resolve, reject) => {
+        if(!ratings.has(level)) level = 'Master';
+        console.log("Database Level: " + level);
+        if(fen === "") {
+            fen = "rnbqkbnr%2Fpppppppp%2F8%2F8%2F8%2F8%2FPPPPPPPP%2FRNBQKBNR+w+KQkq+-+0+1";
+        } else{
+            console.log(fen);
+            fen = fen.replaceAll('/', '%2F');
+            fen = fen.replaceAll(' ', '+');
+            console.log(fen);
+        }
+
+        const movesFormated = moves.join("%2C");
+        let req = "";
+
+        if(level === 'Master') {
+            req = `https://explorer.lichess.ovh/masters?variant=standard&fen=${fen}&play=${movesFormated}&source=analysis`
+        }else {
+            const eloRange = ratings.get(level);
+            req = `https://explorer.lichess.ovh/lichess?variant=standard&fen=${fen}&play=${movesFormated}&since=2012-01&until=2022-12&speeds=rapid%2Cclassical&ratings=${eloRange}`;
+        }
+
+        fetch(req).then((res) => {
+            console.log(res);
+            const data = res.json();
+            console.log(data);
+            //@ts-ignore
+            console.log(data.black);
+
+            resolve(calculateWinrate(data));
+        });
+    });
+} */
+
+export async function getLichessWinrate(moves: Array<String>, level: string, fen = ""): Promise<Winrate> {
+    if(!ratings.has(level)) level = 'Master';
+    console.log("Database Level: " + level);
+    if(fen === "") {
+        fen = "rnbqkbnr%2Fpppppppp%2F8%2F8%2F8%2F8%2FPPPPPPPP%2FRNBQKBNR+w+KQkq+-+0+1";
+    } else{
+        console.log(fen);
+        fen = fen.replaceAll('/', '%2F');
+        fen = fen.replaceAll(' ', '+');
+        console.log(fen);
+    }
+
+    const movesFormated = moves.join("%2C");
+    let req = "";
+
+    if(level === 'Master') {
+        req = `https://explorer.lichess.ovh/masters?variant=standard&fen=${fen}&play=${movesFormated}&source=analysis`
+    }else {
+        const eloRange = ratings.get(level);
+        req = `https://explorer.lichess.ovh/lichess?variant=standard&fen=${fen}&play=${movesFormated}&since=2012-01&until=2022-12&speeds=rapid%2Cclassical&ratings=${eloRange}`;
+    } 
+    
+    const res = await fetch(req);
+    const data = await res.json();
+
+    return calculateWinrate(data as Winrate);
 }
 
 export async function fetchLichessCloudEval(fen: string) {

@@ -24,7 +24,8 @@ import { createPortal } from "react-dom";
 const GameAnalysisPage = () => {
     const engine = useRef<Engine>();
     const toolbox = new GameToolBox();
-    const game = new Chess();
+    //const game = new Chess();
+    const [game, setGame] = useState<Chess>(new Chess());
     
     const searchParams2 = useSearchParams();
     const pgn = searchParams2.get('pgn') || '';
@@ -82,7 +83,7 @@ const GameAnalysisPage = () => {
             return acc + (i%2 === 0 && curr.accuracy ? 100*curr.accuracy : 0);
         }, 0);
         console.log("White accuracy sum: " + whiteAccuracySum);
-        return Math.round(10*whiteAccuracySum/(results.length/2))/10;
+        return Math.round(10*whiteAccuracySum/Math.ceil(results.length/2))/10;
     }
 
     function getBlackAccuracy(results: EvalResult[]) {
@@ -90,7 +91,7 @@ const GameAnalysisPage = () => {
             return acc + (i%2 !== 0 && curr.accuracy ? 100*curr.accuracy : 0);
         }, 0);
         console.log("White accuracy sum: " + blackAccuracySum);
-        return Math.round(10*blackAccuracySum/(results.length/2))/10;
+        return Math.round(10*blackAccuracySum/Math.floor(results.length/2))/10;
     }
 
     function launchStockfishAnalysis(pgn: string, depth: number) {
@@ -211,6 +212,7 @@ const GameAnalysisPage = () => {
 
         setCurrentFen(newGame.fen());
         setCurrentIndex(moveIndex);
+        setGame(newGame);
         console.log('Changement de position');
     }
 
@@ -234,6 +236,7 @@ const GameAnalysisPage = () => {
 
         setCurrentFen(newGame.fen());
         setCurrentIndex(moveIndex-1);
+        setGame(newGame);
         console.log('Changement de position');
     }
 
@@ -258,6 +261,7 @@ const GameAnalysisPage = () => {
 
         setCurrentFen(newGame.fen());
         setCurrentIndex(moveIndex+1);
+        setGame(newGame);
         console.log('Changement de position');
     }
 
@@ -389,7 +393,7 @@ const GameAnalysisPage = () => {
         <div className="flex flex-col justify-start items-center h-full">
             <EvalAndWinrate 
                 game={game} 
-                winrate={winrate} 
+                databaseRating={'Master'} 
                 winner={''} 
                 currentFen={currentFen} 
                 showEval={true} 
