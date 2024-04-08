@@ -29,7 +29,7 @@ export default function Home() {
       >
         Analyse PGN
       </Link>
-      <Link className=' text-cyan-500 cursor-pointer' href={{pathname: '/select-bot'}} >Jouer contre l'ordinateur</Link>
+      <Link className=' text-cyan-500 cursor-pointer' href={{pathname: '/select-game-mode'}} >Choisir un mode de jeu</Link>
     </main>
   )
 }

@@ -1,6 +1,6 @@
 // TODO: Niveaux de difficulté Beginner, Casual, Intermediate, Advanced, Master, Maximum
 
-import { Chess, Color, Square } from "chess.js";
+import { Chess, Color, Piece, Square } from "chess.js";
 import { fetchLichessDatabase } from "../libs/fetchLichess";
 import Engine, { EvalResultSimplified } from "../engine/Engine";
 import GameToolBox from "../game-toolbox/GameToolbox";
@@ -1544,6 +1544,32 @@ class BotsAI {
         console.log(move);
 
         return move;
+    }
+
+    async makeHandMove(game: Chess, selectedPiece: string): Promise<Move> {
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+
+        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, this.#defaultBotParams.skillValue, 50, false);
+        console.log(stockfishMoves);
+        stockfishMoves.forEach((evalRes) => {
+            console.log(evalRes.bestMove);
+            console.log(this.#toolbox.getMovePiece(evalRes.bestMove, game.fen()).type);
+            console.log(selectedPiece);
+        })
+        const bestMoveIndex = stockfishMoves.findIndex((evalRes) => this.#toolbox.getMovePiece(evalRes.bestMove, game.fen()).type === selectedPiece);
+        console.log(bestMoveIndex);
+        move.notation = stockfishMoves[bestMoveIndex].bestMove;
+        move.type = 2;
+        return move;
+    }
+
+    async getBrainPieceChoice(game: Chess): Promise<string> {
+        const move = await makeStockfishMove(this.#defaultBotParams, game, this.#engine);
+
+        return game.get(this.#toolbox.getMoveOrigin(move.notation) || 'a1').type;
     }
 }
 
