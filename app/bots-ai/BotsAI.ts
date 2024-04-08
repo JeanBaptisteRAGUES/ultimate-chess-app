@@ -1552,12 +1552,12 @@ class BotsAI {
             type: -1,
         };
 
-        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, this.#defaultBotParams.skillValue, 50, false);
+        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 12, this.#defaultBotParams.skillValue, 50, false);
         console.log(stockfishMoves);
         stockfishMoves.forEach((evalRes) => {
-            console.log(evalRes.bestMove);
-            console.log(this.#toolbox.getMovePiece(evalRes.bestMove, game.fen()).type);
-            console.log(selectedPiece);
+            if(this.#toolbox.getMovePiece(evalRes.bestMove, game.fen()).type === selectedPiece){
+                console.log(evalRes.bestMove + ': ' + evalRes.eval);
+            }
         })
         const bestMoveIndex = stockfishMoves.findIndex((evalRes) => this.#toolbox.getMovePiece(evalRes.bestMove, game.fen()).type === selectedPiece);
         console.log(bestMoveIndex);

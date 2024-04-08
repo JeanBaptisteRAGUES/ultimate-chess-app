@@ -57,6 +57,7 @@ const HandAndBrainPage = () => {
     ]);
     const [timeControl, setTimeControl] = useState('infinite');
     const [selectedPiece, setSelectedPiece] = useState<string>('');
+    const [allyStatus, setAllyStatus] = useState(0); // 0: ready, 1: thinking, 2: waiting
 
     useEffect(() => {
         engine.current = new Engine();
@@ -69,13 +70,17 @@ const HandAndBrainPage = () => {
         console.log("Ally Role: " + allyRole);
         console.log("Opponent Rating: " + opponentRating);
         console.log("Opponent Behaviour: " + opponentBehaviour);
-        if(allyRole === 'Brain' && game.turn() === playerColor) allyAI.current?.getBrainPieceChoice(game).then((pieceChoice) => setSelectedPiece(pieceChoice));
+        if(allyRole === 'Brain' && game.turn() === playerColor) {
+            setAllyStatus(1);
+            allyAI.current?.getBrainPieceChoice(game).then((pieceChoice) => setSelectedPiece(pieceChoice));
+        } 
     }, []);
 
     useEffect(() => {
       console.log('New Level : ' + opponentRating);
       const opponentColor = playerColor === 'w' ? 'b' : 'w';
       opponentAI.current = new BotsAI(opponentBehaviour, opponentRating, opponentColor);
+      if(playerColor === 'b' && !gameActive) setAllyStatus(2);
     }, [playerColor]);
 
     // TODO: Problème lors de la promotion d'un pion (promeut automatiquement en cavalier)
@@ -153,10 +158,13 @@ const HandAndBrainPage = () => {
 
       if(move && move.type >= 0){
         gameMove(move.notation, move.type);
-
+        setAllyStatus(0);
         if(allyRole === 'Hand') return;
-
-        allyAI.current?.getBrainPieceChoice(game).then((pieceChoice) => setSelectedPiece(pieceChoice));
+        setAllyStatus(1);
+        allyAI.current?.getBrainPieceChoice(game).then((pieceChoice) => {
+            setSelectedPiece(pieceChoice);
+            setAllyStatus(0);
+        });
       } 
       console.log("Erreur lors de la génération d'un coup par l'ordinateur");
     }
@@ -182,6 +190,7 @@ const HandAndBrainPage = () => {
         console.log(playerRole);
         const promotion = getPromotion(sourceSquare, piece);
         gameMove(sourceSquare + targetSquare + promotion, 0);
+        setAllyStatus(2);
     
         let delay = getTimeControlDelay();
         if(opponentRating === 'Maximum') delay = 0;
@@ -293,15 +302,24 @@ const HandAndBrainPage = () => {
       {"Niveau de l adversaire: " + opponentRating}
     </h4>
 
+    const allyStatusComponent = allyStatus === 0 ?
+        <h3 className=" text-xl text-white my-2" >Votre équipier est pret !</h3>
+        :
+        allyStatus === 1 ?
+              <h3 className=" text-xl text-white my-2" >Votre équipier réfléchit..</h3>
+              :
+              <h3 className=" text-xl text-white my-2" >Votre équipier attend le tour de l'adversaire</h3>
+
     async function selectPiece(piece: string) {
         setSelectedPiece(piece);
-        
+        setAllyStatus(1);
         const move: Move | undefined = await allyAI.current?.makeHandMove(game, piece);
         console.log(move);
         if(move && move.type >= 0){
             gameMove(move.notation, move.type);
             let delay = getTimeControlDelay();
             if(opponentRating === 'Maximum') delay = 0;
+            setAllyStatus(2);
             if(gameStarted){
                 const newTimeout = setTimeout(playComputerMove, delay);
                 setCurrentTimeout(newTimeout);
@@ -550,15 +568,15 @@ const selectPieceComponentSmartphone =
     const gameComponent = 
       <div className="flex flex-col justify-start items-center h-full">
         {titleComponent}
-        {/* {evalComponent} */}
-        <EvalAndWinrate 
+        {allyStatusComponent}
+        {/* <EvalAndWinrate 
           game={game} 
           databaseRating={opponentRating} 
           winner={winner} 
           currentFen={currentFen} 
           showEval={showEval} 
           gameActive={gameActive}
-        />
+        /> */}
         {boardComponent}
         {buttonsComponent}
       </div>
