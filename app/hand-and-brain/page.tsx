@@ -308,7 +308,7 @@ const HandAndBrainPage = () => {
         allyStatus === 1 ?
               <h3 className=" text-xl text-white my-2" >Votre équipier réfléchit..</h3>
               :
-              <h3 className=" text-xl text-white my-2" >Votre équipier attend le tour de l'adversaire</h3>
+              <h3 className=" text-xl text-white my-2" >Attente du coup de l'adversaire..</h3>
 
     async function selectPiece(piece: string) {
         setSelectedPiece(piece);
