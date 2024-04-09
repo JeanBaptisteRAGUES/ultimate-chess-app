@@ -36,7 +36,7 @@ export type Move = {
     type: number
 }
 
-export type Behaviour = 'default' | 'pawn-pusher' | 'fianchetto-sniper' | 'shy' | 'blundering' | 'drawish' | 'sacrifice-enjoyer' | 'exchanges-lover' | 'exchanges-hater' | 'queen-player' | 'botez-gambit' | 'castle-destroyer' | 'strategy-stranger' | 'openings-master' | 'openings-beginner' | 'random-player' | 'copycat' | 'bongcloud' | 'gambit-fanatic' | 'cow-lover' | 'hyper-aggressive';
+export type Behaviour = 'default' | 'stockfish-random' | 'pawn-pusher' | 'fianchetto-sniper' | 'shy' | 'blundering' | 'drawish' | 'sacrifice-enjoyer' | 'exchanges-lover' | 'exchanges-hater' | 'queen-player' | 'botez-gambit' | 'castle-destroyer' | 'strategy-stranger' | 'openings-master' | 'openings-beginner' | 'random-player' | 'copycat' | 'bongcloud' | 'gambit-fanatic' | 'cow-lover' | 'hyper-aggressive';
 
 type DefaultBotParams = {
     randMoveChance: number, 
@@ -403,30 +403,28 @@ class BotsAI {
             notation: '',
             type: -1,
         };
-        const movesList = this.#toolbox.convertHistorySanToLan(this.#toolbox.convertPgnToHistory(game.pgn()));
 
-        const lichessMove = await makeLichessMove(movesList, this.#botLevel, '');
-        if(lichessMove.type >= 0){
+        const defaultMove = await this.#defaultMoveLogic(game, true, true);
+        if(defaultMove.type >= 0) {
             this.#lastRandomMove = this.#lastRandomMove-1;
-            return lichessMove;
-        } 
-
-        const forcedStockfishMove = await makeForcedStockfishMove(this.#defaultBotParams, this.#botColor, game, this.#engine, this.#toolbox);
-        if(forcedStockfishMove.type >= 0) {
-            this.#lastRandomMove = this.#lastRandomMove-1;
-            return forcedStockfishMove;
-        } 
-
-        if(isRandomMovePlayable(this.#defaultBotParams, this.#botLevel, this.#lastRandomMove)) {
-            this.#lastRandomMove = this.#defaultBotParams.randMoveInterval;
-            return makeRandomMove(this.#defaultBotParams.filterLevel, this.#defaultBotParams.securityLvl > 1, game);
+            return defaultMove;
         }
 
-        const stockfishMove = await makeStockfishMove(this.#defaultBotParams, game, this.#engine);
-        if(stockfishMove.type >= 0) {
+        return move;
+    }
+
+    async #makestockfishRandomMove(game: Chess): Promise<Move> {
+        console.log('Bot AI: Default behaviour');
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+
+        const defaultMove = await this.#defaultMoveLogic(game, false, true);
+        if(defaultMove.type >= 0) {
             this.#lastRandomMove = this.#lastRandomMove-1;
-            return stockfishMove;
-        } 
+            return defaultMove;
+        }
 
         return move;
     }
@@ -1465,6 +1463,10 @@ class BotsAI {
         switch (this.#behaviour) {
             case "default":
                 move = await this.#makeDefaultMove(game);
+                break;
+
+            case "stockfish-random":
+                move = await this.#makestockfishRandomMove(game);
                 break;
 
             case "pawn-pusher":
