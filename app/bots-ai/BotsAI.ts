@@ -1465,7 +1465,7 @@ class BotsAI {
                 move = await this.#makeDefaultMove(game);
                 break;
 
-            case "stockfish-random":
+            case "stockfish-random": // Plutôt faire puzzle bot qui utilise aussi la bdd lichess
                 move = await this.#makestockfishRandomMove(game);
                 break;
 

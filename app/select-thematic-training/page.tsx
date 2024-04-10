@@ -25,7 +25,28 @@ const SelectThematicTrainingPage = () => {
             nextMove: 'fxe5',
             playerColor: 'w',
             avantage: 'high'
-        }
+        },
+        {
+            title: 'Caro-Kann Tal Variation',
+            startingFen: 'rn1qkb1r/pp2p1p1/2p1p2p/3p4/3Pn1PP/3Q1N2/PPPN1P2/R1B1K2R b KQkq - 4 10',
+            nextMove: 'Nxd2',
+            playerColor: 'w',
+            avantage: 'high'
+        },
+        {
+            title: 'London Greek Gift Sacrifice',
+            startingFen: 'r4rk1/pbqn1ppB/1pnbp3/2ppN3/3P4/2P1PNB1/PP3PPP/R2Q1RK1 b - - 0 12',
+            nextMove: 'Kxh7',
+            playerColor: 'w',
+            avantage: 'medium'
+        },
+        {
+            title: 'Danish Gambit Accepted',
+            startingFen: 'rnbqkb1r/ppp2ppp/3p1n2/8/2B1P3/5N2/PB3PPP/RN1Q1RK1 b kq - 3 7',
+            nextMove: 'Bg4',
+            playerColor: 'w',
+            avantage: 'medium'
+        },
     ];
 
     const defensePositions = [
@@ -35,7 +56,21 @@ const SelectThematicTrainingPage = () => {
             nextMove: 'Bc4+',
             playerColor: 'b',
             avantage: 'medium'
-        }
+        },
+        {
+            title: 'Smith Morra Accepted',
+            startingFen: '2r1k2r/1bq1b1p1/p1nppn1p/1p6/4P3/P1N1BQ2/BP3PPP/R3R1K1 w k - 0 16',
+            nextMove: 'Bxe6',
+            playerColor: 'b',
+            avantage: 'low'
+        },
+        {
+            title: 'Danish Gambit Accepted',
+            startingFen: 'rnbqkb1r/pppp1ppp/5n2/8/2B1P3/8/PB3PPP/RN1QK1NR w KQkq - 1 6',
+            nextMove: 'e5',
+            playerColor: 'b',
+            avantage: 'low'
+        },
     ];
 
     const endgamePositions = [
