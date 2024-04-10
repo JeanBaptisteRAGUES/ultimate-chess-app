@@ -109,6 +109,13 @@ const SelectThematicTrainingPage = () => {
             playerColor: 'b',
             avantage: 'high'
         },
+        {
+            title: 'Pion passé n°1',
+            startingFen: '1r2k3/p1P1b2p/5pp1/B2Rp3/1P6/6P1/4KP1P/8 b - - 0 1',
+            nextMove: 'Rc8',
+            playerColor: 'w',
+            avantage: 'high'
+        },
     ];
 
     const difficultyComponent =

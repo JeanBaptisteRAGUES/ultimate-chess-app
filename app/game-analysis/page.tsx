@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import Engine, { EvalResult } from "../engine/Engine";
 import GameToolBox from "../game-toolbox/GameToolbox";
 import { AnalysisChart } from "../components/AnalysisChart";
-import { Chess, Color } from "chess.js";
+import { Chess, Color, DEFAULT_POSITION } from "chess.js";
 import { Chessboard } from "react-chessboard";
 import { Piece, Square } from "react-chessboard/dist/chessboard/types";
 import EvalAndWinrate from "../components/EvalAndWinrate";
@@ -98,9 +98,13 @@ const GameAnalysisPage = () => {
         if(!engine.current) return;
         // pgn -> history (san) -> history (uci) : 1.e4 e5 -> ['e4', 'e5'] -> ['e2e4', 'e7e5']
         console.log('Pgn: ' + pgn);
-        const historyUci = toolbox.convertHistorySanToLan(toolbox.convertPgnToHistory(pgn));
+        const startingFen = game.history().length > 0 ? game.history({verbose: true})[0].before : DEFAULT_POSITION;
+        console.log(startingFen);
+        console.log(game.history({verbose: true})); //TODO: renvoie []
+        const historyUci = toolbox.convertHistorySanToLan(toolbox.convertPgnToHistory(pgn), startingFen);
+        //const historyUci = toolbox.convertHistorySanToLan(game.history(), startingFen);
         const timestampStart = performance.now();
-        engine.current.launchGameAnalysis(historyUci, depth, setAnalysisProgress).then((results: EvalResult[]) => {
+        engine.current.launchGameAnalysis(historyUci, depth, setAnalysisProgress, startingFen).then((results: EvalResult[]) => {
             console.log(`Durée de l'analyse: ${(performance.now() - timestampStart)/1000}s`);
             console.log(results);
             //console.log("White accuracy: " + getWhiteAccuracy(results));

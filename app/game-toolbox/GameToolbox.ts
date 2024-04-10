@@ -133,8 +133,9 @@ class GameToolBox {
      * @param lanNotation string -> 'f1c4'
      * @returns string -> 'Bc4'
      */
-    convertMoveLanToSan2(movesList: string[], index: number, lanNotation: string): string | undefined {
+    convertMoveLanToSan2(movesList: string[], index: number, lanNotation: string, startingFen?: string): string | undefined {
         this.game.load(DEFAULT_POSITION);
+        if(startingFen) this.game.load(startingFen);
 
         for(let i = 0; i < index; i++) {
             if(i < movesList.length) this.game.move(movesList[i]);
@@ -164,8 +165,9 @@ class GameToolBox {
      * @param   lanHistory  The history of the game in LAN format: ['e2e4', 'e7e5', 'g1f3']
      * @returns The history of the game in SAN format: ['e4', 'e5', 'Nf3']
      */
-    convertHistoryLanToSan(lanHistory: Array<string>): string[]{
+    convertHistoryLanToSan(lanHistory: Array<string>, startingFen?: string): string[]{
         this.game.load(DEFAULT_POSITION);
+        if(startingFen) this.game.load(startingFen);
 
         for(let lanMove of lanHistory){
             this.game.move(lanMove);
@@ -180,10 +182,12 @@ class GameToolBox {
      * @param   sanHistory  The history of the game in SAN format: ['e4', 'e5', 'Nf3']
      * @returns The history of the game in LAN format: ['e2e4', 'e7e5', 'g1f3']
      */
-    convertHistorySanToLan(sanHistory: string[]): string[]{
+    convertHistorySanToLan(sanHistory: string[], startingFen?: string): string[]{
         let lanHistory = [];
         this.game.load(DEFAULT_POSITION);
-
+        if(startingFen) this.game.load(startingFen);
+        console.log(this.game.fen());
+        console.log(startingFen);
         for(let sanMove of sanHistory){
             this.game.move(sanMove);
         }
@@ -202,8 +206,9 @@ class GameToolBox {
      * @param   history  The history of the game in SAN or LAN format: ['e4', 'e5', 'Nf3'] / ['e2e4', 'e7e5', 'g1f3']
      * @returns The pgn of the game: '1.e4 e5 2.Nf3'
      */
-    convertHistoryToPGN(history: string[]): string{
+    convertHistoryToPGN(history: string[], startingFen?: string): string{
         this.game.load(DEFAULT_POSITION);
+        if(startingFen) this.game.load(startingFen);
 
         for(let sanMove of history){
             this.game.move(sanMove);

@@ -1,3 +1,5 @@
+import { DEFAULT_POSITION } from "chess.js";
+
 export const bestMoveRegex = /bestmove\s(\w*)/;
 export const pvMoveRegex = /\spv\s\w*/;
 export const evalRegex = /cp\s-?[0-9]*|mate\s-?[0-9]*/; 
@@ -156,11 +158,16 @@ class Engine {
 
     //TODO: Faire en sorte de calculer le coeff de manière interne
     // movesList: e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 ...
-    evalPositionFromMovesList(movesListUci: string, depth: number, coeff: number) {
+    evalPositionFromMovesList(movesListUci: string, depth: number, coeff: number, startingFen?: string) {
         return new Promise((resolve, reject) => {
             // On stope l'analyse au cas où la position aurait changé avant qu'une précédente analyse soit terminée
             this.stockfish.postMessage('stop');
-            this.stockfish.postMessage(`position startpos moves ${movesListUci}`)
+            if(startingFen){
+                console.log(`position fen ${startingFen} moves ${movesListUci}`);
+                this.stockfish.postMessage(`position fen ${startingFen} moves ${movesListUci}`);
+            }else{
+                this.stockfish.postMessage(`position startpos moves ${movesListUci}`);
+            }
             this.stockfish.postMessage(`go depth ${depth}`);
 
             this.stockfish.onmessage = function(event: any) {
@@ -223,7 +230,7 @@ class Engine {
     //Test avec : movesArray = ['e2e4', 'e7e5', 'g1f3', 'b8c6', 'f1b5'];
     // TODO: Erreur sur l'évaluation du dernier coup lors de l'analyse pour ce pgn : #-1 au lieu de #1
     // 1.e4 e5 2.Nf3 Bc5 3.d4 exd4 4.Nxd4 Qf6 5.Be3 Nc6 6.c3 Bxd4 7.cxd4 Qh4 8.Nc3 Nf6 9.e5 Ne4 10.g3 Nxc3 11.bxc3 Qd8 12.Qd2 d5 13.Bg2 Rb8 14.O-O b6 15.Rfe1 Be6 16.Rad1 Bg4 17.Rc1 Bf5 18.c4 Ne7 19.cxd5 O-O 20.d6 Rc8 21.dxe7 Qxe7 22.d5 Rfd8 23.Bf4 Be6 24.d6 cxd6 25.exd6 Qf8 26.Rxc8 Re8 27.Rxe8 Qxe8 28.Rd1 h6 29.d7 Qxd7 30.Qxd7 a6 31.Qd8+ Kh7 32.Be4+ f5 33.Bc2 g6 34.Qe7+ Bf7 35.Qxf7+ Kh8 36.Be5#
-    async launchGameAnalysis(movesListUci: Array<string>, depth: number, callback: (progress: number) => void) {
+    async launchGameAnalysis(movesListUci: Array<string>, depth: number, callback: (progress: number) => void, startingFen?: string) {
         console.log('Start Game Anaysis');
         let results = [];
         let movesSetArray = movesListUci.map((move, i) => {
@@ -233,7 +240,8 @@ class Engine {
         //Il a fallu ajouter "downlevelIteration": true dans le tsconfig.json pour que ça marche
         for(let [i, movesSet] of movesSetArray.entries()){
             const coeff = i%2 === 0 ? 1 : -1;
-            const result: any = await this.evalPositionFromMovesList(movesSet, depth, coeff);
+            const fen = startingFen ? startingFen : DEFAULT_POSITION;
+            const result: any = await this.evalPositionFromMovesList(movesSet, depth, coeff, fen);
             if(i < movesListUci.length ){
                 let finalResult: EvalResult = {
                     bestMove: result.pv,

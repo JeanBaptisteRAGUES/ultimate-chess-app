@@ -1,6 +1,6 @@
 // TODO: Niveaux de difficulté Beginner, Casual, Intermediate, Advanced, Master, Maximum
 
-import { Chess, Color, Piece, Square } from "chess.js";
+import { Chess, Color, DEFAULT_POSITION, Piece, Square } from "chess.js";
 import { fetchLichessDatabase } from "../libs/fetchLichess";
 import Engine, { EvalResultSimplified } from "../engine/Engine";
 import GameToolBox from "../game-toolbox/GameToolbox";
@@ -368,9 +368,13 @@ class BotsAI {
         };
 
         if(useDatabase) {
-            const movesList = this.#toolbox.convertHistorySanToLan(this.#toolbox.convertPgnToHistory(game.pgn()));
+            console.log(game.pgn());
+            console.log(game.history());
+            //const movesList = this.#toolbox.convertHistorySanToLan(this.#toolbox.convertPgnToHistory(game.pgn()));
+            const startingFen = game.history().length > 0 ? game.history({verbose: true})[0].before : DEFAULT_POSITION;
+            const movesList = this.#toolbox.convertHistorySanToLan(game.history(), startingFen);
 
-            const lichessMove = await makeLichessMove(movesList, this.#botLevel, '');
+            const lichessMove = await makeLichessMove(movesList, this.#botLevel, startingFen);
             if(lichessMove.type >= 0){
                 this.#lastRandomMove = this.#lastRandomMove-1;
                 return lichessMove;
@@ -1465,6 +1469,7 @@ class BotsAI {
                 move = await this.#makeDefaultMove(game);
                 break;
 
+            //TODO: Récupérer game.history({verbose: true}) et si length > 1 utiliser startingFen = history[0].before
             case "stockfish-random": // Plutôt faire puzzle bot qui utilise aussi la bdd lichess
                 move = await this.#makestockfishRandomMove(game);
                 break;

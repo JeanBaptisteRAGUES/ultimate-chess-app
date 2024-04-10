@@ -80,7 +80,7 @@ const ThematicTrainingPage = () => {
     useEffect(() => {
       console.log('New Level : ' + difficulty);
       const botColor = playerColor === 'w' ? 'b' : 'w';
-      botAI.current = new BotsAI('stockfish-random', difficulty, botColor);
+      botAI.current = new BotsAI('default', difficulty, botColor);
     }, [playerColor]);
 
     // TODO: Problème lors de la promotion d'un pion (promeut automatiquement en cavalier)
