@@ -5,12 +5,16 @@ import { Behaviour } from '../bots-ai/BotsAI';
 import Link from 'next/link';
 import { Color, DEFAULT_POSITION } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
+import {FaChess} from 'react-icons/fa';
+import { FaShieldAlt } from 'react-icons/fa';
+import { LuSwords } from 'react-icons/lu';
 
 export type Avantage = 'low' | 'medium' | 'high' | 'very high';
 
 
 const SelectThematicTrainingPage = () => {
     const [difficulty, setDifficulty] = useState('Master');
+    const [themeChoice, setThemeChoice] = useState('Attack');
 
     // TODO: Créer une BDD pour stocker ces données
     // TODO: Peut être avoir une BDD locale avec moins de position si jamais offline
@@ -100,7 +104,24 @@ const SelectThematicTrainingPage = () => {
             </div>
         </div>
 
-    const attackPositionsComponent = 
+    const themeComponent =
+        <div className='flex flex-row justify-around items-center flex-wrap w-full' >
+            <div onClick={() => setThemeChoice('Attack')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: themeChoice === 'Attack' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <LuSwords size={100} />
+                <span className=' w-full h-[10px] flex justify-center items-center mt-2' >Attaque</span>
+            </div>
+            <div onClick={() => setThemeChoice('Defense')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: themeChoice === 'Defense' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <FaShieldAlt size={100} />
+                <span className=' w-full h-[10px] flex justify-center items-center  mt-2' >Defense</span>
+            </div>
+            <div onClick={() => setThemeChoice('Endgames')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: themeChoice === 'Endgames' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <FaChess size={100} />
+                <span className=' w-full h-[10px] flex justify-center items-center  mt-2' >Finales</span>
+            </div>
+        </div>
+
+    // TODO: Afficher que si le thème choisi correspond (attaque, défense, finales)
+    const attackPositionsComponent = themeChoice === 'Attack' ?
         <div className='flex flex-row justify-around items-center flex-wrap w-full mt-2 px-2 gap-2' >
             {
                 attackingPositions.map((position, i) => {
@@ -131,8 +152,10 @@ const SelectThematicTrainingPage = () => {
                 })
             }
         </div>
+        :
+        null
     
-    const defensePositionsComponent = 
+    const defensePositionsComponent = themeChoice === 'Defense' ?
         <div className='flex flex-row justify-around items-center flex-wrap w-full mt-2 px-2 gap-2' >
             {
                 defensePositions.map((position, i) => {
@@ -163,8 +186,10 @@ const SelectThematicTrainingPage = () => {
                 })
             }
         </div>
+        :
+        null
 
-    const endgamePositionsComponent = 
+    const endgamePositionsComponent = themeChoice === 'Endgames' ?
         <div className='flex flex-row justify-around items-center flex-wrap w-full mt-2 px-2 gap-2' >
             {
                 endgamePositions.map((position, i) => {
@@ -196,16 +221,17 @@ const SelectThematicTrainingPage = () => {
             }
             
         </div>
+        :
+        null
 
     return (
-        <div className="flex flex-col justify-start items-center bg-cyan-900 h-screen w-full overflow-auto" >
+        <div className="flex flex-col justify-around items-center bg-cyan-900 h-screen w-full overflow-auto" >
             <div className=' w-full flex justify-center items-center text-2xl font-semibold text-white' >Difficulté:</div>
             {difficultyComponent}
-            <div className=' w-full mt-20 flex justify-center items-center text-3xl font-semibold text-white' >Attaque:</div>
+            <div className=' w-full flex justify-center items-center text-2xl font-semibold text-white' >Thèmes:</div>
+            {themeComponent}
             {attackPositionsComponent}
-            <div className=' w-full mt-20 flex justify-center items-center text-3xl font-semibold text-white' >Défense:</div>
             {defensePositionsComponent}
-            <div className=' w-full mt-20 flex justify-center items-center text-3xl font-semibold text-white' >Finales:</div>
             {endgamePositionsComponent}
         </div>
     )
