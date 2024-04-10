@@ -4,10 +4,73 @@ import React, { useState } from 'react';
 import { Behaviour } from '../bots-ai/BotsAI';
 import Link from 'next/link';
 import { Color, DEFAULT_POSITION } from 'chess.js';
+import { Chessboard } from 'react-chessboard';
+
+export type Avantage = 'low' | 'medium' | 'high' | 'very high';
 
 
 const SelectThematicTrainingPage = () => {
     const [difficulty, setDifficulty] = useState('Master');
+
+    // TODO: Créer une BDD pour stocker ces données
+    // TODO: Peut être avoir une BDD locale avec moins de position si jamais offline
+    const attackingPositions = [
+        {
+            title: 'Damiano Defense',
+            startingFen: 'rnbqkbnr/pppp2pp/5p2/4N3/4P3/8/PPPP1PPP/RNBQKB1R b KQkq - 0 3',
+            nextMove: 'fxe5',
+            playerColor: 'w',
+            avantage: 'high'
+        }
+    ];
+
+    const defensePositions = [
+        {
+            title: 'Alien gambit',
+            startingFen: 'rnbq1b1r/pp2pkp1/2p2n1p/8/3P4/8/PPP2PPP/R1BQKBNR w KQ - 0 7',
+            nextMove: 'Bc4+',
+            playerColor: 'b',
+            avantage: 'medium'
+        }
+    ];
+
+    const endgamePositions = [
+        {
+            title: 'Finale de pions n°1',
+            startingFen: '8/8/1p1p1k2/3P4/3K4/P7/8/8 b - - 5 47',
+            nextMove: 'Ke7',
+            playerColor: 'w',
+            avantage: 'very high'
+        },
+        {
+            title: 'Finale fou contre pion',
+            startingFen: '8/p2k4/8/1P6/2PK1p2/7P/8/3b4 w - - 1 46',
+            nextMove: 'c5',
+            playerColor: 'b',
+            avantage: 'high'
+        },
+        {
+            title: 'Finale fou + tour contre tour',
+            startingFen: '1r6/5p2/6pp/1b2k3/3RP3/4KP1P/6P1/8 w - - 4 37',
+            nextMove: 'Rb4',
+            playerColor: 'b',
+            avantage: 'medium'
+        },
+        {
+            title: 'Finale de tours n°1',
+            startingFen: '3r4/5pkp/4p1p1/1R6/3p1P2/8/P2K1P1P/8 w - - 0 24',
+            nextMove: 'Kd3',
+            playerColor: 'b',
+            avantage: 'medium'
+        },
+        {
+            title: 'Finale de tours n°2',
+            startingFen: '5R2/8/r3k3/5p2/4p1p1/6P1/4K3/8 w - - 1 52',
+            nextMove: 'Ke3',
+            playerColor: 'b',
+            avantage: 'high'
+        },
+    ];
 
     const difficultyComponent =
         <div className='flex flex-row justify-around items-center flex-wrap w-full' >
@@ -39,118 +102,98 @@ const SelectThematicTrainingPage = () => {
 
     const attackPositionsComponent = 
         <div className='flex flex-row justify-around items-center flex-wrap w-full mt-2 px-2 gap-2' >
-            <Link
-                className=' text-white hover:text-cyan-400 cursor-pointer text-xl font-bold my-20 '
-                href = {{
-                pathname: '/thematic-training',
-                query: {
-                    difficulty: difficulty,
-                    startingFen: 'rnbqkbnr/pppp2pp/5p2/4N3/4P3/8/PPPP1PPP/RNBQKB1R b KQkq - 0 3',
-                    nextMove: 'fxe5',
-                    playerColor: 'w'
-                }
-                }}
-            >
-                Position d'attaque
-            </Link>
-            
+            {
+                attackingPositions.map((position, i) => {
+                    return <div key={`attack${i}`} className=' relative w-fit h-fit flex flex-col justify-center items-center'>
+                        <div className=' relative w-44 h-44 flex justify-center items-center'>
+                            <Chessboard 
+                                id={`attack${i}`}
+                                position={position.startingFen}
+                                onPieceDrop={() => false} 
+                                boardOrientation={position.playerColor === 'w' ? 'white' : 'black'}
+                            />
+                            <Link
+                                className=' absolute w-full h-full cursor-pointer z-50 '
+                                href = {{
+                                pathname: '/thematic-training',
+                                query: {
+                                    difficulty: difficulty,
+                                    startingFen: position.startingFen,
+                                    nextMove: position.nextMove,
+                                    playerColor: position.playerColor,
+                                }
+                                }}
+                            ></Link>
+                        </div>
+                        <h1 className=' text-white text-lg font-semibold' >{position.title}</h1>
+                        <h2 className=' text-white text-base'>Avantage: {position.avantage}</h2>
+                    </div>
+                })
+            }
         </div>
     
     const defensePositionsComponent = 
         <div className='flex flex-row justify-around items-center flex-wrap w-full mt-2 px-2 gap-2' >
-            <Link
-                className=' text-white hover:text-cyan-400 cursor-pointer text-xl font-bold my-20 '
-                href = {{
-                pathname: '/thematic-training',
-                query: {
-                    difficulty: difficulty,
-                    startingFen: 'rnbq1b1r/pp2pkp1/2p2n1p/8/3P4/8/PPP2PPP/R1BQKBNR w KQ - 0 7',
-                    nextMove: 'Bc4+',
-                    playerColor: 'b'
-                }
-                }}
-            >
-                Position de défense
-            </Link>
-            
+            {
+                defensePositions.map((position, i) => {
+                    return <div key={`defense${i}`} className=' relative w-fit h-fit flex flex-col justify-center items-center'>
+                        <div className=' relative w-44 h-44 flex justify-center items-center'>
+                            <Chessboard 
+                                id={`defense${i}`}
+                                position={position.startingFen}
+                                onPieceDrop={() => false} 
+                                boardOrientation={position.playerColor === 'w' ? 'white' : 'black'}
+                            />
+                            <Link
+                                className=' absolute w-full h-full cursor-pointer z-50 '
+                                href = {{
+                                pathname: '/thematic-training',
+                                query: {
+                                    difficulty: difficulty,
+                                    startingFen: position.startingFen,
+                                    nextMove: position.nextMove,
+                                    playerColor: position.playerColor,
+                                }
+                                }}
+                            ></Link>
+                        </div>
+                        <h1 className=' text-white text-lg font-semibold' >{position.title}</h1>
+                        <h2 className=' text-white text-base'>Avantage: {position.avantage}</h2>
+                    </div>
+                })
+            }
         </div>
 
     const endgamePositionsComponent = 
         <div className='flex flex-row justify-around items-center flex-wrap w-full mt-2 px-2 gap-2' >
-            <Link
-                className=' text-white hover:text-cyan-400 cursor-pointer text-xl font-bold my-20 '
-                href = {{
-                pathname: '/thematic-training',
-                query: {
-                    difficulty: difficulty,
-                    startingFen: '8/8/1p1p1k2/3P4/3K4/P7/8/8 b - - 5 47',
-                    nextMove: 'Ke7',
-                    playerColor: 'w'
-                }
-                }}
-            >
-                Finale de pions n°1
-            </Link>
-
-            <Link
-                className=' text-white hover:text-cyan-400 cursor-pointer text-xl font-bold my-20 '
-                href = {{
-                pathname: '/thematic-training',
-                query: {
-                    difficulty: difficulty,
-                    startingFen: '8/p2k4/8/1P6/2PK1p2/7P/8/3b4 w - - 1 46',
-                    nextMove: 'c5',
-                    playerColor: 'b'
-                }
-                }}
-            >
-                Finale fou contre pion
-            </Link>
-
-            <Link
-                className=' text-white hover:text-cyan-400 cursor-pointer text-xl font-bold my-20 '
-                href = {{
-                pathname: '/thematic-training',
-                query: {
-                    difficulty: difficulty,
-                    startingFen: '1r6/5p2/6pp/1b2k3/3RP3/4KP1P/6P1/8 w - - 4 37',
-                    nextMove: 'Rb4',
-                    playerColor: 'b'
-                }
-                }}
-            >
-                Finale fou + tour contre tour
-            </Link>
-
-            <Link
-                className=' text-white hover:text-cyan-400 cursor-pointer text-xl font-bold my-20 '
-                href = {{
-                pathname: '/thematic-training',
-                query: {
-                    difficulty: difficulty,
-                    startingFen: '3r4/5pkp/4p1p1/1R6/3p1P2/8/P2K1P1P/8 w - - 0 24',
-                    nextMove: 'Kd3',
-                    playerColor: 'b'
-                }
-                }}
-            >
-                Finale de tours n°1
-            </Link>
-
-            <Link
-                className=' text-white hover:text-cyan-400 cursor-pointer text-xl font-bold my-20 '
-                href = {{
-                pathname: '/thematic-training',
-                query: {
-                    difficulty: difficulty,
-                    startingFen: '5R2/8/r3k3/5p2/4p1p1/6P1/4K3/8 w - - 1 52',
-                    nextMove: 'Ke3',
-                    playerColor: 'b'
-                }
-                }}
-            >
-                Finale de tours n°2
-            </Link>
+            {
+                endgamePositions.map((position, i) => {
+                    return <div key={`endgame${i}`} className=' relative w-fit h-fit flex flex-col justify-center items-center'>
+                        <div className=' relative w-44 h-44 flex justify-center items-center'>
+                            <Chessboard 
+                                id={`endgame${i}`}
+                                position={position.startingFen}
+                                onPieceDrop={() => false} 
+                                boardOrientation={position.playerColor === 'w' ? 'white' : 'black'}
+                            />
+                            <Link
+                                className=' absolute w-full h-full cursor-pointer z-50 '
+                                href = {{
+                                pathname: '/thematic-training',
+                                query: {
+                                    difficulty: difficulty,
+                                    startingFen: position.startingFen,
+                                    nextMove: position.nextMove,
+                                    playerColor: position.playerColor,
+                                }
+                                }}
+                            ></Link>
+                        </div>
+                        <h1 className=' text-white text-lg font-semibold' >{position.title}</h1>
+                        <h2 className=' text-white text-base'>Avantage: {position.avantage}</h2>
+                    </div>
+                })
+            }
             
         </div>
 
