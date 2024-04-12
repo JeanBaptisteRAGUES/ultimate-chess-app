@@ -163,7 +163,6 @@ class Engine {
             // On stope l'analyse au cas où la position aurait changé avant qu'une précédente analyse soit terminée
             this.stockfish.postMessage('stop');
             if(startingFen){
-                console.log(`position fen ${startingFen} moves ${movesListUci}`);
                 this.stockfish.postMessage(`position fen ${startingFen} moves ${movesListUci}`);
             }else{
                 this.stockfish.postMessage(`position startpos moves ${movesListUci}`);
@@ -214,12 +213,7 @@ class Engine {
         let scoreAbsoluteDiff = Math.abs(evalAfter - evalBefore);
         let scorePercentageDiff = Math.max(Math.abs(evalBefore),Math.abs(evalAfter))/Math.min(Math.abs(evalBefore),Math.abs(evalAfter)) - 1;
         let scoreAccuracy = Math.min(Math.abs(evalBefore),Math.abs(evalAfter))/Math.max(Math.abs(evalBefore),Math.abs(evalAfter));
-        console.log(moveEval.movePlayed);
-        console.log(evalBefore);
-        console.log(evalAfter);
-        console.log(scoreAbsoluteDiff);
-        console.log(scorePercentageDiff);
-        console.log(scoreAccuracy);
+        
         if(scoreAbsoluteDiff > 0.5 && scorePercentageDiff > 0.3 && moveEval.bestMove !== moveEval.movePlayed) moveEval.quality = "?!";
         if(scoreAbsoluteDiff > 1 && scorePercentageDiff > 1 && moveEval.bestMove !== moveEval.movePlayed) moveEval.quality = "?";
         if(scoreAbsoluteDiff > 2 && scorePercentageDiff > 2 && moveEval.bestMove !== moveEval.movePlayed) moveEval.quality = "??";
@@ -237,10 +231,12 @@ class Engine {
             return movesListUci.slice(0, i+1).join(' ');
         });
         movesSetArray.unshift('');
+        const fen = startingFen ? startingFen : DEFAULT_POSITION;
+        const coeffBase = fen.includes(' w ') ? 1 : -1;
         //Il a fallu ajouter "downlevelIteration": true dans le tsconfig.json pour que ça marche
         for(let [i, movesSet] of movesSetArray.entries()){
-            const coeff = i%2 === 0 ? 1 : -1;
-            const fen = startingFen ? startingFen : DEFAULT_POSITION;
+            //const coeff = i%2 === 0 ? 1 : -1;
+            const coeff = i%2 === 0 ? coeffBase : -coeffBase;
             const result: any = await this.evalPositionFromMovesList(movesSet, depth, coeff, fen);
             if(i < movesListUci.length ){
                 let finalResult: EvalResult = {

@@ -47,6 +47,13 @@ const SelectThematicTrainingPage = () => {
             playerColor: 'w',
             avantage: 'medium'
         },
+        {
+            title: 'French Greek Gift Sacrifice',
+            startingFen: 'r1b2r2/pp1n1ppk/2n1p3/1NbpP1N1/5B2/8/PqP2PPP/R2Q1RK1 b - - 1 12',
+            nextMove: 'Kg6',
+            playerColor: 'w',
+            avantage: 'medium'
+        },
     ];
 
     const defensePositions = [
@@ -115,6 +122,27 @@ const SelectThematicTrainingPage = () => {
             nextMove: 'Rc8',
             playerColor: 'w',
             avantage: 'high'
+        },
+        {
+            title: 'Pion passé n°2',
+            startingFen: '4r2k/5PR1/p6p/P6P/3Nb3/8/1Pp5/2K5 b - - 0 1',
+            nextMove: 'Rd8',
+            playerColor: 'w',
+            avantage: 'high'
+        },
+        {
+            title: 'Pion passé n°3',
+            startingFen: '8/8/3p4/p1nP4/k1P4P/6P1/8/7K w - - 0 38',
+            nextMove: 'h5',
+            playerColor: 'b',
+            avantage: 'high'
+        },
+        {
+            title: 'Pion passé n°4',
+            startingFen: 'r6k/1pRN1pp1/4p2p/3rP2P/p7/4R3/5KP1/8 b - - 0 1',
+            nextMove: 'Kh7',
+            playerColor: 'w',
+            avantage: 'medium'
         },
     ];
 

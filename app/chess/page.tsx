@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 'use client'
 import { useEffect, useRef, useState } from "react";
-import {Chess, Color} from "chess.js";
+import {Chess, Color, DEFAULT_POSITION} from "chess.js";
 import { Chessboard } from "react-chessboard";
 import { Piece, Square } from "react-chessboard/dist/chessboard/types";
 import EvalAndWinrate from "../components/EvalAndWinrate";
@@ -10,12 +10,14 @@ import Engine from "../engine/Engine";
 import Link from "next/link";
 import BotsAI, { Behaviour, Move } from "../bots-ai/BotsAI";
 import { useSearchParams } from "next/navigation";
+import GameToolBox from "../game-toolbox/GameToolbox";
 
 
 const ChessPage = () => {
     const searchParams = useSearchParams();
     const databaseRating = searchParams.get('difficulty') || 'Master';
     const botBehaviour: Behaviour = searchParams.get('behaviour') as Behaviour || 'default';
+    const toolbox = new GameToolBox();
     const gameActive = useRef(true);
     const [game, setGame] = useState(new Chess());
     const engine = useRef<Engine>();
@@ -419,9 +421,10 @@ const ChessPage = () => {
           game={game} 
           databaseRating={databaseRating} 
           winner={winner} 
+          startingFen={DEFAULT_POSITION}
           currentFen={currentFen} 
+          movesList={toolbox.convertHistorySanToLan(toolbox.convertPgnToHistory(game.pgn()), DEFAULT_POSITION)}
           showEval={showEval} 
-          gameActive={gameActive}
         />
         {boardComponent}
         {buttonsComponent}

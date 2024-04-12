@@ -9,12 +9,13 @@ interface EvalProps {
     game: Chess,
     databaseRating: string,
     winner: string,
+    startingFen: string,
     currentFen: string,
+    movesList: string[],
     showEval: boolean,
-    gameActive: MutableRefObject<boolean>,
 }
 
-const EvalAndWinrate: React.FC<EvalProps> = ({game, databaseRating, winner, currentFen, showEval, gameActive}) => {
+const EvalAndWinrate: React.FC<EvalProps> = ({game, databaseRating, winner, startingFen, currentFen, movesList, showEval}) => {
     const engine = useRef<Engine>();
     const toolbox = new GameToolBox();
     const [engineEval, setEngineEval] = useState('0.3');
@@ -32,10 +33,8 @@ const EvalAndWinrate: React.FC<EvalProps> = ({game, databaseRating, winner, curr
 
     useEffect(() => {
         if(winner || !engine.current) return;
-        const movesList = toolbox.convertHistorySanToLan(toolbox.convertPgnToHistory(game.pgn()));
+        //const movesList = toolbox.convertHistorySanToLan(toolbox.convertPgnToHistory(game.pgn()), startingFen);
         console.log('Moves List:' + movesList);
-        console.log(game.pgn());
-        console.log(game.history());
         
         //let coeff = game.history().length %2 === 0 ? 1 : -1;
         
@@ -45,7 +44,7 @@ const EvalAndWinrate: React.FC<EvalProps> = ({game, databaseRating, winner, curr
         }).catch((err: any) => {
             console.log(err);
         });
-        getLichessWinrate(movesList, databaseRating, '').then((winrate) => {
+        getLichessWinrate(movesList, databaseRating, startingFen).then((winrate) => {
             console.log(winrate);
             if(winrate.white) setWinrate(winrate);
         })

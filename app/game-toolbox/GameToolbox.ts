@@ -136,6 +136,8 @@ class GameToolBox {
     convertMoveLanToSan2(movesList: string[], index: number, lanNotation: string, startingFen?: string): string | undefined {
         this.game.load(DEFAULT_POSITION);
         if(startingFen) this.game.load(startingFen);
+        console.log(this.game.fen());
+        console.log(movesList);
 
         for(let i = 0; i < index; i++) {
             if(i < movesList.length) this.game.move(movesList[i]);
@@ -183,12 +185,12 @@ class GameToolBox {
      * @returns The history of the game in LAN format: ['e2e4', 'e7e5', 'g1f3']
      */
     convertHistorySanToLan(sanHistory: string[], startingFen?: string): string[]{
-        let lanHistory = [];
+        let lanHistory:string[] = [];
         this.game.load(DEFAULT_POSITION);
         if(startingFen) this.game.load(startingFen);
-        console.log(this.game.fen());
         console.log(startingFen);
-        for(let sanMove of sanHistory){
+        console.log(sanHistory);
+        for(let sanMove of sanHistory.filter((sanMove) => sanMove !== '')){
             this.game.move(sanMove);
         }
 
@@ -224,9 +226,10 @@ class GameToolBox {
      * @returns string[] -> ['e4', 'e5', 'Nf3']
      */
     convertPgnToHistory(pgn: string): string[]{
-        this.game.loadPgn(pgn);
+        //this.game.loadPgn(pgn);
 
-        return this.game.history();
+        //return this.game.history();
+        return pgn.replaceAll(/\d*\.{1,}/g, '').trim().replaceAll(/\s{2,}/g, ' ').split(' ');
     }
 
     /**

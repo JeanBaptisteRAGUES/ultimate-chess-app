@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import Engine, { EvalResult } from "../engine/Engine";
 import GameToolBox from "../game-toolbox/GameToolbox";
 import { AnalysisChart } from "../components/AnalysisChart";
-import { Chess, Color, DEFAULT_POSITION } from "chess.js";
+import { Chess, Color, DEFAULT_POSITION, Move } from "chess.js";
 import { Chessboard } from "react-chessboard";
 import { Piece, Square } from "react-chessboard/dist/chessboard/types";
 import EvalAndWinrate from "../components/EvalAndWinrate";
@@ -26,18 +26,23 @@ const GameAnalysisPage = () => {
     const toolbox = new GameToolBox();
     //const game = new Chess();
     const [game, setGame] = useState<Chess>(new Chess());
+    const gameHistory = useRef<Move[]>([]);
     
-    const searchParams2 = useSearchParams();
-    const pgn = searchParams2.get('pgn') || '';
-    const depth: number = eval(searchParams2.get('depth') || '12');
+    const searchParams = useSearchParams();
+    const startingFen = searchParams.get('startingFen') || DEFAULT_POSITION;
+    const pgn = searchParams.get('pgn')?.replaceAll(/\[.*\]/g, '').replaceAll(/\.{3,}/g, '..').trim() || '';
+    //const history = searchParams.get('history') || [];
+    const depth: number = eval(searchParams.get('depth') || '12');
     //const search = searchParams2.get('search');
     const [chartHistoryData, setChartHistoryData] = useState<number[]>([]);
     const [analysisProgress, setAnalysisProgress] = useState(0);
     const [showChartHistory, setShowChartHistory] = useState(false);
-    const [currentFen, setCurrentFen] = useState('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+    const [currentFen, setCurrentFen] = useState(startingFen);
+    const [currentMovesList, setCurrentMovesList] = useState<string[]>([]);
     const [currentIndex, setCurrentIndex] = useState(-1);
     const [formatedResults, setFormatedResults] = useState<JSX.Element[]>([])
     const [playerColor, setPlayerColor] = useState('w');
+    const boardOrientationRef = useRef<Color>('w');
     const [winrate, setWinrate] = useState({
         white: 50,
         draws: 0,
@@ -56,14 +61,22 @@ const GameAnalysisPage = () => {
     const endCaseRef = useRef<Element | null>(null);
     
     useEffect(() => {
-        console.log(searchParams2);
-        console.log(searchParams2.get('pgn'));
-        console.log(searchParams2.get('depth'));
+        console.log(searchParams);
+        console.log(searchParams.get('pgn'));
+        console.log(searchParams.get('depth'));
         engine.current = new Engine();
         engine.current.init().then(() => {
             console.log('Launch PGN analysis');
             launchStockfishAnalysis(pgn, depth);
         });
+        const gameHistoryChess = new Chess();
+        gameHistoryChess.load(startingFen);
+        const movesList = toolbox.convertPgnToHistory(pgn);
+        movesList.forEach((move) => {
+            gameHistoryChess.move(move);
+        })
+        gameHistory.current = gameHistoryChess.history({verbose: true});
+        console.log(gameHistory.current);
     }, []);
     
     function evalToNumber(evalScore: string): number {
@@ -98,9 +111,9 @@ const GameAnalysisPage = () => {
         if(!engine.current) return;
         // pgn -> history (san) -> history (uci) : 1.e4 e5 -> ['e4', 'e5'] -> ['e2e4', 'e7e5']
         console.log('Pgn: ' + pgn);
-        const startingFen = game.history().length > 0 ? game.history({verbose: true})[0].before : DEFAULT_POSITION;
+        //const startingFen = game.history().length > 0 ? game.history({verbose: true})[0].before : DEFAULT_POSITION;
         console.log(startingFen);
-        console.log(game.history({verbose: true})); //TODO: renvoie []
+        console.log(toolbox.convertPgnToHistory(pgn));
         const historyUci = toolbox.convertHistorySanToLan(toolbox.convertPgnToHistory(pgn), startingFen);
         //const historyUci = toolbox.convertHistorySanToLan(game.history(), startingFen);
         const timestampStart = performance.now();
@@ -121,11 +134,14 @@ const GameAnalysisPage = () => {
     function formatAnalyseResults(pgn: string, analysisResults: EvalResult[]) {
         //console.log(analysisResults);
         const timestampStart = performance.now();
+        console.log(pgn);
         const pgnArray = toolbox.convertPgnToArray(pgn);
+        console.log(pgnArray);
         const history = toolbox.convertPgnToHistory(pgn);
+        console.log(history);
 
         const results = analysisResults.map((result: EvalResult, i: number) => {
-            const bestMoveSan = toolbox.convertMoveLanToSan2(history, i, result.bestMove);
+            const bestMoveSan = toolbox.convertMoveLanToSan2(history, i, result.bestMove, startingFen);
             const movePlayed = pgnArray[i];
             const bestMoveSpan = result.quality !== '' ? 
                 <span>
@@ -163,14 +179,16 @@ const GameAnalysisPage = () => {
     }
 
     const highlightMove = (lastMove: string | undefined, moveIndex: number, isMovePlayed: boolean): void => {
-        if(!lastMove) return;
-        const evalRes = analysisResultsRef.current[moveIndex];
-        const quality = isMovePlayed ? evalRes.quality : '';
+        console.log(lastMove);
+        console.log(moveIndex);
+        console.log(isMovePlayed);
+        console.log(playerColor);
 
         // Reset previous highlight
         inaccuracyIndexRef.current = -1;
         errorIndexRef.current = -1;
         blunderIndexRef.current = -1;
+
         if(startCaseRef.current) startCaseRef.current.getAttribute('data-square-color') === 'white' ? 
             startCaseRef.current.setAttribute('style', 'background-color: rgb(240,217,181)') 
             : 
@@ -181,9 +199,14 @@ const GameAnalysisPage = () => {
             : 
             endCaseRef.current.setAttribute('style', 'background-color: rgb(181,136,99)');
 
+        if(!lastMove) return;
+        const evalRes = analysisResultsRef.current[moveIndex];
+        const quality = isMovePlayed ? evalRes.quality : '';
+
+
         // Highlight move origin and destination
-        startCaseRef.current = document.querySelector(`[data-square=${toolbox.getMoveDestination(lastMove)}]`);
-        endCaseRef.current = document.querySelector(`[data-square=${toolbox.getMoveOrigin(lastMove)}]`);
+        startCaseRef.current = document.querySelector(`[data-square=${toolbox.getMoveOrigin(lastMove)}]`);
+        endCaseRef.current = document.querySelector(`[data-square=${toolbox.getMoveDestination(lastMove)}]`);
         const startCaseColor = startCaseRef.current?.getAttribute('data-square-color') || 'white';
         const endCaseColor = endCaseRef.current?.getAttribute('data-square-color') || 'white';
         if(startCaseRef.current) startCaseRef.current.setAttribute('style', `background-color: ${getMoveColor(quality, startCaseColor)}`);
@@ -191,28 +214,33 @@ const GameAnalysisPage = () => {
         
         // highlight move quality (ok / inaccuracy / error / blunder)
         if(quality === '?!'){
-            inaccuracyIndexRef.current = toolbox.getCaseIndex(toolbox.getMoveDestination(lastMove) || 'a1', playerColor as Color);
+            inaccuracyIndexRef.current = toolbox.getCaseIndex(toolbox.getMoveDestination(lastMove) || 'a1', boardOrientationRef.current);
         }
         if(quality === '?'){
-            errorIndexRef.current = toolbox.getCaseIndex(toolbox.getMoveDestination(lastMove) || 'a1', playerColor as Color);
+            errorIndexRef.current = toolbox.getCaseIndex(toolbox.getMoveDestination(lastMove) || 'a1', boardOrientationRef.current);
         }
         if(quality === '??'){
-            blunderIndexRef.current = toolbox.getCaseIndex(toolbox.getMoveDestination(lastMove) || 'a1', playerColor as Color);
+            blunderIndexRef.current = toolbox.getCaseIndex(toolbox.getMoveDestination(lastMove) || 'a1', boardOrientationRef.current);
         }
+        console.log("Inaccuracy Index: " + inaccuracyIndexRef.current);
+        console.log("Error Index: " + errorIndexRef.current);
+        console.log("Blunder Index: " + blunderIndexRef.current);
     }
   
+    // TODO: Afficher les suggestions de stockfish (ne marche plus pour le moment)
     const showMovePosition = (move: string | undefined, moveIndex: number, isMovePlayed: boolean) => {
         if(!move) return;
         // Setup board position
         const newGame = new Chess();
-        let positionArray = toolbox.convertPgnToArray(pgn).slice(0, moveIndex);
-        positionArray.push(move);
-        const positionPGN = positionArray.join(' ');
-        newGame.loadPgn(positionPGN);
+        newGame.load(gameHistory.current[moveIndex].after);
 
         // Highlight Move
-        let lastMove = newGame.history({verbose: true}).pop()?.lan;
+        let lastMove = gameHistory.current[moveIndex].lan;
         highlightMove(lastMove, moveIndex, isMovePlayed);
+
+        // Build movesList
+        let newMovesList: string[] = gameHistory.current.filter((move, i) => i <= moveIndex).map((move) => move.lan );
+        setCurrentMovesList(newMovesList);
 
         setCurrentFen(newGame.fen());
         setCurrentIndex(moveIndex);
@@ -226,17 +254,16 @@ const GameAnalysisPage = () => {
             return;
         }
         const newGame = new Chess();
-        console.log(moveIndex);
-        console.log(toolbox.convertPgnToArray(pgn));
-        let positionArray = toolbox.convertPgnToArray(pgn).slice(0, moveIndex);
-        console.log(positionArray);
-        const positionPGN = positionArray.join(' ');
-        console.log(positionPGN);
-        newGame.loadPgn(positionPGN);
+        newGame.load(gameHistory.current[moveIndex].before);
 
         // Highlight Move
-        let lastMove = newGame.history({verbose: true}).pop()?.lan;
+        let lastMove = (moveIndex-1) > 0 ? gameHistory.current[moveIndex-1].lan : undefined;
         highlightMove(lastMove, moveIndex-1, true);
+
+        // Build movesList
+        let newMovesList: string[] = gameHistory.current.filter((move, i) => i <= moveIndex).map((move) => move.lan );
+        setCurrentMovesList(newMovesList);
+
 
         setCurrentFen(newGame.fen());
         setCurrentIndex(moveIndex-1);
@@ -250,18 +277,16 @@ const GameAnalysisPage = () => {
             return;
         }
         const newGame = new Chess();
-        console.log(moveIndex);
-        console.log(moveIndex+2);
-        console.log(toolbox.convertPgnToArray(pgn));
-        let positionArray = toolbox.convertPgnToArray(pgn).slice(0, moveIndex+2);
-        console.log(positionArray);
-        const positionPGN = positionArray.join(' ');
-        console.log(positionPGN);
-        newGame.loadPgn(positionPGN);
+        newGame.load(gameHistory.current[moveIndex+1].after);
 
         // Highlight Move
-        let lastMove = newGame.history({verbose: true}).pop()?.lan;
+        let lastMove = gameHistory.current[moveIndex+1].lan;
+        console.log(lastMove);
         highlightMove(lastMove, moveIndex+1, true);
+
+        // Build movesList
+        let newMovesList: string[] = gameHistory.current.filter((move, i) => i <= moveIndex).map((move) => move.lan );
+        setCurrentMovesList(newMovesList);
 
         setCurrentFen(newGame.fen());
         setCurrentIndex(moveIndex+1);
@@ -322,7 +347,9 @@ const GameAnalysisPage = () => {
         <button
             className=" bg-white border rounded cursor-pointer w-10"
             onClick={() => {
-                playerColor === 'w' ? setPlayerColor('b') : setPlayerColor('w')
+                const newColor = playerColor === 'w' ? 'b' : 'w';
+                setPlayerColor(newColor);
+                boardOrientationRef.current = newColor;
             }}
         >
             ↺
@@ -399,13 +426,19 @@ const GameAnalysisPage = () => {
                 game={game} 
                 databaseRating={'Master'} 
                 winner={''} 
+                startingFen={startingFen}
                 currentFen={currentFen} 
+                movesList={currentMovesList}
                 showEval={true} 
-                gameActive={gameActive}
             />
             {boardComponent}
             {buttonsComponent}
         </div>
+    /* const gameComponent = 
+        <div className="flex flex-col justify-start items-center h-full">
+            {boardComponent}
+            {buttonsComponent}
+        </div> */
 
     const gameContainer =
         <div className="flex flex-row justify-center items-center w-1/2 h-full pl-5" >

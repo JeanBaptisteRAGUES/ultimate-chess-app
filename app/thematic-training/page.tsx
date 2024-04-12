@@ -213,6 +213,7 @@ const ThematicTrainingPage = () => {
           href = {{
             pathname: '/game-analysis',
             query: {
+              startingFen: game.history().length > 0 ? game.history({verbose: true})[0].before : null,
               pgn: game.pgn(),
               depth: 12
             }
@@ -225,6 +226,7 @@ const ThematicTrainingPage = () => {
           href = {{
             pathname: '/game-analysis',
             query: {
+              startingFen: game.history().length > 0 ? game.history({verbose: true})[0].before : null,
               pgn: game.pgn(),
               depth: 16
             }
