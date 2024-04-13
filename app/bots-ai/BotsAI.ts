@@ -782,15 +782,11 @@ class BotsAI {
         return move;
     }
 
-    async #botezGambitLogic(game: Chess): Promise<Move> {
+    #botezGambitOpenings(game: Chess): Move {
         let move: Move = {
             notation: '',
             type: -1,
         };
-
-        if(game.history().length > 40) {
-            return move;
-        }
 
         if(game.history().length === 0) {
             move.notation = 'e2e4';
@@ -799,6 +795,11 @@ class BotsAI {
         }
 
         if(game.history().length === 1) {
+            if(game.pgn() === '1.e4') {
+                move.notation = 'e7e5';
+                move.type = 2;
+                return move;
+            }
             move.notation = 'e7e6';
             move.type = 2;
             return move;
@@ -814,6 +815,24 @@ class BotsAI {
             move.notation = 'd8f6';
             move.type = 2;
             return move;
+        }
+
+        return move;
+    }
+
+    async #botezGambitLogic(game: Chess): Promise<Move> {
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+
+        if(game.history().length > 40) {
+            return move;
+        }
+
+        let openingMove = this.#botezGambitOpenings(game);
+        if(openingMove.type >= 0) {
+            return openingMove;
         }
 
         const pawnsCases: Square[] = ['c3', 'c4', 'c5', 'c6', 'e3', 'e4', 'e6', 'e5'];
@@ -880,11 +899,347 @@ class BotsAI {
         return move;
     }
 
+    #gambitFanaticOpenings(game: Chess): Move {
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+        let rand = Math.random()*100;
+
+        switch (game.pgn().replaceAll(/\.\s/g, '.')) {
+            // When Black
+            // e4
+            case '1.e4':
+                move.notation = 'e7e5';
+                move.type = 2;
+                return move;
+
+            // e4 e5 Nf3 (main line)
+            case '1.e4 e5 2.Nf3':
+                move.notation = 'b8c6';
+                move.type = 2;
+                return move;
+
+            // Italian
+            case '1.e4 e5 2.Nf3 Nc6 3.Bc4':
+                if(rand >= 50){
+                    move.notation = 'f7f5';
+                    move.type = 2;
+                    return move;
+                }
+                move.notation = 'c6d4';
+                move.type = 2;
+                return move; 
+
+            // Ruy Lopez
+            case '1.e4 e5 2.Nf3 Nc6 3.Bb5':
+                move.notation = 'f7f5';
+                move.type = 2;
+                return move;
+
+            // Scotch
+            case '1.e4 e5 2.Nf3 Nc6 3.d4':
+                move.notation = 'd7d5';
+                move.type = 2;
+                return move;
+
+            // Vienna
+            case '1.e4 e5 2.Nc3':
+                move.notation = 'g8f6';
+                move.type = 2;
+                return move;
+            case '1.e4 e5 2.Nc3 Nf6 3.f4':
+                move.notation = 'd7d5';
+                move.type = 2;
+                return move;
+            case '1.e4 e5 2.Nc3 Nf6 3.Bc4':
+                move.notation = 'f6e4';
+                move.type = 2;
+                return move;
+            case '1.e4 e5 2.Nc3 Nf6 3.Bc4 Nxe4 4.Nxe4':
+                move.notation = 'd7d5';
+                move.type = 2;
+                return move;
+            case '1.e4 e5 2.Nc3 Nf6 3.Nf3':
+                move.notation = 'f8b4';
+                move.type = 2;
+                return move; 
+            case '1.e4 e5 2.Nc3 Nf6 3.Nf3 Bb4 4.Nxe5':
+                move.notation = 'e8h8';
+                move.type = 2;
+                return move;
+
+            // d4
+            case '1.d4':;
+                if(rand >= 30){
+                    move.notation = 'e7e5';
+                    move.type = 2;
+                    return move;
+                }
+                move.notation = 'g8f6';
+                move.type = 2;
+                return move;
+
+            // Englud Gambit Accepted
+            case '1.d4 e5 2.dxe5':
+                move.notation = 'b8c6';
+                move.type = 2;
+                return move;
+            case '1.d4 e5 2.dxe5 Nc6 3.Nf3':
+                move.notation = 'd8e7';
+                move.type = 2;
+                return move;
+            case '1.d4 e5 2.dxe5 Nc6 3.Nf3 Qe7 4.Bf4':
+                move.notation = 'e7b4';
+                move.type = 2;
+                return move;
+
+            // London System
+            case '1.d4 Nf6 2.Bf4':
+                move.notation = 'c7c5';
+                move.type = 2;
+                return move;
+
+            // Queen's Gambit
+            case '1.d4 Nf6 2.c4':
+                move.notation = 'c7c5';
+                move.type = 2;
+                return move;
+
+            // Accelerated Catalan
+            case '1.d4 Nf6 2.g3':
+                move.notation = 'c7c5';
+                move.type = 2;
+                return move;
+
+            // d4 Nf3
+            case '1.d4 Nf6 2.Nf3':
+                move.notation = 'c7c5';
+                move.type = 2;
+                return move; 
+                
+            // When White
+            // Start
+            case '':
+                move.notation = 'e2e4';
+                move.type = 2;
+                return move;
+
+            // e5
+            case '1.e4 e5':
+                if(rand >= 50){
+                    move.notation = 'f2f4';
+                    move.type = 2;
+                    return move;
+                }
+                move.notation = 'd2d4';
+                move.type = 2;
+                return move;
+
+            // Danish Gambit
+            case '1.e4 e5 2.d4 exd4':
+                move.notation = 'c2c3';
+                move.type = 2;
+                return move; 
+            case '1.e4 e5 2.d4 exd4 3.c3 dxc3':
+                move.notation = 'f1c4';
+                move.type = 2;
+                return move;
+
+            // Caro-Kann
+            case '1.e4 c6':
+                if(rand >= 70){
+                    move.notation = 'c2c4';
+                    move.type = 2;
+                    return move;
+                }
+                move.notation = 'd2d4';
+                move.type = 2;
+                return move;
+            case '1.e4 c6 2.d4 d5':
+                move.notation = 'b1d2';
+                move.type = 2;
+                return move; 
+            case '1.e4 c6 2.d4 d5 3.Nd2 dxe4':
+                move.notation = 'd2e4';
+                move.type = 2;
+                return move;
+            case '1.e4 c6 2.d4 d5 3.Nd2 dxe4 4.Nxe4 Nf6':
+                move.notation = 'e4g5';
+                move.type = 2;
+                return move;
+            case '1.e4 c6 2.d4 d5 3.Nd2 dxe4 4.Nxe4 Nf6 5.Ng5 h6':
+                move.notation = 'g5f7';
+                move.type = 2;
+                return move; 
+            case '1.e4 c6 2.d4 d5 3.Nd2 dxe4 4.Nxe4 Nf6 5.Ng5 Bf5':
+                move.notation = 'g5f7';
+                move.type = 2;
+                return move;
+            case '1.e4 c6 2.d4 d5 3.Nd2 dxe4 4.Nxe4 Nf6 5.Ng5 Bg4':
+                move.notation = 'g5f7';
+                move.type = 2;
+                return move;
+            case '1.e4 c6 2.d4 d5 3.Nd2 dxe4 4.Nxe4 Bf5':
+                move.notation = 'e4g5';
+                move.type = 2;
+                return move;
+            case '1.e4 c6 2.d4 d5 3.Nd2 dxe4 4.Nxe4 Bf5 5.Ng5 h6':
+                move.notation = 'g5f7';
+                move.type = 2;
+                return move;
+            case '1.e4 c6 2.d4 d5 3.Nd2 dxe4 4.Nxe4 Bf5 5.Ng5 Nf6':
+                move.notation = 'g5f7';
+                move.type = 2;
+                return move;
+
+            // French Defense
+            case '1.e4 e6':
+                if(rand >= 50){
+                    move.notation = 'g1f3';
+                    move.type = 2;
+                    return move;
+                }
+                move.notation = 'b2b3';
+                move.type = 2;
+                return move;
+            case '1.e4 e6 2.b3 d5':
+                move.notation = 'c1b2';
+                move.type = 2;
+                return move;
+            case '1.e4 e6 2.Nf3 d5':
+                move.notation = 'e4e5';
+                move.type = 2;
+                return move;
+            case '1.e4 e6 2.Nf3 d5 3.e5 c5':
+                move.notation = 'b2b4';
+                move.type = 2;
+                return move;
+            case '1.e4 e6 2.Nf3 d5 3.e5 Nc6':
+                move.notation = 'd2d4';
+                move.type = 2;
+                return move;
+
+            // Sicilian Defense
+            case '1.e4 c5':
+                if(rand >= 40){
+                    move.notation = 'd2d4';
+                    move.type = 2;
+                    return move;
+                }
+                move.notation = 'b2b4';
+                move.type = 2;
+                return move;
+            case '1.e4 c5 2.d4 cxd4':
+                move.notation = 'c2c3';
+                move.type = 2;
+                return move;
+
+            // Pirc Defense
+            case '1.e4 d6':
+                move.notation = 'd2d4';
+                move.type = 2;
+                return move;
+            case '1.e4 d6 2.d4 Nf6':
+                move.notation = 'b1c3';
+                move.type = 2;
+                return move; 
+            case '1.e4 d6 2.d4 Nf6 3.Nc3 g6':
+                move.notation = 'c1g5';
+                move.type = 2;
+                return move;
+            case '1.e4 d6 2.d4 Nf6 3.Nc3 g6 4.Bg5 Bg7':
+                move.notation = 'e4e5';
+                move.type = 2;
+                return move;
+            case '1.e4 d6 2.d4 Nf6 3.Nc3 g6 4.Bg5 Bg7 5.e5 dxe5':
+                move.notation = 'd4e5';
+                move.type = 2;
+                return move; 
+            case '1.e4 d6 2.d4 Nf6 3.Nc3 g6 4.Bg5 Bg7 5.e5 dxe5 6.dxe5 Qxd1+':
+                move.notation = 'a1d1';
+                move.type = 2;
+                return move;
+            case '1.e4 d6 2.d4 Nf6 3.Nc3 g6 4.Bg5 Bg7 5.e5 dxe5 6.dxe5 Qxd1+ 7.Rxd1 Ng4':
+                move.notation = 'h2h3';
+                move.type = 2;
+                return move;
+            case '1.e4 d6 2.d4 g6':
+                move.notation = 'b1c3';
+                move.type = 2;
+                return move; 
+            case '1.e4 d6 2.d4 g6 3.Nc3 Bg7':
+                move.notation = 'c1g5';
+                move.type = 2;
+                return move;
+            case '1.e4 d6 2.d4 g6 3.Nc3 Bg7 4.Bg5 Nf6':
+                move.notation = 'e4e5';
+                move.type = 2;
+                return move;
+            case '1.e4 d6 2.d4 g6 3.Nc3 Bg7 4.Bg5 Nf6 5.e5 dxe5':
+                move.notation = 'd4e5';
+                move.type = 2;
+                return move; 
+            case '1.e4 d6 2.d4 g6 3.Nc3 Bg7 4.Bg5 Nf6 5.e5 dxe5 6.dxe5 Qxd1+':
+                move.notation = 'a1d1';
+                move.type = 2;
+                return move;
+            case '1.e4 d6 2.d4 g6 3.Nc3 Bg7 4.Bg5 Nf6 5.e5 dxe5 6.dxe5 Qxd1+ 7.Rxd1 Ng4':
+                move.notation = 'h2h3';
+                move.type = 2;
+                return move;
+
+            // Modern Defense
+            case '1.e4 g6':
+                move.notation = 'd2d4';
+                move.type = 2;
+                return move;
+            case '1.e4 g6 2.d4 Bg7':
+                move.notation = 'b1c3';
+                move.type = 2;
+                return move; 
+            case '1.e4 g6 2.d4 Bg7 3.Nc3 d6':
+                move.notation = 'c1g5';
+                move.type = 2;
+                return move;
+            case '1.e4 g6 2.d4 Bg7 3.Nc3 d6 4.Bg5 Nf6':
+                move.notation = 'e4e5';
+                move.type = 2;
+                return move;
+            case '1.e4 g6 2.d4 Bg7 3.Nc3 d6 4.Bg5 Nf6 5.e5 dxe5':
+                move.notation = 'd4e5';
+                move.type = 2;
+                return move; 
+            case '1.e4 g6 2.d4 Bg7 3.Nc3 d6 4.Bg5 Nf6 5.e5 dxe5 6.dxe5 Qxd1+':
+                move.notation = 'a1d1';
+                move.type = 2;
+                return move;
+            case '1.e4 d6 2.d4 Nf6 3.Nc3 g6 4.Bg5 Bg7 5.e5 dxe5 6.dxe5 Qxd1+ 7.Rxd1 Ng4':
+                move.notation = 'h2h3';
+                move.type = 2;
+                return move;
+            default:
+                break;
+        }
+
+        // Si aucune ouverture reconnue
+        if(game.history().length > 2) {
+            return move;
+        }
+
+        return move;
+    }
+
     async #gambitFanaticLogic(game: Chess): Promise<Move> {
         let move: Move = {
             notation: '',
             type: -1,
         };
+
+        let openingMove = this.#gambitFanaticOpenings(game);
+        if(openingMove.type >= 0) {
+            return openingMove;
+        }
 
         let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, 20, 50, false);
         console.log(game.history({verbose: true}));
