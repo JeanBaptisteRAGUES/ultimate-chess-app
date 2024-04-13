@@ -227,7 +227,6 @@ const GameAnalysisPage = () => {
         console.log("Blunder Index: " + blunderIndexRef.current);
     }
   
-    // TODO: Afficher les suggestions de stockfish (ne marche plus pour le moment)
     const showMovePosition = (move: string | undefined, moveIndex: number, isMovePlayed: boolean) => {
         if(!move) return;
         console.log(move.replaceAll(/\d*\./g, ''));

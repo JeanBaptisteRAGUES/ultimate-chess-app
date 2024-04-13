@@ -792,6 +792,30 @@ class BotsAI {
             return move;
         }
 
+        if(game.history().length === 0) {
+            move.notation = 'e2e4';
+            move.type = 2;
+            return move;
+        }
+
+        if(game.history().length === 1) {
+            move.notation = 'e7e6';
+            move.type = 2;
+            return move;
+        }
+
+        if(game.history().length === 2) {
+            move.notation = 'd1f3';
+            move.type = 2;
+            return move;
+        }
+
+        if(game.history().length === 3) {
+            move.notation = 'd8f6';
+            move.type = 2;
+            return move;
+        }
+
         const pawnsCases: Square[] = ['c3', 'c4', 'c5', 'c6', 'e3', 'e4', 'e6', 'e5'];
 
         let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, 20, 50, false);
