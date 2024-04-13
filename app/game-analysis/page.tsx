@@ -230,12 +230,15 @@ const GameAnalysisPage = () => {
     // TODO: Afficher les suggestions de stockfish (ne marche plus pour le moment)
     const showMovePosition = (move: string | undefined, moveIndex: number, isMovePlayed: boolean) => {
         if(!move) return;
+        console.log(move.replaceAll(/\d*\./g, ''));
         // Setup board position
         const newGame = new Chess();
-        newGame.load(gameHistory.current[moveIndex].after);
+        //newGame.load(gameHistory.current[moveIndex].after);
+        newGame.load(gameHistory.current[moveIndex].before);
+        newGame.move(move.replaceAll(/\d*\./g, ''));
 
         // Highlight Move
-        let lastMove = gameHistory.current[moveIndex].lan;
+        let lastMove = isMovePlayed ? gameHistory.current[moveIndex].lan : toolbox.convertMoveSanToLan(gameHistory.current[moveIndex].before, move.replaceAll(/\d*\./g, ''));
         highlightMove(lastMove, moveIndex, isMovePlayed);
 
         // Build movesList

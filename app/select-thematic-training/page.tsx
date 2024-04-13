@@ -54,6 +54,34 @@ const SelectThematicTrainingPage = () => {
             playerColor: 'w',
             avantage: 'medium'
         },
+        {
+            title: 'Punishing Opponent Mistake',
+            startingFen: '2r2rk1/pp2bppp/1q6/3p1p2/1n1N1B2/4P2P/P2QBPP1/1R4K1 b - - 0 1',
+            nextMove: 'Qa5',
+            playerColor: 'w',
+            avantage: 'medium'
+        },
+        {
+            title: 'Philidor Defense Bishop Sacrifice',
+            startingFen: 'rn2kbnr/p1p1qppp/1p6/4p1B1/2B1P3/1Q6/PPP2PPP/RN2K2R b KQkq - 3 8',
+            nextMove: 'Qxg5',
+            playerColor: 'w',
+            avantage: 'high'
+        },
+        {
+            title: 'Philidor Defense Knight Sacrifice',
+            startingFen: 'rn2kbnr/p4ppp/1pp2q2/3Np3/2B1P3/1Q6/PPP2PPP/R1B1K2R b KQkq - 1 9',
+            nextMove: 'cxd5',
+            playerColor: 'w',
+            avantage: 'medium'
+        },
+        {
+            title: 'London System Destruction',
+            startingFen: 'r1b1k2r/pp1p1p1p/1qn5/4P1p1/1b2nB2/1P2PN2/P2N1PPP/R2QKB1R w KQkq - 0 10',
+            nextMove: 'Bxg5',
+            playerColor: 'b',
+            avantage: 'medium'
+        },
     ];
 
     const defensePositions = [
