@@ -92,6 +92,12 @@ const SelectHandAndBrainPage = () => {
             <div onClick={() => setBehaviour('default')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: behaviour === 'default' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Default</span>
             </div>
+            <div onClick={() => setBehaviour('stockfish-only')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: behaviour === 'stockfish-only' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Stockfish Only</span>
+            </div>
+            <div onClick={() => setBehaviour('human')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: behaviour === 'human' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Human</span>
+            </div>
             <div onClick={() => setBehaviour('pawn-pusher')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: behaviour === 'pawn-pusher' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Pawn Pusher</span>
             </div>

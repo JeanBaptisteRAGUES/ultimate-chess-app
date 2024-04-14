@@ -36,7 +36,7 @@ export type Move = {
     type: number
 }
 
-export type Behaviour = 'default' | 'stockfish-random' | 'pawn-pusher' | 'fianchetto-sniper' | 'shy' | 'blundering' | 'drawish' | 'sacrifice-enjoyer' | 'exchanges-lover' | 'exchanges-hater' | 'queen-player' | 'botez-gambit' | 'castle-destroyer' | 'strategy-stranger' | 'openings-master' | 'openings-beginner' | 'random-player' | 'copycat' | 'bongcloud' | 'gambit-fanatic' | 'cow-lover' | 'hyper-aggressive';
+export type Behaviour = 'default' | 'stockfish-random' | 'stockfish-only' | 'human' | 'pawn-pusher' | 'fianchetto-sniper' | 'shy' | 'blundering' | 'drawish' | 'sacrifice-enjoyer' | 'exchanges-lover' | 'exchanges-hater' | 'queen-player' | 'botez-gambit' | 'castle-destroyer' | 'strategy-stranger' | 'openings-master' | 'openings-beginner' | 'random-player' | 'copycat' | 'bongcloud' | 'gambit-fanatic' | 'cow-lover' | 'hyper-aggressive';
 
 type DefaultBotParams = {
     randMoveChance: number, 
@@ -417,8 +417,8 @@ class BotsAI {
         return move;
     }
 
-    async #makestockfishRandomMove(game: Chess): Promise<Move> {
-        console.log('Bot AI: Default behaviour');
+    async #makeStockfishRandomMove(game: Chess): Promise<Move> {
+        console.log('Bot AI: Stockfish Random behaviour');
         let move: Move = {
             notation: '',
             type: -1,
@@ -428,6 +428,124 @@ class BotsAI {
         if(defaultMove.type >= 0) {
             this.#lastRandomMove = this.#lastRandomMove-1;
             return defaultMove;
+        }
+
+        return move;
+    }
+
+    async #makeStockfishOnlyMove(game: Chess): Promise<Move> {
+        console.log('Bot AI: Stockfish Only behaviour');
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+
+        const defaultMove = await this.#defaultMoveLogic(game, false, false);
+        if(defaultMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return defaultMove;
+        }
+
+        return move;
+    }
+
+    async #humanMoveLogic(game: Chess, useDatabase: Boolean, useRandom: Boolean): Promise<Move> {
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+
+        if(useDatabase) {
+            console.log(game.pgn());
+            console.log(game.history());
+            //const movesList = this.#toolbox.convertHistorySanToLan(this.#toolbox.convertPgnToHistory(game.pgn()));
+            const startingFen = game.history().length > 0 ? game.history({verbose: true})[0].before : DEFAULT_POSITION;
+            const movesList = this.#toolbox.convertHistorySanToLan(game.history(), startingFen);
+
+            const lichessMove = await makeLichessMove(movesList, this.#botLevel, startingFen);
+            if(lichessMove.type >= 0){
+                this.#lastRandomMove = this.#lastRandomMove-1;
+                return lichessMove;
+            } 
+        }
+
+        /* const forcedStockfishMove = await makeForcedStockfishMove(this.#defaultBotParams, this.#botColor, game, this.#engine, this.#toolbox);
+        if(forcedStockfishMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return forcedStockfishMove;
+        } 
+
+        if(useRandom && isRandomMovePlayable(this.#defaultBotParams, this.#botLevel, this.#lastRandomMove)) {
+            this.#lastRandomMove = this.#defaultBotParams.randMoveInterval;
+            return makeRandomMove(this.#defaultBotParams.filterLevel, this.#defaultBotParams.securityLvl > 1, game);
+        } */
+
+        const newGame = new Chess(game.fen());
+        const opponentColor = this.#botColor === 'b' ? 'w' : 'b';
+        const forgotPieceChance = new Map([
+            ['Beginner', 30],
+            ['Casual', 20],
+            ['Intermediate', 10],
+            ['Advanced', 5],
+            ['Master', 2],
+            ['Maximum', 0]
+          ]).get(this.#botLevel);
+        console.log(forgotPieceChance)
+
+        console.log(newGame.ascii());
+
+        // TODO: Faire un système plus évolué qui prend en compte le temps depuis lequel la pièce n'a pas été jouée
+
+        game.board().forEach((rank) => {
+            rank.forEach((boardCase) => {
+                if(boardCase?.color !== this.#botColor && (boardCase?.type === 'b' || boardCase?.type === 'n' || boardCase?.type === 'r' || boardCase?.type === 'q')){
+                    const rand = Math.random()*100;
+
+                    if(boardCase?.type === 'b' && rand <= (forgotPieceChance || 10)) {
+                        console.log('Oublie le fou en ' + boardCase.square);
+                        newGame.put({ type: 'p', color: opponentColor }, boardCase.square)
+                    }
+
+                    if(boardCase?.type === 'n' && rand <= (forgotPieceChance || 10)) {
+                        console.log('Oublie le cavalier en ' + boardCase.square);
+                        newGame.put({ type: 'p', color: opponentColor }, boardCase.square)
+                    }
+
+                    if(boardCase?.type === 'r' && rand <= (forgotPieceChance || 10)) {
+                        console.log('Oublie la tour en ' + boardCase.square);
+                        newGame.put({ type: 'p', color: opponentColor }, boardCase.square)
+                    }
+
+                    if(boardCase?.type === 'q' && rand <= (forgotPieceChance || 10)) {
+                        console.log('Oublie la dame en ' + boardCase.square);
+                        newGame.put({ type: 'p', color: opponentColor }, boardCase.square)
+                    }
+                }
+            })
+        });
+
+        console.log(newGame.ascii());
+
+        const stockfishMove = await makeStockfishMove(this.#defaultBotParams, newGame, this.#engine);
+        if(stockfishMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return stockfishMove;
+        } 
+
+        return move;
+    }
+
+    async #makeHumanMove(game: Chess): Promise<Move> {
+        console.log('Bot AI: Human behaviour');
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+
+        const humanMove = await this.#humanMoveLogic(game, true, false);
+        if(humanMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return humanMove;
         }
 
         return move;
@@ -1850,9 +1968,16 @@ class BotsAI {
 
             //TODO: Récupérer game.history({verbose: true}) et si length > 1 utiliser startingFen = history[0].before
             case "stockfish-random": // Plutôt faire puzzle bot qui utilise aussi la bdd lichess
-                move = await this.#makestockfishRandomMove(game);
+                move = await this.#makeStockfishRandomMove(game);
                 break;
 
+            case "stockfish-only": // Plutôt faire puzzle bot qui utilise aussi la bdd lichess
+                move = await this.#makeStockfishOnlyMove(game);
+                break;
+
+            case "human":
+                move = await this.#makeHumanMove(game);
+                break;
             case "pawn-pusher":
                 move = await this.#makePawnPusherMove(game);
                 break;

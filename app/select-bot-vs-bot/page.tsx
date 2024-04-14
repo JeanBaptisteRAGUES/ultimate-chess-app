@@ -82,6 +82,12 @@ const SelectBotVsBotPage = () => {
             <div onClick={() => setBot1_Behaviour('default')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot1_Behaviour === 'default' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Default</span>
             </div>
+            <div onClick={() => setBot1_Behaviour('stockfish-only')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot1_Behaviour === 'stockfish-only' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Stockfish Only</span>
+            </div>
+            <div onClick={() => setBot1_Behaviour('human')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot1_Behaviour === 'human' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Human</span>
+            </div>
             <div onClick={() => setBot1_Behaviour('pawn-pusher')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot1_Behaviour === 'pawn-pusher' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Pawn Pusher</span>
             </div>
@@ -142,6 +148,12 @@ const bot2_BehaviourComponent =
     <div className='flex flex-row justify-around items-center flex-wrap w-full mt-2 px-2 gap-2' >
         <div onClick={() => setBot2_Behaviour('default')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot2_Behaviour === 'default' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
             <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Default</span>
+        </div>
+        <div onClick={() => setBot2_Behaviour('stockfish-only')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot2_Behaviour === 'stockfish-only' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Stockfish Only</span>
+        </div>
+        <div onClick={() => setBot2_Behaviour('human')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot2_Behaviour === 'human' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Human</span>
         </div>
         <div onClick={() => setBot2_Behaviour('pawn-pusher')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot2_Behaviour === 'pawn-pusher' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
             <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Pawn Pusher</span>
