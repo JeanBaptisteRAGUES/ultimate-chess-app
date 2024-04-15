@@ -66,8 +66,6 @@ function filterMoves(movesList: string[], filterLevel: number) {
 
     let possiblesMovesFiltered = movesList.filter(move => !move.match(filter[filterLevel]));
 
-    console.log(possiblesMovesFiltered);
-
     if(possiblesMovesFiltered.length < 1) possiblesMovesFiltered = movesList;
 
     return possiblesMovesFiltered;
@@ -84,7 +82,6 @@ function getSafeMovesOnly(movesList: string[], game: Chess) {
     }
     
     safePossibleMoves = movesList.filter(pMove => isPawn(pMove) || !isDestinationDefended(pMove));
-    console.log(safePossibleMoves);
     if(safePossibleMoves.length < 1) safePossibleMoves = movesList;
 
     return safePossibleMoves;
@@ -95,7 +92,6 @@ function makeRandomMove(filterLevel: number, safeMoves: boolean, game: Chess): M
     console.log('Make Random Move');
     
     const possibleMoves = game.moves();
-    console.log(possibleMoves);
     let possiblesMovesFiltered = filterMoves(possibleMoves, filterLevel);
 
     let finalMovesList: string[] = possiblesMovesFiltered;
@@ -103,7 +99,6 @@ function makeRandomMove(filterLevel: number, safeMoves: boolean, game: Chess): M
     if(safeMoves) finalMovesList = getSafeMovesOnly(possiblesMovesFiltered, game);
 
     const randomIndex = Math.floor(Math.random() * finalMovesList.length);
-    console.log(finalMovesList[randomIndex]);
 
     return {
         notation: finalMovesList[randomIndex],
@@ -132,8 +127,6 @@ function isLastMoveDangerous(game: Chess, playerColor: Color) {
     const pieceMoves = gameTest.moves({square: lastMove.to});
     //gameTest.load(currentFen);
 
-    console.log(pieceMoves);
-
     let danger = false;
 
     pieceMoves.forEach(pieceMove => {
@@ -147,7 +140,7 @@ function isLastMoveDangerous(game: Chess, playerColor: Color) {
         }
     });
 
-    console.log(`Is last move \x1B[34m(${lastMove.san})\x1B[0m dangerous: \x1B[31m` + danger);
+    //console.log(`Is last move \x1B[34m(${lastMove.san})\x1B[0m dangerous: \x1B[31m` + danger);
 
     return danger;
 }
@@ -261,26 +254,31 @@ function initDefaultBotParams(level: string): DefaultBotParams {
 }
 
 async function makeForcedStockfishMove(botParams: DefaultBotParams, botColor: Color, game: Chess, engine: Engine, toolbox: GameToolBox): Promise<Move> {
-    console.log('Search Forced Stockfish Move');
+    //console.log('Search Forced Stockfish Move');
     const playerColor = game.turn() === 'w' ? 'b' : 'w';
     let stockfishMove: Move = {
         notation: '',
         type: -1
     }  
 
-    if(await isNearCheckmate(botParams.playForcedMate, botColor, game, engine, toolbox)){
-        console.log('Play Forced Checkmate !');
+    const isNearCheckmateRes = await isNearCheckmate(botParams.playForcedMate, botColor, game, engine, toolbox) 
+    if(isNearCheckmateRes){
+        console.log(`${botColor} is forced to Checkmate`);
         const stockfishRes = await engine.findBestMove(game.fen(), 12, 20);
         stockfishMove.notation = stockfishRes;
         stockfishMove.type = 3;
+        return stockfishMove;
     }
     
     if(botParams.securityLvl > 0 && isLastMoveDangerous(game, playerColor)){
-        console.log('Play Forced Stockfish Best Move !');
+        console.log(`${botColor} is forced to play a move from Stockfish`);
         const stockfishRes = await engine.findBestMove(game.fen(), botParams.skillValue, botParams.depth);
         stockfishMove.notation = stockfishRes;
         stockfishMove.type = 3;
+        return stockfishMove;
     }
+
+    console.log(`${botColor} is not forced to play a move from Stockfish`);
 
     return stockfishMove;
 } 
@@ -365,17 +363,17 @@ class BotsAI {
         };
 
         if(useDatabase) {
-            console.log(game.pgn());
-            console.log(game.history());
             //const movesList = this.#toolbox.convertHistorySanToLan(this.#toolbox.convertPgnToHistory(game.pgn()));
             const startingFen = game.history().length > 0 ? game.history({verbose: true})[0].before : DEFAULT_POSITION;
             const movesList = this.#toolbox.convertHistorySanToLan(game.history(), startingFen);
 
             const lichessMove = await makeLichessMove(movesList, this.#botLevel, startingFen);
             if(lichessMove.type >= 0){
+                console.log(`${this.#botColor} make Lichess move`);
                 this.#lastRandomMove = this.#lastRandomMove-1;
                 return lichessMove;
             } 
+            console.log('No more moves in the Lichess Database for ' + this.#botColor);
         }
 
         const forcedStockfishMove = await makeForcedStockfishMove(this.#defaultBotParams, this.#botColor, game, this.#engine, this.#toolbox);
@@ -399,7 +397,7 @@ class BotsAI {
     }
 
     async #makeDefaultMove(game: Chess): Promise<Move> {
-        console.log('Bot AI: Default behaviour');
+        //console.log('Bot AI: Default behaviour');
         let move: Move = {
             notation: '',
             type: -1,
@@ -415,7 +413,7 @@ class BotsAI {
     }
 
     async #makeStockfishRandomMove(game: Chess): Promise<Move> {
-        console.log('Bot AI: Stockfish Random behaviour');
+        //console.log('Bot AI: Stockfish Random behaviour');
         let move: Move = {
             notation: '',
             type: -1,
@@ -431,7 +429,7 @@ class BotsAI {
     }
 
     async #makeStockfishOnlyMove(game: Chess): Promise<Move> {
-        console.log('Bot AI: Stockfish Only behaviour');
+        //console.log('Bot AI: Stockfish Only behaviour');
         let move: Move = {
             notation: '',
             type: -1,
@@ -459,9 +457,11 @@ class BotsAI {
 
             const lichessMove = await makeLichessMove(movesList, this.#botLevel, startingFen);
             if(lichessMove.type >= 0){
+                console.log(`${this.#botColor} make Lichess move`);
                 this.#lastRandomMove = this.#lastRandomMove-1;
                 return lichessMove;
             } 
+            console.log('No more moves in the Lichess Database for ' + this.#botColor);
         }
 
         /* const forcedStockfishMove = await makeForcedStockfishMove(this.#defaultBotParams, this.#botColor, game, this.#engine, this.#toolbox);
@@ -493,6 +493,7 @@ class BotsAI {
             rank.forEach((boardCase) => {
                 if(boardCase?.color !== this.#botColor && (boardCase?.type === 'b' || boardCase?.type === 'q')){
                     const rand = Math.random()*100;
+                    console.log("Random move result: " + rand);
                     const pieceInactivity = this.#toolbox.getPieceInactivity(game.history({verbose: true}), boardCase.square);
                     const inactivityBonusMult = Math.min(0.15*pieceInactivity, 1.5);
                     const forgotPieceChanceFinal = Math.ceil(forgotPieceChance*inactivityBonusMult);
@@ -528,6 +529,7 @@ class BotsAI {
         if(!this.#toolbox.isMoveValid(game.fen(), stockfishMove.notation)) stockfishMove.type = -1;
 
         if(stockfishMove.type >= 0) {
+            if(stockfishMove.type === 5) console.log(`Human move (${stockfishMove.type}): ${this.#toolbox.convertMoveLanToSan(game.fen(), stockfishMove.notation)}`);
             this.#lastRandomMove = this.#lastRandomMove-1;
             return stockfishMove;
         } 
@@ -537,7 +539,7 @@ class BotsAI {
 
     // TODO: Vérifier si le coup humain est valide
     async #makeHumanMove(game: Chess): Promise<Move> {
-        console.log('Bot AI: Human behaviour');
+        //console.log('Bot AI: Human behaviour');
         let move: Move = {
             notation: '',
             type: -1,
@@ -583,9 +585,6 @@ class BotsAI {
 
         stockfishMoves.sort(compareEval);
 
-        console.log('Stockfish moves sorted');
-        console.log(stockfishMoves);
-
         move.notation = stockfishMoves[0].bestMove;
         move.type = 2;
 
@@ -596,7 +595,7 @@ class BotsAI {
      * Joue le plus possible des coups de pions, souvent au détriment du développement de ses pièces.
      */
     async #makePawnPusherMove(game: Chess): Promise<Move> {
-        console.log('Bot AI: Pawn Pusher');
+        //console.log('Bot AI: Pawn Pusher');
         let move: Move = {
             notation: '',
             type: -1,
@@ -657,9 +656,6 @@ class BotsAI {
 
         stockfishMoves.sort(compareEval);
 
-        console.log('Stockfish moves sorted');
-        console.log(stockfishMoves);
-
         move.notation = stockfishMoves[0].bestMove;
         move.type = 2;
 
@@ -670,7 +666,7 @@ class BotsAI {
      * Joue le plus possible des fianchettos.
      */
     async #makeFianchettoEnjoyerMove(game: Chess): Promise<Move> {
-        console.log('Bot AI: Fianchetto Sniper');
+        //console.log('Bot AI: Fianchetto Sniper');
         let move: Move = {
             notation: '',
             type: -1,
@@ -714,9 +710,6 @@ class BotsAI {
 
         stockfishMoves.sort(compareEval);
 
-        console.log('Stockfish moves sorted');
-        console.log(stockfishMoves);
-
         move.notation = stockfishMoves[0].bestMove;
         move.type = 2;
 
@@ -727,7 +720,7 @@ class BotsAI {
      * Joue des coups très près les uns des autres.
      */
     async #makeShyMove(game: Chess): Promise<Move> {
-        console.log('Bot AI: shy');
+        //console.log('Bot AI: shy');
         let move: Move = {
             notation: '',
             type: -1,
@@ -763,9 +756,6 @@ class BotsAI {
 
         stockfishMoves.sort(compareEval);
 
-        console.log('Stockfish moves sorted');
-        console.log(stockfishMoves);
-
         move.notation = stockfishMoves[0].bestMove;
         move.type = 2;
 
@@ -776,7 +766,7 @@ class BotsAI {
      * Joue les pires coups possibles.
      */
     async #makeBlunderMove(game: Chess): Promise<Move> {
-        console.log('Bot AI: Blundering');
+        //console.log('Bot AI: Blundering');
         let move: Move = {
             notation: '',
             type: -1,
@@ -807,9 +797,6 @@ class BotsAI {
 
         stockfishMoves.sort(compareEval);
 
-        console.log('Stockfish moves sorted');
-        console.log(stockfishMoves);
-
         move.notation = stockfishMoves[0].bestMove;
         move.type = 2;
 
@@ -820,7 +807,7 @@ class BotsAI {
      * Joue les coups dont l'évaluation est la plus proche de 0.
      */
     async #makeDrawishMove(game: Chess): Promise<Move> {
-        console.log('Bot AI: Drawish');
+        //console.log('Bot AI: Drawish');
         let move: Move = {
             notation: '',
             type: -1,
@@ -873,9 +860,6 @@ class BotsAI {
 
         stockfishMoves.sort(compareEval);
 
-        console.log('Stockfish moves sorted');
-        console.log(stockfishMoves);
-
         move.notation = stockfishMoves[0].bestMove;
         move.type = 2;
 
@@ -886,7 +870,7 @@ class BotsAI {
      * Joue le plus possible des coups de dame, souvent au détriment du développement de ses pièces.
      */
     async #makeQueenPlayerMove(game: Chess): Promise<Move> {
-        console.log('Bot AI: Queen Player');
+        //console.log('Bot AI: Queen Player');
         let move: Move = {
             notation: '',
             type: -1,
@@ -990,9 +974,6 @@ class BotsAI {
 
         stockfishMoves.sort(compareEval);
 
-        console.log('Stockfish moves sorted');
-        console.log(stockfishMoves);
-
         move.notation = stockfishMoves[0].bestMove;
         move.type = 2;
 
@@ -1003,7 +984,7 @@ class BotsAI {
      * Aime sacrifier sa dame le plus rapidement possible.
      */
     async #makeBotezGambitMove(game: Chess): Promise<Move> {
-        console.log('Bot AI: Botez Gambit');
+        //console.log('Bot AI: Botez Gambit');
         let move: Move = {
             notation: '',
             type: -1,
@@ -1367,7 +1348,6 @@ class BotsAI {
         }
 
         let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, 20, 50, false);
-        console.log(game.history({verbose: true}));
         if(game.history().length < 1 || game.history().length > 4) {
             return move;
         }
@@ -1393,9 +1373,6 @@ class BotsAI {
 
         stockfishMoves.sort(compareEval);
 
-        console.log('Stockfish moves sorted');
-        console.log(stockfishMoves);
-
         move.notation = stockfishMoves[0].bestMove;
         move.type = 2;
 
@@ -1406,7 +1383,7 @@ class BotsAI {
      * Aime sortir l'adversaire de la théorie en jouant des Gambits dans l'ouverture.
      */
     async #makeGambitFanaticMove(game: Chess): Promise<Move> {
-        console.log('Bot AI: Gambit Fanatic');
+        //console.log('Bot AI: Gambit Fanatic');
         let move: Move = {
             notation: '',
             type: -1,
@@ -1445,7 +1422,6 @@ class BotsAI {
 
         let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, 20, 50, false);
         
-        console.log('Game history length: ' + game.history().length);
         const lastOpponentMove = game.history({verbose: true})[game.history().length-1].lan;
         const lastOpponentPiece = game.history({verbose: true})[game.history().length-1].piece;
         //console.log(game.history({verbose: true}));
@@ -1456,8 +1432,6 @@ class BotsAI {
             let isCopycat = Math.abs(lastOpponentMove.charCodeAt(0) - evalRes.bestMove.charCodeAt(0)) === 0;
             isCopycat = isCopycat && (Math.abs(lastOpponentMove.charCodeAt(2) - evalRes.bestMove.charCodeAt(2)) === 0);
             isCopycat = isCopycat && (this.#toolbox.getMoveDistance(lastOpponentMove) === this.#toolbox.getMoveDistance(evalRes.bestMove));
-            console.log('Random bonus: ' + randBonus);
-            console.log(evalRes.bestMove + ' is copycat: ' + isCopycat);
             if(isCopycat){
                 evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + randBonus).toString();
                 return evalRes;
@@ -1469,9 +1443,6 @@ class BotsAI {
 
         stockfishMoves.sort(compareEval);
 
-        console.log('Stockfish moves sorted');
-        console.log(stockfishMoves);
-
         move.notation = stockfishMoves[0].bestMove;
         move.type = 2;
 
@@ -1482,7 +1453,7 @@ class BotsAI {
      * Aime copier les coups de l'adversaire.
      */
     async #makeCopycatMove(game: Chess): Promise<Move> {
-        console.log('Bot AI: Copycat');
+        //console.log('Bot AI: Copycat');
         let move: Move = {
             notation: '',
             type: -1,
@@ -1514,7 +1485,6 @@ class BotsAI {
         }
 
         let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, 20, 50, false);
-        console.log(game.history({verbose: true}));
         if(game.history().length < 1) {
             move.notation = 'e2e4';
             move.type = 2;
@@ -1545,9 +1515,6 @@ class BotsAI {
 
         stockfishMoves.sort(compareEval);
 
-        console.log('Stockfish moves sorted');
-        console.log(stockfishMoves);
-
         move.notation = stockfishMoves[0].bestMove;
         move.type = 2;
 
@@ -1558,7 +1525,7 @@ class BotsAI {
      * Joue le bongcloud.
      */
     async #makeBongcloudMove(game: Chess): Promise<Move> {
-        console.log('Bot AI: Bongcloud');
+        //console.log('Bot AI: Bongcloud');
         let move: Move = {
             notation: '',
             type: -1,
@@ -1607,9 +1574,6 @@ class BotsAI {
 
         stockfishMoves.sort(compareEval);
 
-        console.log('Stockfish moves sorted');
-        console.log(stockfishMoves);
-
         move.notation = stockfishMoves[0].bestMove;
         move.type = 2;
 
@@ -1620,7 +1584,7 @@ class BotsAI {
      * Adore échanger les pièces.
      */
     async #makeExchangesLoverMove(game: Chess): Promise<Move> {
-        console.log('Bot AI: Exchange Lover');
+        //console.log('Bot AI: Exchange Lover');
         let move: Move = {
             notation: '',
             type: -1,
@@ -1663,8 +1627,8 @@ class BotsAI {
 
         stockfishMoves.sort(compareEval);
 
-        console.log('Stockfish moves sorted');
-        console.log(stockfishMoves);
+        
+        
 
         move.notation = stockfishMoves[0].bestMove;
         move.type = 2;
@@ -1676,7 +1640,7 @@ class BotsAI {
      * Évite les échanges autant que possible.
      */
     async #makeExchangesHaterMove(game: Chess): Promise<Move> {
-        console.log('Bot AI: Exchange Hater');
+        //console.log('Bot AI: Exchange Hater');
         let move: Move = {
             notation: '',
             type: -1,
@@ -1722,7 +1686,6 @@ class BotsAI {
             }
 
             if(this.#toolbox.getMovePiece(evalRes.bestMove, game.fen()).type === 'n' && knightCases.includes(moveDestination)) {
-                console.log(evalRes.bestMove + ' is bad: ' + badStartingCases.includes(moveOrigin));
                 if(!badStartingCases.includes(moveOrigin)) {
                     evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + 2*randBonus).toString();
                     return evalRes;
@@ -1734,8 +1697,8 @@ class BotsAI {
 
         stockfishMoves.sort(compareEval);
 
-        console.log('Stockfish moves sorted');
-        console.log(stockfishMoves);
+        
+        
 
         move.notation = stockfishMoves[0].bestMove;
         move.type = 2;
@@ -1747,7 +1710,7 @@ class BotsAI {
      * Joue la cow opening.
      */
     async #makeCowLoverMove(game: Chess): Promise<Move> {
-        console.log('Bot AI: Cow Lover');
+        //console.log('Bot AI: Cow Lover');
         let move: Move = {
             notation: '',
             type: -1,
@@ -1772,7 +1735,7 @@ class BotsAI {
      * Joue très bien les ouvertures, mais assez mal le reste de la partie.
      */
     async #makeOpeningsMasterMove(game: Chess): Promise<Move> {
-        console.log('Bot AI: Openings Master');
+        //console.log('Bot AI: Openings Master');
         let move: Move = {
             notation: '',
             type: -1,
@@ -1795,7 +1758,6 @@ class BotsAI {
         }
 
         const stockfishMove = await makeStockfishMove(openingsMasterParams, game, this.#engine);
-        console.log(stockfishMove);
         if(stockfishMove.type >= 0) {
             //this.#lastRandomMove = this.#lastRandomMove-1;
             return stockfishMove;
@@ -1808,7 +1770,7 @@ class BotsAI {
      * Joue très mal les ouvertures, mais assez bien le reste de la partie.
      */
     async #makeOpeningsBeginnerMove(game: Chess): Promise<Move> {
-        console.log('Bot AI: Openings Beginner');
+        //console.log('Bot AI: Openings Beginner');
         let move: Move = {
             notation: '',
             type: -1,
@@ -1832,7 +1794,6 @@ class BotsAI {
         }
 
         const stockfishMove = await makeStockfishMove(openingsBeginnerParams, game, this.#engine);
-        console.log(stockfishMove);
         if(stockfishMove.type >= 0) {
             //this.#lastRandomMove = this.#lastRandomMove-1;
             return stockfishMove;
@@ -1912,7 +1873,6 @@ class BotsAI {
 
             // Si le bot n'a pas encore roqué, il cherche à développer ses pièces pour roquer
             if(!botHasCastled && this.#toolbox.getMovePiece(evalRes.bestMove, game.fen()).type !== 'p') {
-                console.log(evalRes.bestMove + ': ' + eval(evalRes.bestMove.charAt(1)));
                 if((eval(evalRes.bestMove.charAt(1)) === 1 && eval(evalRes.bestMove.charAt(3)) !== 1) || (eval(evalRes.bestMove.charAt(1)) === 8 && eval(evalRes.bestMove.charAt(3)) !== 8)){
                     randBonus = randBonus * this.#toolbox.getMoveDistance(evalRes.bestMove);
                     evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + 0.2).toString();
@@ -1926,8 +1886,8 @@ class BotsAI {
 
         stockfishMoves.sort(compareEval);
 
-        console.log('Stockfish moves sorted');
-        console.log(stockfishMoves);
+        
+        
 
         move.notation = stockfishMoves[0].bestMove;
         move.type = 2;
@@ -1940,7 +1900,7 @@ class BotsAI {
      */
     // TODO: À améliorer
     async #makeCastleDestroyerMove(game: Chess): Promise<Move> {
-        console.log('Bot AI: Castle Destroyer');
+        //console.log('Bot AI: Castle Destroyer');
         let move: Move = {
             notation: '',
             type: -1,
@@ -2068,14 +2028,8 @@ class BotsAI {
         };
 
         let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 12, this.#defaultBotParams.skillValue, 50, false);
-        console.log(stockfishMoves);
-        stockfishMoves.forEach((evalRes) => {
-            if(this.#toolbox.getMovePiece(evalRes.bestMove, game.fen()).type === selectedPiece){
-                console.log(evalRes.bestMove + ': ' + evalRes.eval);
-            }
-        })
+        
         const bestMoveIndex = stockfishMoves.findIndex((evalRes) => this.#toolbox.getMovePiece(evalRes.bestMove, game.fen()).type === selectedPiece);
-        console.log(bestMoveIndex);
         move.notation = stockfishMoves[bestMoveIndex].bestMove;
         move.type = 2;
         return move;

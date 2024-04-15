@@ -3,6 +3,10 @@
 import React, { useState } from 'react';
 import { Behaviour } from '../bots-ai/BotsAI';
 import Link from 'next/link';
+import { GiBulletBill } from 'react-icons/gi';
+import { SiStackblitz } from 'react-icons/si';
+import { LuAlarmClock } from 'react-icons/lu';
+import { IoHourglassOutline } from 'react-icons/io5';
 
 /*TODO: Choix difficulté: [
     'Beginner': pawnIcon, 
@@ -16,13 +20,34 @@ import Link from 'next/link';
 // TODO: Liste des bots
 
 const SelectBotVsBotPage = () => {
+    const [timeControl, setTimeControl] = useState('300');
     const [bot1_Level, setBot1_Level] = useState('Master');
     const [bot1_Behaviour, setBot1_Behaviour] = useState<Behaviour>('default');
     const [bot2_Level, setBot2_Level] = useState('Master');
     const [bot2_Behaviour, setBot2_Behaviour] = useState<Behaviour>('default');
 
+    const timeControlComponent =
+        <div className='flex mt-10 flex-row justify-around items-center flex-wrap w-full' >
+            <div onClick={() => setTimeControl('300')} className=' h-[200px] md:h-[110px] w-[200px] md:w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: timeControl === '300' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <GiBulletBill size={100} />
+                <span className=' w-full h-[10px] flex justify-center items-center' >Bullet</span>
+            </div>
+            <div onClick={() => setTimeControl('3000')} className=' h-[200px] md:h-[110px] w-[200px] md:w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: timeControl === '3000' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <SiStackblitz size={100} />
+                <span className=' w-full h-[10px] flex justify-center items-center' >Blitz</span>
+            </div>
+            <div onClick={() => setTimeControl('15000')} className=' h-[200px] md:h-[110px] w-[200px] md:w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: timeControl === '15000' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <LuAlarmClock size={100} />
+                <span className=' w-full h-[10px] flex justify-center items-center' >Rapid</span>
+            </div>
+            <div onClick={() => setTimeControl('120000')} className=' h-[200px] md:h-[110px] w-[200px] md:w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: timeControl === '120000' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <IoHourglassOutline size={100} />
+                <span className=' w-full h-[10px] flex justify-center items-center' >Classical</span>
+            </div>
+        </div>
+
     const bot1_LevelComponent =
-        <div className='flex flex-row justify-around items-center flex-wrap w-full' >
+        <div className='flex mt-10 flex-row justify-around items-center flex-wrap w-full' >
             <div onClick={() => setBot1_Level('Beginner')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot1_Level === 'Beginner' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♙</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >Beginner</span>
@@ -50,7 +75,7 @@ const SelectBotVsBotPage = () => {
         </div>
     
     const bot2_LevelComponent =
-        <div className='flex flex-row justify-around items-center flex-wrap w-full' >
+        <div className='flex mt-10 flex-row justify-around items-center flex-wrap w-full' >
             <div onClick={() => setBot2_Level('Beginner')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot2_Level === 'Beginner' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♙</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >Beginner</span>
@@ -78,7 +103,7 @@ const SelectBotVsBotPage = () => {
         </div>
 
     const bot1_BehaviourComponent = 
-        <div className='flex flex-row justify-around items-center flex-wrap w-full mt-2 px-2 gap-2' >
+        <div className='flex mt-10 flex-row justify-around items-center flex-wrap w-full mt-2 px-2 gap-2' >
             <div onClick={() => setBot1_Behaviour('default')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot1_Behaviour === 'default' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Default</span>
             </div>
@@ -145,7 +170,7 @@ const SelectBotVsBotPage = () => {
         </div>
 
 const bot2_BehaviourComponent = 
-    <div className='flex flex-row justify-around items-center flex-wrap w-full mt-2 px-2 gap-2' >
+    <div className='flex mt-10 flex-row justify-around items-center flex-wrap w-full mt-2 px-2 gap-2' >
         <div onClick={() => setBot2_Behaviour('default')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot2_Behaviour === 'default' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
             <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Default</span>
         </div>
@@ -214,11 +239,13 @@ const bot2_BehaviourComponent =
 
     return (
         <div className="flex flex-col justify-start items-center bg-cyan-900 h-screen w-full overflow-auto" >
-            <div className=' w-full flex justify-center items-center text-2xl font-semibold text-white' >Niveau Bot n°1:</div>
+            <div className=' w-full mt-20 flex justify-center items-center text-2xl font-semibold text-white' >Cadence:</div>
+            {timeControlComponent}
+            <div className=' w-full mt-20 flex justify-center items-center text-2xl font-semibold text-white' >Niveau Bot n°1:</div>
             {bot1_LevelComponent}
             <div className=' w-full mt-20 flex justify-center items-center text-2xl font-semibold text-white' >Gimmick Bot n°1:</div>
             {bot1_BehaviourComponent}
-            <div className=' w-full flex justify-center items-center text-2xl font-semibold text-white' >Niveau Bot n°2:</div>
+            <div className=' w-full mt-20 flex justify-center items-center text-2xl font-semibold text-white' >Niveau Bot n°2:</div>
             {bot2_LevelComponent}
             <div className=' w-full mt-20 flex justify-center items-center text-2xl font-semibold text-white' >Gimmick Bot n°2:</div>
             {bot2_BehaviourComponent}
@@ -231,6 +258,7 @@ const bot2_BehaviourComponent =
                     bot1_Behaviour: bot1_Behaviour,
                     bot2_Level: bot2_Level,
                     bot2_Behaviour: bot2_Behaviour,
+                    timeControl: timeControl,
                 }
                 }}
             >

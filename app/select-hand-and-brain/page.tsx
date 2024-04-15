@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import { Behaviour } from '../bots-ai/BotsAI';
 import Link from 'next/link';
+import { FaHandFist } from 'react-icons/fa6';
+import  { GiBrain } from 'react-icons/gi';
 
 /*TODO: Choix difficulté: [
     'Beginner': pawnIcon, 
@@ -23,10 +25,12 @@ const SelectHandAndBrainPage = () => {
 
     const playerRoleComponent =
         <div className='flex flex-row justify-around items-center flex-wrap w-full mt-5 mb-10 px-2 gap-2' >
-                <div onClick={() => setPlayerRole('Brain')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: playerRole === 'Brain' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <div onClick={() => setPlayerRole('Brain')} className=' h-[160px] w-[160px] flex flex-col justify-start items-center cursor-pointer' style={{color: playerRole === 'Brain' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                    <GiBrain size={200} />
                     <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Brain</span>
                 </div>
-                <div onClick={() => setPlayerRole('Hand')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: playerRole === 'Hand' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <div onClick={() => setPlayerRole('Hand')} className=' h-[160px] w-[160px] flex flex-col justify-start items-center cursor-pointer' style={{color: playerRole === 'Hand' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                    <FaHandFist size={200} />
                     <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Hand</span>
                 </div>
         </div>

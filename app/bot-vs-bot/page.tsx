@@ -20,6 +20,8 @@ const BotVsBotPage = () => {
     const bot2_Behaviour: Behaviour = searchParams.get('bot2_Behaviour') as Behaviour || 'default';
     const bot1_Level = searchParams.get('bot1_Level') || 'Master';
     const bot2_Level = searchParams.get('bot2_Level') || 'Master';
+    const moveDelay = eval(searchParams.get('timeControl') || '300');
+
     const toolbox = new GameToolBox();
     const gameActive = useRef(true);
     const [game, setGame] = useState(new Chess());
@@ -43,7 +45,7 @@ const BotVsBotPage = () => {
     const movesTypeRef = useRef(new Array()); // -1: erreur, 0(blanc): joueur, 1(jaune): lichess, 2(vert clair): stockfish, 3(vert foncé): stockfish forcé, 4(rouge): random
     const [showGameoverWindow, setShowGameoverWindow] = useState(false);
     const [winner, setWinner] = useState(''); // 'w' -> blancs gagnent, 'b' -> noirs gagnent, 'd' -> draw
-    const whiteTimeControl = useRef({
+    /* const whiteTimeControl = useRef({
       startingTime: 600,
       increment: 0,
       timeElapsed: 0,
@@ -62,7 +64,7 @@ const BotVsBotPage = () => {
       ['30+20', {startingTime: 1800, increment: 20}],
       ['90+30', {startingTime: 5400, increment: 30}],
     ]);
-    const [timeControl, setTimeControl] = useState('infinite');
+    const [timeControl, setTimeControl] = useState('infinite'); */
 
     useEffect(() => {
         engine.current = new Engine();
@@ -117,34 +119,6 @@ const BotVsBotPage = () => {
       return pgnAfter.split(' ');
     }
 
-    function getTimeControlDelay() {
-      if(timeControl === 'infinite') return 300;
-      //@ts-expect-error
-      let rawDelay = (timeControls.get(timeControl)?.startingTime/60);
-      if(game.history().length <= 10) rawDelay =  Math.min(5,rawDelay/4); // On joue plus vite dans l'ouverture
-      if(game.turn() === 'w'){
-        if((whiteTimeControl.current.startingTime - whiteTimeControl.current.timeElapsed) < whiteTimeControl.current.startingTime*0.2){
-          rawDelay/=2;
-          console.log("Les blancs ont 20% ou moins de leur temps initial !");
-        }
-        if((whiteTimeControl.current.startingTime - whiteTimeControl.current.timeElapsed) < whiteTimeControl.current.startingTime*0.1){
-          rawDelay/=2;
-          console.log("Les blancs ont 10% ou moins de leur temps initial !");
-        }
-      }else{
-        if((blackTimeControl.current.startingTime - blackTimeControl.current.timeElapsed) < blackTimeControl.current.startingTime*0.2){
-          rawDelay/=2;
-          console.log("Les noirs ont 20% ou moins de leur temps initial !");
-        }
-        if((blackTimeControl.current.startingTime - blackTimeControl.current.timeElapsed) < blackTimeControl.current.startingTime*0.1){
-          rawDelay/=2;
-          console.log("Les noirs ont 10% ou moins de leur temps initial !");
-        }
-      }
-      let randDelay = Math.max(rawDelay,Math.random()*rawDelay*2)*1000;
-      return randDelay;
-    }
-
     async function playComputerMove() {
       console.log('Play computer move');
       if(game.pgn().includes('#')) return;
@@ -153,7 +127,7 @@ const BotVsBotPage = () => {
 
       if(move && move.type >= 0){
         gameMove(move.notation, move.type);
-        const newTimeout = setTimeout(playComputerMove, 3000);
+        const newTimeout = setTimeout(playComputerMove, moveDelay);
         setCurrentTimeout(newTimeout);
         return;
       } 
@@ -300,35 +274,11 @@ const BotVsBotPage = () => {
     // TODO: Problème d'horloge lorsqu'on switch de position, le temps défile pour le mauvais joueur
     const boardComponent =
       <div className=" flex flex-col justify-center items-center h-[300px] md:h-[500px] w-[95vw] md:w-[500px] my-10" >
-          <Clock 
-            game={game} 
-            turnColor={game.turn()} 
-            clockColor={playerColor === 'w' ? 'b' : 'w'}
-            timeControl={timeControl} 
-            timeControls={timeControls}
-            setEngineEval={setEngineEval}
-            setWinner={setWinner}
-            setShowGameoverWindow={setShowGameoverWindow}
-            gameStarted={gameStarted} 
-            gameActive={gameActive}
-          />
           <Chessboard 
             id="PlayVsRandom"
             position={currentFen}
             onPieceDrop={onDrop} 
             boardOrientation={playerColor === 'w' ? 'white' : 'black'}
-          />
-          <Clock 
-            game={game} 
-            turnColor={game.turn()} 
-            clockColor={playerColor === 'w' ? 'w' : 'b'}
-            timeControl={timeControl} 
-            timeControls={timeControls}
-            setEngineEval={setEngineEval}
-            setWinner={setWinner}
-            setShowGameoverWindow={setShowGameoverWindow}
-            gameStarted={gameStarted} 
-            gameActive={gameActive}
           />
       </div>
 
@@ -344,19 +294,6 @@ const BotVsBotPage = () => {
     >
       reset
     </button>
-
-    const selectTimeControlButton = 
-      <select id='time-control' onChange={(e) => setTimeControl(e.target.value)} value={timeControl}>
-        <option value="">Sélectionnez une cadence</option>
-        <option value="infinite">Infini</option>
-        <option value="1+0">1+0</option>
-        <option value="3+0">3+0</option>
-        <option value="3+2">3+2</option>
-        <option value="10+0">10+0</option>
-        <option value="15+10">15+10</option>
-        <option value="30+20">30+20</option>
-        <option value="90+30">90+30</option>
-      </select>
 
     const startGameButton = <button
         className=" bg-white border rounded cursor-pointer flex flex-none"
@@ -380,7 +317,6 @@ const BotVsBotPage = () => {
 
     const buttonsComponent =
       <div className="flex justify-center mt-10 md:mt-0 items-center gap-2 w-full h-fit" >
-        {selectTimeControlButton}
         {startGameButton}
         {switchButton}
       </div>
