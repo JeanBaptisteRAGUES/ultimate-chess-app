@@ -29,14 +29,11 @@ function calculateWinrate(data: any) {
 
 export async function fetchLichessDatabase(moves: Array<String>, level: string, fen = "") {
     if(!ratings.has(level)) level = 'Master';
-    console.log("Database Level: " + level);
     if(fen === "") {
         fen = "rnbqkbnr%2Fpppppppp%2F8%2F8%2F8%2F8%2FPPPPPPPP%2FRNBQKBNR+w+KQkq+-+0+1";
     } else{
-        console.log(fen);
         fen = fen.replaceAll('/', '%2F');
         fen = fen.replaceAll(' ', '+');
-        console.log(fen);
     }
 
     const movesFormated = moves.join("%2C");
@@ -62,7 +59,7 @@ export async function fetchLichessDatabase(moves: Array<String>, level: string, 
     ));
 
     moveIndex = gamesArray.length - gamesArray.filter(value => value > randMove).length;
-    console.log("Coup choisi : %s (%s)", data.moves[moveIndex]?.san,  data.moves[moveIndex]?.uci);
+    //console.log("Coup choisi : %s (%s)", data.moves[moveIndex]?.san,  data.moves[moveIndex]?.uci);
 
     return {
         san: data.moves[moveIndex]?.san,
@@ -108,14 +105,11 @@ export async function fetchLichessDatabase(moves: Array<String>, level: string, 
 
 export async function getLichessWinrate(moves: Array<String>, level: string, fen = ""): Promise<Winrate> {
     if(!ratings.has(level)) level = 'Master';
-    console.log("Database Level: " + level);
     if(fen === "") {
         fen = "rnbqkbnr%2Fpppppppp%2F8%2F8%2F8%2F8%2FPPPPPPPP%2FRNBQKBNR+w+KQkq+-+0+1";
     } else{
-        console.log(fen);
         fen = fen.replaceAll('/', '%2F');
         fen = fen.replaceAll(' ', '+');
-        console.log(fen);
     }
 
     const movesFormated = moves.join("%2C");

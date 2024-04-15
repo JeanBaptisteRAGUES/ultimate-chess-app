@@ -1,4 +1,4 @@
-import { Chess, Color, DEFAULT_POSITION, Piece, Square } from "chess.js";
+import { Chess, Color, DEFAULT_POSITION, Move, Piece, Square } from "chess.js";
 
 // TODO: Faire un type pour les coups de type san ou uci/lan
 // TODO: Faire attention aux complications que celà peut amener (conversion, méthodes string inutilisables etc..)
@@ -109,6 +109,19 @@ class GameToolBox {
         return kingSquare;
     }
 
+    /**
+     * Prend en entrée historique: game.history({verbose: true}) et la case de la pièce à examiner.
+     * Renvoie le nombre de coups depuis lequel la pièce n'a pas été jouée.
+     * @param history game.history({verbose: true}): Move[]
+     * @param pieceSquare Square
+     * @returns Nombre de coups d'inactivité: number
+     */
+    getPieceInactivity(history: Move[], pieceSquare: string): number {
+        const lastMoveIndex = history.findLastIndex((move) => move.lan.includes(pieceSquare));
+        if(lastMoveIndex >= 0) return Math.floor((history.length - (lastMoveIndex+1))/2);
+        return Math.floor(history.length/2);
+    }
+
     // uci ~= lan (long algebric notation), 'f1c4' -> 'Bc4'
     /**
      * Lan (Long Algebric Notation) vers San (Short Algebric Notation)
@@ -188,8 +201,6 @@ class GameToolBox {
         let lanHistory:string[] = [];
         this.game.load(DEFAULT_POSITION);
         if(startingFen) this.game.load(startingFen);
-        console.log(startingFen);
-        console.log(sanHistory);
         for(let sanMove of sanHistory.filter((sanMove) => sanMove !== '')){
             this.game.move(sanMove);
         }
@@ -240,6 +251,11 @@ class GameToolBox {
      */
     convertPgnToArray(pgn: string): string[] {
         return pgn.replaceAll('. ', '.').split(' ');
+    }
+
+    isMoveValid(fen: string, move: string): boolean {
+        this.game.load(fen);
+        return this.game.moves({verbose: true}).findIndex((legalMove) => legalMove.lan === move) >= 0;
     }
 
 

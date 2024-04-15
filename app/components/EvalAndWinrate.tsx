@@ -34,7 +34,6 @@ const EvalAndWinrate: React.FC<EvalProps> = ({game, databaseRating, winner, star
     useEffect(() => {
         if(winner || !engine.current) return;
         //const movesList = toolbox.convertHistorySanToLan(toolbox.convertPgnToHistory(game.pgn()), startingFen);
-        console.log('Moves List:' + movesList);
         
         //let coeff = game.history().length %2 === 0 ? 1 : -1;
         
@@ -45,7 +44,6 @@ const EvalAndWinrate: React.FC<EvalProps> = ({game, databaseRating, winner, star
             console.log(err);
         });
         getLichessWinrate(movesList, databaseRating, startingFen).then((winrate) => {
-            console.log(winrate);
             if(winrate.white) setWinrate(winrate);
         })
     }, [currentFen]);

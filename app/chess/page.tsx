@@ -36,7 +36,7 @@ const ChessPage = () => {
     const [engineEval, setEngineEval] = useState('0.3');
     const [showEval, setShowEval] = useState(true);
     const scoreHistory = useRef(new Array());
-    const movesTypeRef = useRef(new Array()); // -1: erreur, 0(blanc): joueur, 1(jaune): lichess, 2(vert clair): stockfish, 3(vert foncé): stockfish forcé, 4(rouge): random
+    const movesTypeRef = useRef(new Array()); // -1: erreur, 0(blanc): joueur, 1(jaune): lichess, 2(vert clair): stockfish, 3(vert foncé): stockfish forcé, 4(rouge): random, 5(rose): human
     const [showGameoverWindow, setShowGameoverWindow] = useState(false);
     const [winner, setWinner] = useState(''); // 'w' -> blancs gagnent, 'b' -> noirs gagnent, 'd' -> draw
     const whiteTimeControl = useRef({
@@ -194,7 +194,9 @@ const ChessPage = () => {
         case 3:
           return <span onClick={() => showMovePosition(i)} key={i} className=" text-green-600 cursor-pointer" >{move}</span>
         case 4:
-          return <span onClick={() => showMovePosition(i)} key={i} className=" text-red-600 cursor-pointer" >{move}</span>            
+          return <span onClick={() => showMovePosition(i)} key={i} className=" text-red-600 cursor-pointer" >{move}</span>
+        case 5:
+          return <span onClick={() => showMovePosition(i)} key={i} className=" text-rose-400 cursor-pointer" >{move}</span>             
         default:
           return <span onClick={() => showMovePosition(i)} key={i} className=" text-white cursor-pointer" >{move}</span>
       }
@@ -280,7 +282,7 @@ const ChessPage = () => {
       null
 
     const titleComponent = <h4 className=" text-lg text-white" >
-      {"Niveau de l adversaire: " + databaseRating}
+      {`Adversaire: ${botBehaviour} (${databaseRating})`}
     </h4>
 
     const pgnComponentDesktop =
