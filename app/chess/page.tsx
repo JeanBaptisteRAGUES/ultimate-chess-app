@@ -11,6 +11,7 @@ import Link from "next/link";
 import BotsAI, { Behaviour, Move } from "../bots-ai/BotsAI";
 import { useSearchParams } from "next/navigation";
 import GameToolBox from "../game-toolbox/GameToolbox";
+import { PiVirtualReality } from "react-icons/pi";
 
 
 const ChessPage = () => {
@@ -20,6 +21,7 @@ const ChessPage = () => {
     const toolbox = new GameToolBox();
     const gameActive = useRef(true);
     const [game, setGame] = useState(new Chess());
+    const virtualGame = useRef(new Chess());
     const engine = useRef<Engine>();
     const botAI = useRef<BotsAI>();
     const [playerColor, setPlayerColor] = useState<Color>('w');
@@ -28,11 +30,8 @@ const ChessPage = () => {
     //const [databaseRating, setDatabaseRating] = useState('Master');
     //const [botBehaviour, setBotBehaviour] = useState<Behaviour>('default');
     const [currentFen, setCurrentFen] = useState('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
-    const [winrate, setWinrate] = useState({
-      white: 50,
-      draws: 0,
-      black: 50
-    });
+    const [virtualFen, setVirtualFen] = useState('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+    const [isVirtualMode, setIsVirtualMode] = useState(false);
     const [engineEval, setEngineEval] = useState('0.3');
     const [showEval, setShowEval] = useState(true);
     const scoreHistory = useRef(new Array());
@@ -75,12 +74,23 @@ const ChessPage = () => {
       botAI.current = new BotsAI(botBehaviour, databaseRating, botColor);
     }, [playerColor]);
 
-    // TODO: Problème lors de la promotion d'un pion (promeut automatiquement en cavalier)
     const gameMove = (moveNotation: string, moveType: number) => {
       game.move(moveNotation);
       setCurrentFen(game.fen());
+      setVirtualFen(game.fen());
       movesTypeRef.current.push(moveType);
       checkGameOver();
+    }
+
+    const gameVirtualMove = (moveNotation: string) => {
+      virtualGame.current.move(moveNotation);
+      setVirtualFen(virtualGame.current.fen());
+    }
+
+    const switchMode = () => {
+      virtualGame.current.load(currentFen);
+      setVirtualFen(currentFen);
+      setIsVirtualMode(!isVirtualMode);
     }
   
     function checkGameOver() {
@@ -171,6 +181,14 @@ const ChessPage = () => {
   
     function onDrop(sourceSquare: Square, targetSquare: Square, piece: Piece) {
       const promotion = getPromotion(sourceSquare, piece);
+
+      if(isVirtualMode) {
+        gameVirtualMove(sourceSquare + targetSquare + promotion);
+        return true;
+      }
+
+      if(gameStarted && game.get(sourceSquare).color !== playerColor) return false;
+
       gameMove(sourceSquare + targetSquare + promotion, 0);
   
       let delay = getTimeControlDelay();
@@ -298,7 +316,7 @@ const ChessPage = () => {
 
     // TODO: Problème d'horloge lorsqu'on switch de position, le temps défile pour le mauvais joueur
     const boardComponent =
-      <div className=" flex flex-col justify-center items-center h-[300px] md:h-[500px] w-[95vw] md:w-[500px] my-10" >
+      <div className=" relative flex flex-col justify-center items-center h-[400px] md:h-[500px] w-[95vw] md:w-[500px] my-10" >
           <Clock 
             game={game} 
             turnColor={game.turn()} 
@@ -313,7 +331,7 @@ const ChessPage = () => {
           />
           <Chessboard 
             id="PlayVsRandom"
-            position={currentFen}
+            position={isVirtualMode ? virtualFen : currentFen}
             onPieceDrop={onDrop} 
             boardOrientation={playerColor === 'w' ? 'white' : 'black'}
           />
@@ -329,6 +347,13 @@ const ChessPage = () => {
             gameStarted={gameStarted} 
             gameActive={gameActive}
           />
+          {
+            isVirtualMode ? <div className=" absolute w-full h-full opacity-10 bg-cyan-400 pointer-events-none" >
+
+            </div>
+            :
+            null
+          }
       </div>
 
     const resetButton = <button
@@ -389,6 +414,10 @@ const ChessPage = () => {
       Switch
     </button>
 
+    const virtualModeButton = <div onClick={() => switchMode()} className=' h-[30px] w-[30px] flex flex-col justify-start items-center cursor-pointer' style={{color: isVirtualMode ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+        <PiVirtualReality size={30} />
+    </div>
+
     const analysisButton = 
       <Link
         href = {{
@@ -408,6 +437,7 @@ const ChessPage = () => {
         {/* selectBotBehaviourButton */}
         {/* selectDifficultyButton */}
         {selectTimeControlButton}
+        {virtualModeButton}
         {startGameButton}
         {switchButton}
         {/* analysisButton */}
