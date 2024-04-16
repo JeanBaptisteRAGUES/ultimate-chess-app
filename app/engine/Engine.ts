@@ -210,40 +210,48 @@ class Engine {
 
     mateToNumber(mateEval: string) {
         //return 20/eval(mateEval.split('#')[1]);
-        return eval(mateEval.split('#')[1]) >= 0 ? 7 : -7;
+        return eval(mateEval.split('#')[1]) >= 0 ? 20 : -20;
     }
 
     //TODO: Régler erreur quand evalAfter >> evalBefore (ex: (4.55+3)/(-0.39+3))
     async evalMoveQuality(moveEval: EvalResult, movesSet: string[], searchBookMoves: boolean) {
         const isBookMove = searchBookMoves ? await isTheory(movesSet) : false;
         let evalBefore: number = moveEval.evalBefore.includes('#') ? this.mateToNumber(moveEval.evalBefore) : eval(moveEval.evalBefore);
+        evalBefore = Math.min(20, Math.max(-20, evalBefore));
         let evalAfter: number = moveEval.evalAfter.includes('#') ? this.mateToNumber(moveEval.evalAfter) : eval(moveEval.evalAfter);
+        evalAfter = Math.min(20, Math.max(-20, evalAfter));
         let scoreAbsoluteDiff = Math.max(Math.abs(evalAfter - evalBefore) - 0.1, 0);
+        //let scoreAbsoluteDiff = Math.max(Math.abs(evalAfter - evalBefore) - (0.05 + 0.1*Math.abs(evalBefore)), 0);
         let mult = 1;
         
         if(Math.sign(evalBefore) === Math.sign(evalAfter)){
-            if(evalBefore >= evalAfter){
+            /* if(evalBefore >= evalAfter){
                 mult = 1 - evalAfter/evalBefore;
             }else{
                 mult = 1 - evalBefore/evalAfter;
-            }
+            } */
+            mult = 1 - Math.min(Math.abs(evalBefore), Math.abs(evalAfter))/Math.max(Math.abs(evalBefore), Math.abs(evalAfter));
         }
 
         // Utilisé pour le score de précision
-        let scoreAccuracy = 1 - scoreAbsoluteDiff/3;
+        let scoreAccuracy = Math.max(1 - scoreAbsoluteDiff/3, 0);
         
         // Utilisé pour évaluer les erreurs
         let blunderAccuracy = 1 - mult*scoreAbsoluteDiff/3;
 
         
+        // TODO: On a quand même des fois des accuracy < 0
+        if(scoreAccuracy < 0) moveEval.accuracy = 0;
+        if(moveEval.bestMove === moveEval.movePlayed) moveEval.accuracy = 1;
 
-        console.log(`\x1B[34m${moveEval.movePlayed}`);
-        console.log('Eval before: ' + moveEval.evalBefore);
-        console.log('Eval after: ' + moveEval.evalAfter);
+        /* console.log(`\x1B[34m${moveEval.movePlayed}`);
+        console.log('Eval before: ' + evalBefore);
+        console.log('Eval after: ' + evalAfter);
         console.log('Score diff abs: ' + scoreAbsoluteDiff);
         console.log('Accuracy: ' + scoreAccuracy);
+        console.log('Mult: ' + mult);
         console.log('Blunder Accuracy: ' + blunderAccuracy);
-        console.log('Marked as book move: ' + isBookMove);
+        console.log('Marked as book move: ' + isBookMove); */
         
         if(isBookMove && scoreAbsoluteDiff < 1) {
             moveEval.accuracy = 1;
@@ -257,7 +265,6 @@ class Engine {
             return moveEval;
         }
 
-        if(scoreAccuracy < 0) moveEval.accuracy = 0;
 
         //TODO: Prendre une marge d'erreur de 0.1 et faire en sorte que evalBefore = 0.12 et evalAfter = 0.01 ne donne pas une % de merde
         if(scoreAbsoluteDiff > 0.4 && blunderAccuracy < 0.9 && moveEval.bestMove !== moveEval.movePlayed) moveEval.quality = "?!";
@@ -265,7 +272,7 @@ class Engine {
         if(scoreAbsoluteDiff > 2 && blunderAccuracy < 0.5 && moveEval.bestMove !== moveEval.movePlayed) moveEval.quality = "??";
         moveEval.accuracy = scoreAccuracy;
 
-        console.log('Quality: ' + moveEval.quality);
+        //console.log('Quality: ' + moveEval.quality);
 
         return moveEval;
     }

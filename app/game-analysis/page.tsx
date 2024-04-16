@@ -99,7 +99,7 @@ const GameAnalysisPage = () => {
         const blackAccuracySum = results.reduce((acc, curr, i) => {
             return acc + (i%2 !== 0 && curr.accuracy ? 100*curr.accuracy : 0);
         }, 0);
-        console.log("White accuracy sum: " + blackAccuracySum);
+        console.log("Black accuracy sum: " + blackAccuracySum);
         return Math.round(10*blackAccuracySum/Math.floor(results.length/2))/10;
     }
 
