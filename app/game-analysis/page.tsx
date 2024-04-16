@@ -61,9 +61,6 @@ const GameAnalysisPage = () => {
     const endCaseRef = useRef<Element | null>(null);
     
     useEffect(() => {
-        console.log(searchParams);
-        console.log(searchParams.get('pgn'));
-        console.log(searchParams.get('depth'));
         engine.current = new Engine();
         engine.current.init().then(() => {
             console.log('Launch PGN analysis');
@@ -76,7 +73,6 @@ const GameAnalysisPage = () => {
             gameHistoryChess.move(move);
         })
         gameHistory.current = gameHistoryChess.history({verbose: true});
-        console.log(gameHistory.current);
     }, []);
     
     function evalToNumber(evalScore: string): number {
@@ -84,7 +80,7 @@ const GameAnalysisPage = () => {
             if(evalScore.includes('-')) return -7;
             return 7;
         }
-        return Math.min(eval(evalScore), 6.5);
+        return Math.max(-6.5, (Math.min(eval(evalScore), 6.5)));
     }
 
     function analysisResultsToHistoryData(results: EvalResult[]): number[] {
@@ -119,7 +115,6 @@ const GameAnalysisPage = () => {
         const timestampStart = performance.now();
         engine.current.launchGameAnalysis(historyUci, depth, setAnalysisProgress, startingFen).then((results: EvalResult[]) => {
             console.log(`Durée de l'analyse: ${(performance.now() - timestampStart)/1000}s`);
-            console.log(results);
             //console.log("White accuracy: " + getWhiteAccuracy(results));
             setWhiteAccuracy(getWhiteAccuracy(results));
             setBlackAccuracy(getBlackAccuracy(results));
@@ -136,9 +131,7 @@ const GameAnalysisPage = () => {
         const timestampStart = performance.now();
         console.log(pgn);
         const pgnArray = toolbox.convertPgnToArray(pgn);
-        console.log(pgnArray);
         const history = toolbox.convertPgnToHistory(pgn);
-        console.log(history);
 
         const results = analysisResults.map((result: EvalResult, i: number) => {
             const bestMoveSan = toolbox.convertMoveLanToSan2(history, i, result.bestMove, startingFen);
@@ -155,6 +148,9 @@ const GameAnalysisPage = () => {
                 <span>
                     {movePlayed}
                 </span>
+
+            // TODO: Prendre en compte les coups théoriques
+            if(result.isTheory) return <span onClick={() => showMovePosition(movePlayed, i, true)} key={i} className=" text-amber-800 cursor-pointer select-none" >{bestMoveSpan}</span>;
             if(result.quality === '??') return <span onClick={() => showMovePosition(movePlayed, i, true)} key={i} className=" text-red-600 cursor-pointer select-none" >{bestMoveSpan}</span>;
             if(result.quality === '?') return <span onClick={() => showMovePosition(movePlayed, i, true)} key={i} className=" text-orange-500 cursor-pointer select-none" >{bestMoveSpan}</span>;
             if(result.quality === '?!') return <span onClick={() => showMovePosition(movePlayed, i, true)} key={i} className=" text-yellow-400 cursor-pointer select-none" >{bestMoveSpan}</span>;
@@ -311,10 +307,10 @@ const GameAnalysisPage = () => {
                     <AnalysisChart historyData={chartHistoryData} className=" " />
                 </div>
                 <div className="  w-full h-fit flex justify-around items-center" >
-                    <div className=" bg-slate-50 text-black text-xl h-10 w-20 flex justify-center items-center m-5 rounded" >
+                    <div className=" bg-slate-50 text-black text-xl font-medium h-10 w-20 flex justify-center items-center m-5 rounded" >
                         {whiteAccuracy}%
                     </div>
-                    <div className=" bg-slate-950 text-white text-xl h-10 w-20 flex justify-center items-center m-5 rounded" >
+                    <div className=" bg-slate-950 text-white text-xl font-medium h-10 w-20 flex justify-center items-center m-5 rounded" >
                         {blackAccuracy}%
                     </div>
                 </div>

@@ -480,9 +480,9 @@ class BotsAI {
         const forgotPieceChance = new Map([
             ['Beginner', 30],
             ['Casual', 20],
-            ['Intermediate', 10],
-            ['Advanced', 5],
-            ['Master', 2],
+            ['Intermediate', 15],
+            ['Advanced', 10],
+            ['Master', 5],
             ['Maximum', 0]
           ]).get(this.#botLevel) || 10;
         let hasForgotten = false;
@@ -492,10 +492,10 @@ class BotsAI {
         game.board().forEach((rank) => {
             rank.forEach((boardCase) => {
                 if(boardCase?.color !== this.#botColor && (boardCase?.type === 'b' || boardCase?.type === 'q')){
-                    const rand = Math.random()*100;
+                    const rand = Math.ceil(Math.random()*100);
                     console.log("Random move result: " + rand);
                     const pieceInactivity = this.#toolbox.getPieceInactivity(game.history({verbose: true}), boardCase.square);
-                    const inactivityBonusMult = Math.min(0.15*pieceInactivity, 1.5);
+                    const inactivityBonusMult = 0.1 + Math.min(0.2*pieceInactivity, 1.5);
                     const forgotPieceChanceFinal = Math.ceil(forgotPieceChance*inactivityBonusMult);
                     //console.log(`Inactivité de la pièce en ${boardCase.square}: ${pieceInactivity} (mult: ${inactivityBonusMult})`);
 

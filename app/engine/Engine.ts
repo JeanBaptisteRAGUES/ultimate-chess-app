@@ -1,4 +1,6 @@
 import { DEFAULT_POSITION } from "chess.js";
+import { isTheory } from "../libs/fetchWikibooks";
+import GameToolBox from "../game-toolbox/GameToolbox";
 
 export const bestMoveRegex = /bestmove\s(\w*)/;
 export const pvMoveRegex = /\spv\s\w*/;
@@ -14,6 +16,7 @@ export type EvalResult = {
     evalAfter: string,
     quality: string,
     accuracy?: number,
+    isTheory?: boolean,
 }
 
 export type EvalResultSimplified = {
@@ -43,9 +46,11 @@ function getBestMoveFromData(data: string) {
 
 class Engine {
     stockfish: Worker;
+    toolbox: GameToolBox;
 
     constructor() {
         this.stockfish = new Worker('stockfish.js#stockfish.wasm');
+        this.toolbox = new GameToolBox();
     }
 
     init() {
@@ -204,33 +209,82 @@ class Engine {
     }
 
     mateToNumber(mateEval: string) {
-        return 20/eval(mateEval.split('#')[1]);
+        //return 20/eval(mateEval.split('#')[1]);
+        return eval(mateEval.split('#')[1]) >= 0 ? 7 : -7;
     }
 
-    evalMoveQuality(moveEval: EvalResult) {
+    //TODO: Régler erreur quand evalAfter >> evalBefore (ex: (4.55+3)/(-0.39+3))
+    async evalMoveQuality(moveEval: EvalResult, movesSet: string[], searchBookMoves: boolean) {
+        const isBookMove = searchBookMoves ? await isTheory(movesSet) : false;
         let evalBefore: number = moveEval.evalBefore.includes('#') ? this.mateToNumber(moveEval.evalBefore) : eval(moveEval.evalBefore);
         let evalAfter: number = moveEval.evalAfter.includes('#') ? this.mateToNumber(moveEval.evalAfter) : eval(moveEval.evalAfter);
-        let scoreAbsoluteDiff = Math.abs(evalAfter - evalBefore);
-        let scorePercentageDiff = Math.max(Math.abs(evalBefore),Math.abs(evalAfter))/Math.min(Math.abs(evalBefore),Math.abs(evalAfter)) - 1;
-        let scoreAccuracy = Math.min(Math.abs(evalBefore),Math.abs(evalAfter))/Math.max(Math.abs(evalBefore),Math.abs(evalAfter));
+        let scoreAbsoluteDiff = Math.max(Math.abs(evalAfter - evalBefore) - 0.1, 0);
+        let mult = 1;
         
-        if(scoreAbsoluteDiff > 0.5 && scorePercentageDiff > 0.3 && moveEval.bestMove !== moveEval.movePlayed) moveEval.quality = "?!";
-        if(scoreAbsoluteDiff > 1 && scorePercentageDiff > 1 && moveEval.bestMove !== moveEval.movePlayed) moveEval.quality = "?";
-        if(scoreAbsoluteDiff > 2 && scorePercentageDiff > 2 && moveEval.bestMove !== moveEval.movePlayed) moveEval.quality = "??";
+        if(Math.sign(evalBefore) === Math.sign(evalAfter)){
+            if(evalBefore >= evalAfter){
+                mult = 1 - evalAfter/evalBefore;
+            }else{
+                mult = 1 - evalBefore/evalAfter;
+            }
+        }
+
+        // Utilisé pour le score de précision
+        let scoreAccuracy = 1 - scoreAbsoluteDiff/3;
+        
+        // Utilisé pour évaluer les erreurs
+        let blunderAccuracy = 1 - mult*scoreAbsoluteDiff/3;
+
+        
+
+        console.log(`\x1B[34m${moveEval.movePlayed}`);
+        console.log('Eval before: ' + moveEval.evalBefore);
+        console.log('Eval after: ' + moveEval.evalAfter);
+        console.log('Score diff abs: ' + scoreAbsoluteDiff);
+        console.log('Accuracy: ' + scoreAccuracy);
+        console.log('Blunder Accuracy: ' + blunderAccuracy);
+        console.log('Marked as book move: ' + isBookMove);
+        
+        if(isBookMove && scoreAbsoluteDiff < 1) {
+            moveEval.accuracy = 1;
+            moveEval.isTheory = true;
+            return moveEval;
+        }
+        moveEval.isTheory = false;
+
+        if(scoreAccuracy > 1){
+            moveEval.accuracy = 1;
+            return moveEval;
+        }
+
+        if(scoreAccuracy < 0) moveEval.accuracy = 0;
+
+        //TODO: Prendre une marge d'erreur de 0.1 et faire en sorte que evalBefore = 0.12 et evalAfter = 0.01 ne donne pas une % de merde
+        if(scoreAbsoluteDiff > 0.4 && blunderAccuracy < 0.9 && moveEval.bestMove !== moveEval.movePlayed) moveEval.quality = "?!";
+        if(scoreAbsoluteDiff > 0.8 && blunderAccuracy < 0.7 && moveEval.bestMove !== moveEval.movePlayed) moveEval.quality = "?";
+        if(scoreAbsoluteDiff > 2 && blunderAccuracy < 0.5 && moveEval.bestMove !== moveEval.movePlayed) moveEval.quality = "??";
         moveEval.accuracy = scoreAccuracy;
+
+        console.log('Quality: ' + moveEval.quality);
+
         return moveEval;
     }
 
     //Test avec : movesArray = ['e2e4', 'e7e5', 'g1f3', 'b8c6', 'f1b5'];
     // TODO: Erreur sur l'évaluation du dernier coup lors de l'analyse pour ce pgn : #-1 au lieu de #1
     // 1.e4 e5 2.Nf3 Bc5 3.d4 exd4 4.Nxd4 Qf6 5.Be3 Nc6 6.c3 Bxd4 7.cxd4 Qh4 8.Nc3 Nf6 9.e5 Ne4 10.g3 Nxc3 11.bxc3 Qd8 12.Qd2 d5 13.Bg2 Rb8 14.O-O b6 15.Rfe1 Be6 16.Rad1 Bg4 17.Rc1 Bf5 18.c4 Ne7 19.cxd5 O-O 20.d6 Rc8 21.dxe7 Qxe7 22.d5 Rfd8 23.Bf4 Be6 24.d6 cxd6 25.exd6 Qf8 26.Rxc8 Re8 27.Rxe8 Qxe8 28.Rd1 h6 29.d7 Qxd7 30.Qxd7 a6 31.Qd8+ Kh7 32.Be4+ f5 33.Bc2 g6 34.Qe7+ Bf7 35.Qxf7+ Kh8 36.Be5#
-    async launchGameAnalysis(movesListUci: Array<string>, depth: number, callback: (progress: number) => void, startingFen?: string) {
+    async launchGameAnalysis(movesList_lan: string[], depth: number, callback: (progress: number) => void, startingFen?: string) {
         console.log('Start Game Anaysis');
         let results = [];
-        let movesSetArray = movesListUci.map((move, i) => {
-            return movesListUci.slice(0, i+1).join(' ');
+        let movesSetArray = movesList_lan.map((move, i) => {
+            return movesList_lan.slice(0, i+1).join(' ');
         });
         movesSetArray.unshift('');
+        let movesList_san = this.toolbox.convertHistoryLanToSan(movesList_lan, startingFen);
+        let movesSetArray_san = movesList_san.map((move, i) => {
+            return movesList_san.slice(0, i+1);
+        });
+        //movesSetArray_san.unshift(['']);
         const fen = startingFen ? startingFen : DEFAULT_POSITION;
         const coeffBase = fen.includes(' w ') ? 1 : -1;
         //Il a fallu ajouter "downlevelIteration": true dans le tsconfig.json pour que ça marche
@@ -238,10 +292,10 @@ class Engine {
             //const coeff = i%2 === 0 ? 1 : -1;
             const coeff = i%2 === 0 ? coeffBase : -coeffBase;
             const result: any = await this.evalPositionFromMovesList(movesSet, depth, coeff, fen);
-            if(i < movesListUci.length ){
+            if(i < movesList_lan.length ){
                 let finalResult: EvalResult = {
                     bestMove: result.pv,
-                    movePlayed: movesListUci[i],
+                    movePlayed: movesList_lan[i],
                     evalBefore: result.eval,
                     evalAfter: result.eval,
                     quality: "",
@@ -249,12 +303,12 @@ class Engine {
                 results.push(finalResult);
             }
             
-            callback(i/movesListUci.length);
+            callback(i/movesList_lan.length);
             if(i > 0) results[i-1].evalAfter = result.eval;
         }
 
-        for(let result of results){
-            result = this.evalMoveQuality(result);
+        for(let [i, result] of results.entries()){
+            result = await this.evalMoveQuality(result, movesSetArray_san[i], i < 12);
         }
 
         /* results.forEach((result, i) => {

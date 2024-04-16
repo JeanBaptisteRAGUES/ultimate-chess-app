@@ -149,8 +149,6 @@ class GameToolBox {
     convertMoveLanToSan2(movesList: string[], index: number, lanNotation: string, startingFen?: string): string | undefined {
         this.game.load(DEFAULT_POSITION);
         if(startingFen) this.game.load(startingFen);
-        console.log(this.game.fen());
-        console.log(movesList);
 
         for(let i = 0; i < index; i++) {
             if(i < movesList.length) this.game.move(movesList[i]);
