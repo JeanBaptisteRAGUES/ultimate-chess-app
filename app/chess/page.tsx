@@ -87,6 +87,7 @@ const ChessPage = () => {
       setVirtualFen(virtualGame.current.fen());
     }
 
+    // TODO: Problème de dame noire qui ne peut plus bouger dans la scandinave (cf photo)
     const switchMode = () => {
       virtualGame.current.load(currentFen);
       setVirtualFen(currentFen);
@@ -173,6 +174,13 @@ const ChessPage = () => {
      * @returns 
      */
     function getPromotion(sourceSquare: Square, piece: Piece) {
+      if(isVirtualMode){
+        if(virtualGame.current.get(sourceSquare).type === 'p' && piece.charAt(1) !== 'P'){
+          return piece.charAt(1).toLowerCase();
+        }
+        return '';
+      }
+
       if(game.get(sourceSquare).type === 'p' && piece.charAt(1) !== 'P'){
         return piece.charAt(1).toLowerCase();
       }
@@ -181,7 +189,7 @@ const ChessPage = () => {
   
     function onDrop(sourceSquare: Square, targetSquare: Square, piece: Piece) {
       const promotion = getPromotion(sourceSquare, piece);
-
+      
       if(isVirtualMode) {
         gameVirtualMove(sourceSquare + targetSquare + promotion);
         return true;
