@@ -14,6 +14,7 @@ import { createRoot } from "react-dom/client";
 import { createPortal } from "react-dom";
 
 type EvalResultFormated = {
+    playerColor: Color,
     bestMove: string,
     movePlayed: string,
     evalBefore: string,

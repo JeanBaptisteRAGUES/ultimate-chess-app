@@ -1,4 +1,4 @@
-import { DEFAULT_POSITION } from "chess.js";
+import { Color, DEFAULT_POSITION } from "chess.js";
 import { isTheory } from "../libs/fetchWikibooks";
 import GameToolBox from "../game-toolbox/GameToolbox";
 
@@ -10,6 +10,7 @@ export const mateRegex = /mate\s-?[0-9]*/;
 export const firstEvalMoveRegex = /pv\s[a-h][1-8]/;
 
 export type EvalResult = {
+    playerColor: Color,
     bestMove: string,
     movePlayed: string,
     evalBefore: string,
@@ -214,8 +215,8 @@ class Engine {
     }
 
     //TODO: Régler erreur quand evalAfter >> evalBefore (ex: (4.55+3)/(-0.39+3))
-    async evalMoveQuality(moveEval: EvalResult, movesSet: string[], searchBookMoves: boolean) {
-        const isBookMove = searchBookMoves ? await isTheory(movesSet) : false;
+    async evalMoveQuality(moveEval: EvalResult, movesSet: string[], checkTheory: boolean) {
+        const isBookMove = checkTheory ? await isTheory(movesSet) : false;
         let evalBefore: number = moveEval.evalBefore.includes('#') ? this.mateToNumber(moveEval.evalBefore) : eval(moveEval.evalBefore);
         evalBefore = Math.min(20, Math.max(-20, evalBefore));
         let evalAfter: number = moveEval.evalAfter.includes('#') ? this.mateToNumber(moveEval.evalAfter) : eval(moveEval.evalAfter);
@@ -239,19 +240,34 @@ class Engine {
         // Utilisé pour évaluer les erreurs
         let blunderAccuracy = 1 - mult*scoreAbsoluteDiff/3;
 
-        
+        // Empêche d'afficher des coups comme étant des erreurs graves si le score reste totalement gagnant
+        if(Math.sign(evalBefore) === 1 && moveEval.playerColor === 'w' && evalAfter > 10) blunderAccuracy = Math.max(0.85, blunderAccuracy);
+        if(Math.sign(evalBefore) === -1 && moveEval.playerColor === 'b' && evalAfter < -10) blunderAccuracy = Math.max(0.85, blunderAccuracy);
+
+        // Empêche d'afficher des coups comme étant des erreurs si stockfish avait sous-estimé l'avantage de la position
+        if(Math.sign(evalBefore) === 1 && moveEval.playerColor === 'w' && evalAfter > evalBefore) {
+            scoreAccuracy = 1;
+            blunderAccuracy = 1;
+        }
+        if(Math.sign(evalBefore) === -1 && moveEval.playerColor === 'b' && evalAfter < evalBefore) {
+            scoreAccuracy = 1;
+            blunderAccuracy = 1;
+        }
+
         // TODO: On a quand même des fois des accuracy < 0
         if(scoreAccuracy < 0) moveEval.accuracy = 0;
         if(moveEval.bestMove === moveEval.movePlayed) moveEval.accuracy = 1;
 
-        /* console.log(`\x1B[34m${moveEval.movePlayed}`);
+        console.log(`\x1B[34m${moveEval.movePlayed}`);
+        console.log('Player Color: ' + moveEval.playerColor);
         console.log('Eval before: ' + evalBefore);
+        console.log('Eval before sign: ' + Math.sign(evalBefore));
         console.log('Eval after: ' + evalAfter);
         console.log('Score diff abs: ' + scoreAbsoluteDiff);
         console.log('Accuracy: ' + scoreAccuracy);
         console.log('Mult: ' + mult);
         console.log('Blunder Accuracy: ' + blunderAccuracy);
-        console.log('Marked as book move: ' + isBookMove); */
+        console.log('Marked as book move: ' + isBookMove);
         
         if(isBookMove && scoreAbsoluteDiff < 1) {
             moveEval.accuracy = 1;
@@ -272,7 +288,7 @@ class Engine {
         if(scoreAbsoluteDiff > 2 && blunderAccuracy < 0.5 && moveEval.bestMove !== moveEval.movePlayed) moveEval.quality = "??";
         moveEval.accuracy = scoreAccuracy;
 
-        //console.log('Quality: ' + moveEval.quality);
+        console.log('Quality: ' + moveEval.quality);
 
         return moveEval;
     }
@@ -299,8 +315,10 @@ class Engine {
             //const coeff = i%2 === 0 ? 1 : -1;
             const coeff = i%2 === 0 ? coeffBase : -coeffBase;
             const result: any = await this.evalPositionFromMovesList(movesSet, depth, coeff, fen);
+            const playerColor = Math.sign(coeff) === 1 ? 'w' : 'b';
             if(i < movesList_lan.length ){
                 let finalResult: EvalResult = {
+                    playerColor: playerColor,
                     bestMove: result.pv,
                     movePlayed: movesList_lan[i],
                     evalBefore: result.eval,
@@ -314,8 +332,9 @@ class Engine {
             if(i > 0) results[i-1].evalAfter = result.eval;
         }
 
+        // TODO: remettre checkTheory à i < 12 dès qu'on aura reglé le problème de latence de fetch avec fetch('http://...', {signal: AbortSignal.timeout(500)}) dans un try{}catch{}finally{}
         for(let [i, result] of results.entries()){
-            result = await this.evalMoveQuality(result, movesSetArray_san[i], i < 12);
+            result = await this.evalMoveQuality(result, movesSetArray_san[i], i < 1);
         }
 
         /* results.forEach((result, i) => {
