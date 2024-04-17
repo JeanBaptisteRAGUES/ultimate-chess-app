@@ -133,8 +133,13 @@ class GameToolBox {
      */
     convertMoveLanToSan(fen: string, lanNotation: string): string | undefined{
         this.game.load(fen);
-        this.game.move(lanNotation);
-        return this.game.history().pop();
+        try {
+            this.game.move(lanNotation);
+            return this.game.history().pop();
+        } catch (error) {
+            console.log(`Erreur lors de la conversion du coup ${lanNotation} vers sa notation SAN: ${error}`);
+            return lanNotation;
+        }
     }
 
     // uci ~= lan (long algebric notation), 'f1c4' -> 'Bc4'
@@ -150,12 +155,17 @@ class GameToolBox {
         this.game.load(DEFAULT_POSITION);
         if(startingFen) this.game.load(startingFen);
 
-        for(let i = 0; i < index; i++) {
-            if(i < movesList.length) this.game.move(movesList[i]);
+        try {
+            for(let i = 0; i < index; i++) {
+                if(i < movesList.length) this.game.move(movesList[i]);
+            }
+    
+            this.game.move(lanNotation);
+            return this.game.history().pop();
+        } catch (error) {
+            console.log(`Erreur lors de la conversion du coup ${lanNotation} vers sa notation SAN: ${error}`);
+            return lanNotation;
         }
-
-        this.game.move(lanNotation);
-        return this.game.history().pop();
     }
 
     /**

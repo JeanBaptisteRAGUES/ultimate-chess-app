@@ -293,7 +293,8 @@ function isRandomMovePlayable (botParams: DefaultBotParams, level: string, lastR
 }
 
 async function makeStockfishMove(botParams: DefaultBotParams, game: Chess, engine: Engine): Promise<Move> {
-    //console.log('Make Stockfish Move');
+    console.log('Make Stockfish Move');
+    console.log(botParams);
     let stockfishMove: Move = {
         notation: '',
         type: -1
@@ -2036,6 +2037,7 @@ class BotsAI {
     }
 
     async getBrainPieceChoice(game: Chess): Promise<string> {
+        console.log(this.#botColor + ' réfléchit à une pièce à bouger');
         const move = await makeStockfishMove(this.#defaultBotParams, game, this.#engine);
 
         return game.get(this.#toolbox.getMoveOrigin(move.notation) || 'a1').type;

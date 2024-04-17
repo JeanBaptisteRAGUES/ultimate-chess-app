@@ -65,10 +65,6 @@ const GameAnalysisPage = () => {
     
     useEffect(() => {
         engine.current = new Engine();
-        engine.current.init().then(() => {
-            console.log('Launch PGN analysis');
-            launchStockfishAnalysis(pgn, depth);
-        });
         const gameHistoryChess = new Chess();
         gameHistoryChess.load(startingFen);
         const movesList = toolbox.convertPgnToHistory(pgn);
@@ -76,6 +72,10 @@ const GameAnalysisPage = () => {
             gameHistoryChess.move(move);
         })
         gameHistory.current = gameHistoryChess.history({verbose: true});
+        engine.current.init().then(() => {
+            console.log('Launch PGN analysis');
+            launchStockfishAnalysis(pgn, depth);
+        });
     }, []);
     
     function evalToNumber(evalScore: string): number {
@@ -171,7 +171,10 @@ const GameAnalysisPage = () => {
         const history = toolbox.convertPgnToHistory(pgn);
 
         const results = analysisResults.map((result: EvalResult, i: number) => {
-            const bestMoveSan = toolbox.convertMoveLanToSan2(history, i, result.bestMove, startingFen);
+            //const bestMoveSan = toolbox.convertMoveLanToSan2(history, i, result.bestMove, startingFen);
+            console.log(gameHistory.current[i].before);
+            console.log(result.bestMove);
+            const bestMoveSan = toolbox.convertMoveLanToSan(gameHistory.current[i].before, result.bestMove);
             const movePlayed = pgnArray[i];
             const formatedResult = result as EvalResultFormated;
             formatedResult.bestMove = bestMoveSan || '';
@@ -314,13 +317,30 @@ const GameAnalysisPage = () => {
         console.log('Changement de position');
     }
 
-    function onDrop(sourceSquare: Square, targetSquare: Square, piece: Piece) {
+    /* function onDrop(sourceSquare: Square, targetSquare: Square, piece: Piece) {
 
         game.move(sourceSquare + targetSquare);
         setCurrentFen(game.fen());
     
         return true;
-    }
+    } */
+
+    function getPromotion(sourceSquare: Square, piece: Piece) {
+        if(game.get(sourceSquare).type === 'p' && piece.charAt(1) !== 'P'){
+          return piece.charAt(1).toLowerCase();
+        }
+        return '';
+      }
+
+    function onDrop(sourceSquare: Square, targetSquare: Square, piece: Piece) {
+        const promotion = getPromotion(sourceSquare, piece);
+  
+        game.move(sourceSquare + targetSquare + promotion);
+    
+        setCurrentFen(game.fen());
+        
+        return true;
+      }
 
     const formatedResultsComponent = formatedResults.length > 0 ?
         <div className="  w-full h-full overflow-y-auto flex flex-row flex-wrap justify-start items-start gap-2" >
@@ -464,7 +484,7 @@ const GameAnalysisPage = () => {
             onPieceDrop={onDrop} 
             boardOrientation={playerColor === 'w' ? 'white' : 'black'}
             />
-            <div className=" absolute flex flex-wrap h-[304px] md:h-[512px] w-[304px] md:w-[512px]" >
+            <div className=" absolute flex flex-wrap h-[304px] md:h-[512px] w-[304px] md:w-[512px] pointer-events-none" >
                 {
                     board.map((e,i) => {
                         const inaccuracyIcon = inaccuracyIndexRef.current === i ? <span className="w-5 h-5 translate-x-1 -translate-y-1 bg-yellow-500 text-white font-bold rounded-full flex justify-center items-center" >?!</span> : null;

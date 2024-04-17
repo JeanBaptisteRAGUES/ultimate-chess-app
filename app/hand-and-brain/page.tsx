@@ -70,10 +70,10 @@ const HandAndBrainPage = () => {
         console.log("Ally Role: " + allyRole);
         console.log("Opponent Rating: " + opponentRating);
         console.log("Opponent Behaviour: " + opponentBehaviour);
-        if(allyRole === 'Brain' && game.turn() === playerColor) {
+        /* if(allyRole === 'Brain' && game.turn() === playerColor) {
             setAllyStatus(1);
             allyAI.current?.getBrainPieceChoice(game).then((pieceChoice) => setSelectedPiece(pieceChoice));
-        } 
+        }  */
     }, []);
 
     useEffect(() => {
@@ -165,8 +165,10 @@ const HandAndBrainPage = () => {
             setSelectedPiece(pieceChoice);
             setAllyStatus(0);
         });
-      } 
-      console.log("Erreur lors de la génération d'un coup par l'ordinateur");
+      } else{
+        console.log("Erreur lors de la génération d'un coup par l'ordinateur");
+      }
+      
     }
 
     /**
@@ -516,6 +518,11 @@ const selectPieceComponentSmartphone =
           if(game.turn() !== playerColor){
             //makeLichessMove();
             playComputerMove();
+          } else{
+            if(allyRole === 'Brain') {
+              setAllyStatus(1);
+              allyAI.current?.getBrainPieceChoice(game).then((pieceChoice) => setSelectedPiece(pieceChoice));
+            } 
           }
         }}
       >
