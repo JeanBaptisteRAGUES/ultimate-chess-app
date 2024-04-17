@@ -13,13 +13,14 @@ import { useSearchParams } from "next/navigation";
 import { createRoot } from "react-dom/client";
 import { createPortal } from "react-dom";
 
-/* type EvalResult = {
+type EvalResultFormated = {
     bestMove: string,
     movePlayed: string,
     evalBefore: string,
     evalAfter: string,
     quality: string,
-} */
+    isTheory: boolean,
+}
 
 const GameAnalysisPage = () => {
     const engine = useRef<Engine>();
@@ -40,7 +41,8 @@ const GameAnalysisPage = () => {
     const [currentFen, setCurrentFen] = useState(startingFen);
     const [currentMovesList, setCurrentMovesList] = useState<string[]>([]);
     const [currentIndex, setCurrentIndex] = useState(-1);
-    const [formatedResults, setFormatedResults] = useState<JSX.Element[]>([])
+    //const [formatedResults, setFormatedResults] = useState<JSX.Element[]>([])
+    const [formatedResults, setFormatedResults] = useState<EvalResultFormated[]>([]);
     const [playerColor, setPlayerColor] = useState('w');
     const boardOrientationRef = useRef<Color>('w');
     const [winrate, setWinrate] = useState({
@@ -126,7 +128,7 @@ const GameAnalysisPage = () => {
     }
 
     // TODO: Entourer le coup dont l'index = currentIndex
-    function formatAnalyseResults(pgn: string, analysisResults: EvalResult[]) {
+    /* function formatAnalyseResults(pgn: string, analysisResults: EvalResult[]) {
         //console.log(analysisResults);
         const timestampStart = performance.now();
         console.log(pgn);
@@ -150,11 +152,30 @@ const GameAnalysisPage = () => {
                 </span>
 
             // TODO: Prendre en compte les coups théoriques
-            if(result.isTheory) return <span onClick={() => showMovePosition(movePlayed, i, true)} key={i} className=" text-amber-800 cursor-pointer select-none" >{bestMoveSpan}</span>;
-            if(result.quality === '??') return <span onClick={() => showMovePosition(movePlayed, i, true)} key={i} className=" text-red-600 cursor-pointer select-none" >{bestMoveSpan}</span>;
-            if(result.quality === '?') return <span onClick={() => showMovePosition(movePlayed, i, true)} key={i} className=" text-orange-500 cursor-pointer select-none" >{bestMoveSpan}</span>;
-            if(result.quality === '?!') return <span onClick={() => showMovePosition(movePlayed, i, true)} key={i} className=" text-yellow-400 cursor-pointer select-none" >{bestMoveSpan}</span>;
-            return <span onClick={() => showMovePosition(movePlayed, i, true)} key={i} className=" text-white cursor-pointer select-none" >{bestMoveSpan}</span>;
+            if(result.isTheory) return <span onClick={() => showMovePosition(movePlayed, i, true)} key={i} className=" text-amber-800 cursor-pointer select-none" style={{backgroundColor: currentIndex === i ? "rgba(34, 211, 238, 0.3)" : "rgba(0,0,0,0)" }} >{bestMoveSpan}</span>;
+            if(result.quality === '??') return <span onClick={() => showMovePosition(movePlayed, i, true)} key={i} className=" text-red-600 cursor-pointer select-none" style={{backgroundColor: currentIndex === i ? "rgba(34, 211, 238, 0.3)" : "rgba(0,0,0,0)" }} >{bestMoveSpan}</span>;
+            if(result.quality === '?') return <span onClick={() => showMovePosition(movePlayed, i, true)} key={i} className=" text-orange-500 cursor-pointer select-none" style={{backgroundColor: currentIndex === i ? "rgba(34, 211, 238, 0.3)" : "rgba(0,0,0,0)" }} >{bestMoveSpan}</span>;
+            if(result.quality === '?!') return <span onClick={() => showMovePosition(movePlayed, i, true)} key={i} className=" text-yellow-400 cursor-pointer select-none" style={{backgroundColor: currentIndex === i ? "rgba(34, 211, 238, 0.3)" : "rgba(0,0,0,0)" }} >{bestMoveSpan}</span>;
+            return <span onClick={() => showMovePosition(movePlayed, i, true)} key={i} className=" text-white cursor-pointer select-none" style={{backgroundColor: currentIndex === i ? "rgba(34, 211, 238, 0.3)" : "rgba(0,0,0,0)" }} >{bestMoveSpan}</span>;
+        });
+        console.log(`Durée du formatage: ${(performance.now() - timestampStart)/1000}s`);
+        setFormatedResults(results);
+    }  */
+
+    function formatAnalyseResults(pgn: string, analysisResults: EvalResult[]) {
+        //console.log(analysisResults);
+        const timestampStart = performance.now();
+        console.log(pgn);
+        const pgnArray = toolbox.convertPgnToArray(pgn);
+        const history = toolbox.convertPgnToHistory(pgn);
+
+        const results = analysisResults.map((result: EvalResult, i: number) => {
+            const bestMoveSan = toolbox.convertMoveLanToSan2(history, i, result.bestMove, startingFen);
+            const movePlayed = pgnArray[i];
+            const formatedResult = result as EvalResultFormated;
+            formatedResult.bestMove = bestMoveSan || '';
+            formatedResult.movePlayed = movePlayed || '';
+            return formatedResult;
         });
         console.log(`Durée du formatage: ${(performance.now() - timestampStart)/1000}s`);
         setFormatedResults(results);
@@ -300,11 +321,54 @@ const GameAnalysisPage = () => {
         return true;
     }
 
+    const formatedResultsComponent = formatedResults.length > 0 ?
+        <div className="  w-full h-full overflow-y-auto flex flex-row flex-wrap justify-start items-start gap-2" >
+            {
+                formatedResults.map((result: EvalResultFormated, i: number) => {
+                    const bestMoveSpan = result.quality !== '' ? 
+                        <span>
+                            {result.movePlayed + result.quality} <span onClick={(e) => {
+                                    e.stopPropagation()
+                                    showMovePosition(result.bestMove, i, false)
+                                }
+                            }>({result.bestMove} was best)</span>
+                        </span>
+                    :
+                        <span>
+                            {result.movePlayed}
+                        </span>
+        
+                    // TODO: Prendre en compte les coups théoriques
+                    if(result.isTheory) return <span onClick={() => showMovePosition(result.movePlayed, i, true)} key={i} className=" text-amber-700 cursor-pointer select-none" style={{backgroundColor: currentIndex === i ? "rgba(34, 211, 238, 0.3)" : "rgba(0,0,0,0)" }} >{bestMoveSpan}</span>;
+                    if(result.quality === '??') return <span onClick={() => showMovePosition(result.movePlayed, i, true)} key={i} className=" text-red-600 cursor-pointer select-none" style={{backgroundColor: currentIndex === i ? "rgba(34, 211, 238, 0.3)" : "rgba(0,0,0,0)" }} >{bestMoveSpan}</span>;
+                    if(result.quality === '?') return <span onClick={() => showMovePosition(result.movePlayed, i, true)} key={i} className=" text-orange-500 cursor-pointer select-none" style={{backgroundColor: currentIndex === i ? "rgba(34, 211, 238, 0.3)" : "rgba(0,0,0,0)" }} >{bestMoveSpan}</span>;
+                    if(result.quality === '?!') return <span onClick={() => showMovePosition(result.movePlayed, i, true)} key={i} className=" text-yellow-400 cursor-pointer select-none" style={{backgroundColor: currentIndex === i ? "rgba(34, 211, 238, 0.3)" : "rgba(0,0,0,0)" }} >{bestMoveSpan}</span>;
+                    return <span onClick={() => showMovePosition(result.movePlayed, i, true)} key={i} className=" text-white cursor-pointer select-none" style={{backgroundColor: currentIndex === i ? "rgba(34, 211, 238, 0.3)" : "rgba(0,0,0,0)" }} >{bestMoveSpan}</span>;
+                })
+            }
+        </div>
+        :
+        null
+
     const chartHistoryComponent = showChartHistory ?
         <div className=" flex justify-center items-center w-full h-full" >
             <div className=" relative flex flex-col justify-start items-center w-11/12 h-full pt-5" >
-                <div className=" flex justify-center items-center w-full h-fit" >
+                <div className=" relative flex justify-center items-center w-full h-fit" >
                     <AnalysisChart historyData={chartHistoryData} className=" " />
+                    <div className=" absolute w-full h-full pr-1 pl-4 pt-3 pb-7" >
+                        <div className=" w-full h-full flex">
+                            {
+                                analysisResultsRef.current.map((result, i) => {
+                                    if(i === analysisResultsRef.current.length - 1){
+                                        if(i === currentIndex) return <div key={i} className=" h-full border-l-2 border-cyan-400"/>
+                                        return null;
+                                    }
+                                    if(i === currentIndex) return <div key={i} className=" h-full flex-grow border-l-2 border-cyan-400"/>
+                                    return <div key={i} className=" h-full flex-grow border-l border-black opacity-0"/>
+                                })
+                            }
+                        </div>
+                    </div>
                 </div>
                 <div className="  w-full h-fit flex justify-around items-center" >
                     <div className=" bg-slate-50 text-black text-xl font-medium h-10 w-20 flex justify-center items-center m-5 rounded" >
@@ -314,9 +378,7 @@ const GameAnalysisPage = () => {
                         {blackAccuracy}%
                     </div>
                 </div>
-                <div className="  w-full h-full overflow-y-auto flex flex-row flex-wrap justify-start items-start gap-2" >
-                    {formatedResults}
-                </div>
+                {formatedResultsComponent}
             </div>
         </div>
     :
