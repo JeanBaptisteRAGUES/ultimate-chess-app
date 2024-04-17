@@ -1,5 +1,5 @@
 import { Color, DEFAULT_POSITION } from "chess.js";
-import { isTheory } from "../libs/fetchWikibooks";
+import { safeFetchTheory } from "../libs/fetchWikibooks";
 import GameToolBox from "../game-toolbox/GameToolbox";
 
 export const bestMoveRegex = /bestmove\s(\w*)/;
@@ -216,7 +216,7 @@ class Engine {
 
     //TODO: Régler erreur quand evalAfter >> evalBefore (ex: (4.55+3)/(-0.39+3))
     async evalMoveQuality(moveEval: EvalResult, movesSet: string[], checkTheory: boolean) {
-        const isBookMove = checkTheory ? await isTheory(movesSet) : false;
+        const isBookMove = checkTheory ? await safeFetchTheory(movesSet) : false;
         let evalBefore: number = moveEval.evalBefore.includes('#') ? this.mateToNumber(moveEval.evalBefore) : eval(moveEval.evalBefore);
         evalBefore = Math.min(20, Math.max(-20, evalBefore));
         let evalAfter: number = moveEval.evalAfter.includes('#') ? this.mateToNumber(moveEval.evalAfter) : eval(moveEval.evalAfter);
@@ -332,9 +332,8 @@ class Engine {
             if(i > 0) results[i-1].evalAfter = result.eval;
         }
 
-        // TODO: remettre checkTheory à i < 12 dès qu'on aura reglé le problème de latence de fetch avec fetch('http://...', {signal: AbortSignal.timeout(500)}) dans un try{}catch{}finally{}
         for(let [i, result] of results.entries()){
-            result = await this.evalMoveQuality(result, movesSetArray_san[i], i < 1);
+            result = await this.evalMoveQuality(result, movesSetArray_san[i], i < 15);
         }
 
         /* results.forEach((result, i) => {
