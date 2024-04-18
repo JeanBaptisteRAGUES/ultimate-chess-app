@@ -11,6 +11,7 @@ import Link from "next/link";
 import BotsAI, { Behaviour, Move } from "../bots-ai/BotsAI";
 import { useSearchParams } from "next/navigation";
 import GameToolBox from "../game-toolbox/GameToolbox";
+import { ImSwitch } from "react-icons/im"; // TODO: Bouton pour stopper le match
 
 
 const BotVsBotPage = () => {

@@ -1010,6 +1010,112 @@ class BotsAI {
                 move.type = 2;
                 return move;
 
+            // Three Knights
+            case '1.e4 e5 2.Nf3 Nc6 3.Nc3':
+                move.notation = 'g8f6';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.Nc3 Nf6 4.Bc4':
+                move.notation = 'f6e4';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.Nc3 Nf6 4.Bc4 Nxe4 5.Nxe4':
+                move.notation = 'd7d5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.Nc3 Nf6 4.d4':
+                move.notation = 'e5d4';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.Nc3 Nf6 4.d4 exd4 5.Nxd4':
+                move.notation = 'f6e4';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.Nc3 Nf6 4.d4 exd4 5.Nxd4 Nxe4 6.Nxc6':
+                move.notation = 'e4c3';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.Nc3 Nf6 4.d4 exd4 5.Nxd4 Nxe4 6.Nxe4':
+                move.notation = 'd8e7';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.Nc3 Nf6 4.d4 exd4 5.Nxd4 Nxe4 6.Nxe4 Qe7 7.f3':
+                move.notation = 'd7d5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.Nc3 Nf6 4.d4 exd4 5.Nxd4 Nxe4 6.Nxe4 Qe7 7.Nxc6':
+                move.notation = 'e5d4';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.Nc3 Nf6 4.d4 exd4 5.Nxd4 Nxe4 6.Nxe4 Qe7 7.Qd3':
+                move.notation = 'd7d5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.Nc3 Nf6 4.d4 exd4 5.Nxd4 Nxe4 6.Nxe4 Qe7 7.Bd3':
+                move.notation = 'c6d4';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.Nc3 Nf6 4.d4 exd4 5.Nxd4 Nxe4 6.Nxe4 Qe7 7.Bd3 Nxd4 8.O-O':
+                move.notation = 'd7d5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.Nc3 Nf6 4.d4 exd4 5.Nxd4 Nxe4 6.Nxe4 Qe7 7.Qe2':
+                move.notation = 'c6d4';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.Nc3 Nf6 4.d3':
+                move.notation = 'd7d5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.Nc3 Nf6 4.a3':
+                move.notation = 'd7d5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.Nc3 Nf6 4.Bb5':
+                move.notation = 'c6d4';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.Nc3 Nf6 4.Bb5 Nd4 5.Nxd4':
+                move.notation = 'e5d4';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.Nc3 Nf6 4.Bb5 Nd4 5.Nxd4 exd4 6.Ne2':
+                move.notation = 'c7c6';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.Nc3 Nf6 4.Bb5 Nd4 5.Nxd4 exd4 6.Ne2 c6 7.Bd3':
+                move.notation = 'd7d5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.Nc3 Nf6 4.Bb5 Nd4 5.Nxe5':
+                move.notation = 'd8e7';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.Nc3 Nf6 4.Bb5 Nd4 5.Nxe5 Qe7 6.Nf3':
+                move.notation = 'd4b5';
+                move.type = 2;
+                return move;
+
             // Italian
             case '1.e4 e5 2.Nf3 Nc6 3.Bc4':
                 if(rand <= 40){
@@ -1022,6 +1128,7 @@ class BotsAI {
                 return move;
             
             case '1.e4 e5 2.Nf3 Nc6 3.Bc4 Nf6 4.Ng5':
+                console.log(rand);
                 if(rand <= 70){
                     move.notation = 'f8c5';
                     move.type = 2;

@@ -12,6 +12,9 @@ import BotsAI, { Behaviour, Move } from "../bots-ai/BotsAI";
 import { useSearchParams } from "next/navigation";
 import GameToolBox from "../game-toolbox/GameToolbox";
 import { PiVirtualReality } from "react-icons/pi";
+import { FaCirclePlay } from "react-icons/fa6";
+import { FaFontAwesomeFlag } from "react-icons/fa";
+import { FaRotate } from "react-icons/fa6";
 
 
 const ChessPage = () => {
@@ -325,36 +328,46 @@ const ChessPage = () => {
     // TODO: Problème d'horloge lorsqu'on switch de position, le temps défile pour le mauvais joueur
     const boardComponent =
       <div className=" relative flex flex-col justify-center items-center h-[400px] md:h-[500px] w-[95vw] md:w-[500px] my-10" >
-          <Clock 
-            game={game} 
-            turnColor={game.turn()} 
-            clockColor={playerColor === 'w' ? 'b' : 'w'}
-            timeControl={timeControl} 
-            timeControls={timeControls}
-            setEngineEval={setEngineEval}
-            setWinner={setWinner}
-            setShowGameoverWindow={setShowGameoverWindow}
-            gameStarted={gameStarted} 
-            gameActive={gameActive}
-          />
+          <div className=" relative flex justify-around p-2 w-full h-10 bg-slate-100 rounded-t-md">
+            <div className=" w-52 h-full flex justify-start items-center" >
+              {botBehaviour}
+            </div>
+            <Clock 
+              game={game} 
+              turnColor={game.turn()} 
+              clockColor={playerColor === 'w' ? 'b' : 'w'}
+              timeControl={timeControl} 
+              timeControls={timeControls}
+              setEngineEval={setEngineEval}
+              setWinner={setWinner}
+              setShowGameoverWindow={setShowGameoverWindow}
+              gameStarted={gameStarted} 
+              gameActive={gameActive}
+            />
+          </div>
           <Chessboard 
             id="PlayVsRandom"
             position={isVirtualMode ? virtualFen : currentFen}
             onPieceDrop={onDrop} 
             boardOrientation={playerColor === 'w' ? 'white' : 'black'}
           />
-          <Clock 
-            game={game} 
-            turnColor={game.turn()} 
-            clockColor={playerColor === 'w' ? 'w' : 'b'}
-            timeControl={timeControl} 
-            timeControls={timeControls}
-            setEngineEval={setEngineEval}
-            setWinner={setWinner}
-            setShowGameoverWindow={setShowGameoverWindow}
-            gameStarted={gameStarted} 
-            gameActive={gameActive}
-          />
+          <div className=" relative flex justify-around p-2 w-full h-10 rounded-b-md bg-slate-100">
+            <div className=" w-52 h-full flex justify-start items-center" >
+              Joueur
+            </div>
+            <Clock 
+              game={game} 
+              turnColor={game.turn()} 
+              clockColor={playerColor === 'w' ? 'w' : 'b'}
+              timeControl={timeControl} 
+              timeControls={timeControls}
+              setEngineEval={setEngineEval}
+              setWinner={setWinner}
+              setShowGameoverWindow={setShowGameoverWindow}
+              gameStarted={gameStarted} 
+              gameActive={gameActive}
+            />
+          </div>
           {
             isVirtualMode ? <div className=" absolute w-full h-full opacity-10 bg-cyan-400 pointer-events-none" >
 
@@ -377,7 +390,8 @@ const ChessPage = () => {
       reset
     </button>
 
-    const selectTimeControlButton = 
+    // TODO: Choisir le time control depuis la page de sélection des bots
+    /* const selectTimeControlButton = 
       <select id='time-control' onChange={(e) => setTimeControl(e.target.value)} value={timeControl}>
         <option value="">Sélectionnez une cadence</option>
         <option value="infinite">Infini</option>
@@ -388,7 +402,7 @@ const ChessPage = () => {
         <option value="15+10">15+10</option>
         <option value="30+20">30+20</option>
         <option value="90+30">90+30</option>
-      </select>
+      </select> */
 
     const startGameButton = !gameStarted ? 
       <button
@@ -413,14 +427,15 @@ const ChessPage = () => {
         Show Eval
       </button>
 
-    const switchButton = <button
-      className=" bg-white border rounded cursor-pointer"
-      onClick={() => {
-        playerColor === 'w' ? setPlayerColor('b') : setPlayerColor('w')
-      }}
-    >
-      Switch
-    </button>
+    const switchButton = 
+      <button
+          className=" bg-white border rounded cursor-pointer w-10"
+          onClick={() => {
+            playerColor === 'w' ? setPlayerColor('b') : setPlayerColor('w')
+          }}
+      >
+          ↺
+      </button>
 
     const virtualModeButton = <div onClick={() => switchMode()} className=' h-[30px] w-[30px] flex flex-col justify-start items-center cursor-pointer' style={{color: isVirtualMode ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
         <PiVirtualReality size={30} />
@@ -444,7 +459,7 @@ const ChessPage = () => {
         {/* resetButton */}
         {/* selectBotBehaviourButton */}
         {/* selectDifficultyButton */}
-        {selectTimeControlButton}
+        {/* selectTimeControlButton */}
         {virtualModeButton}
         {startGameButton}
         {switchButton}
