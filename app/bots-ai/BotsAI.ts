@@ -1012,14 +1012,59 @@ class BotsAI {
 
             // Italian
             case '1.e4 e5 2.Nf3 Nc6 3.Bc4':
-                if(rand >= 50){
+                if(rand <= 40){
                     move.notation = 'f7f5';
                     move.type = 2;
                     return move;
                 }
-                move.notation = 'c6d4';
+                move.notation = 'g8f6';
                 move.type = 2;
-                return move; 
+                return move;
+            
+            case '1.e4 e5 2.Nf3 Nc6 3.Bc4 Nf6 4.Ng5':
+                if(rand <= 70){
+                    move.notation = 'f8c5';
+                    move.type = 2;
+                    return move;
+                }
+                move.notation = 'f6e4';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.Bc4 Nf6 4.Nc3':
+                move.notation = 'f6e4';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.Bc4 Nf6 4.O-O':
+                move.notation = 'f6e4';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.Bc4 Nf6 4.O-O Nxe4 5.Re1':
+                move.notation = 'd7d5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.Bc4 Nf6 4.d3':
+                move.notation = 'd7d5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.Bc4 Nf6 4.d4':
+                move.notation = 'e5d4';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.Bc4 Nf6 4.d4 exd4 5.e5':
+                move.notation = 'd7d5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.Bc4 Nf6 4.c3':
+                move.notation = 'f6e4';
+                move.type = 2;
+                return move;
 
             // Ruy Lopez
             case '1.e4 e5 2.Nf3 Nc6 3.Bb5':
