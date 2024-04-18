@@ -7,6 +7,9 @@ import { GiBulletBill } from 'react-icons/gi';
 import { SiStackblitz } from 'react-icons/si';
 import { LuAlarmClock } from 'react-icons/lu';
 import { IoHourglassOutline } from 'react-icons/io5';
+import { SiLichess } from 'react-icons/si';
+//import { SiChessdotcom } from 'react-icons/si';
+import { FaChessPawn } from 'react-icons/fa';
 
 /*TODO: Choix difficulté: [
     'Beginner': pawnIcon, 
@@ -103,7 +106,7 @@ const SelectBotVsBotPage = () => {
         </div>
 
     const bot1_BehaviourComponent = 
-        <div className='flex mt-10 flex-row justify-around items-center flex-wrap w-full mt-2 px-2 gap-2' >
+        <div className='flex mt-10 flex-row justify-around items-center flex-wrap w-full px-2 gap-2' >
             <div onClick={() => setBot1_Behaviour('default')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot1_Behaviour === 'default' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Default</span>
             </div>
@@ -127,9 +130,6 @@ const SelectBotVsBotPage = () => {
             </div>
             <div onClick={() => setBot1_Behaviour('drawish')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot1_Behaviour === 'drawish' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Drawish</span>
-            </div>
-            <div onClick={() => setBot1_Behaviour('sacrifice-enjoyer')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot1_Behaviour === 'sacrifice-enjoyer' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
-                <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Sacrifice Enjoyer</span>
             </div>
             <div onClick={() => setBot1_Behaviour('exchanges-lover')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot1_Behaviour === 'exchanges-lover' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Exchanges Lover</span>
@@ -167,10 +167,13 @@ const SelectBotVsBotPage = () => {
             <div onClick={() => setBot1_Behaviour('cow-lover')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot1_Behaviour === 'cow-lover' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Cow Lover</span>
             </div>
+            <div onClick={() => setBot1_Behaviour('indian-king')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot1_Behaviour === 'indian-king' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Indian King</span>
+            </div>
         </div>
 
 const bot2_BehaviourComponent = 
-    <div className='flex mt-10 flex-row justify-around items-center flex-wrap w-full mt-2 px-2 gap-2' >
+    <div className='flex mt-10 flex-row justify-around items-center flex-wrap w-full px-2 gap-2' >
         <div onClick={() => setBot2_Behaviour('default')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot2_Behaviour === 'default' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
             <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Default</span>
         </div>
@@ -194,9 +197,6 @@ const bot2_BehaviourComponent =
         </div>
         <div onClick={() => setBot2_Behaviour('drawish')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot2_Behaviour === 'drawish' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
             <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Drawish</span>
-        </div>
-        <div onClick={() => setBot2_Behaviour('sacrifice-enjoyer')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot2_Behaviour === 'sacrifice-enjoyer' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
-            <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Sacrifice Enjoyer</span>
         </div>
         <div onClick={() => setBot2_Behaviour('exchanges-lover')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot2_Behaviour === 'exchanges-lover' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
             <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Exchanges Lover</span>
@@ -234,6 +234,9 @@ const bot2_BehaviourComponent =
         <div onClick={() => setBot2_Behaviour('cow-lover')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot2_Behaviour === 'cow-lover' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
             <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Cow Lover</span>
         </div>
+        <div onClick={() => setBot2_Behaviour('indian-king')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot2_Behaviour === 'indian-king' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Indian King</span>
+            </div>
     </div>
 
 

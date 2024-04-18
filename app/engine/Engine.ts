@@ -221,26 +221,27 @@ class Engine {
         evalBefore = Math.min(20, Math.max(-20, evalBefore));
         let evalAfter: number = moveEval.evalAfter.includes('#') ? this.mateToNumber(moveEval.evalAfter) : eval(moveEval.evalAfter);
         evalAfter = Math.min(20, Math.max(-20, evalAfter));
-        let scoreAbsoluteDiff = Math.max(Math.abs(evalAfter - evalBefore) - 0.1, 0);
-        //let scoreAbsoluteDiff = Math.max(Math.abs(evalAfter - evalBefore) - (0.05 + 0.1*Math.abs(evalBefore)), 0);
+        //let scoreAbsoluteDiff = Math.max(Math.abs(evalAfter - evalBefore) - 0.1, 0);
+        //let scoreAbsoluteDiff = Math.max(Math.abs(evalAfter - evalBefore), 0);
+        let scoreAbsoluteDiff = Math.max(Math.abs(evalAfter - evalBefore) - (0.1 + 0.02*Math.abs(evalBefore)), 0);
         let mult = 1;
         
         if(Math.sign(evalBefore) === Math.sign(evalAfter)){
-            /* if(evalBefore >= evalAfter){
-                mult = 1 - evalAfter/evalBefore;
-            }else{
-                mult = 1 - evalBefore/evalAfter;
-            } */
             mult = 1 - Math.min(Math.abs(evalBefore), Math.abs(evalAfter))/Math.max(Math.abs(evalBefore), Math.abs(evalAfter));
         }
 
+        //TODO: Tester différentes valeurs
         // Utilisé pour le score de précision
-        let scoreAccuracy = Math.max(1 - scoreAbsoluteDiff/3, 0);
+        //let scoreAccuracy = Math.max(1 - scoreAbsoluteDiff/3, 0);
+        let scoreAccuracy = Math.max(1 - scoreAbsoluteDiff/1.5, 0);
         
         // Utilisé pour évaluer les erreurs
-        let blunderAccuracy = 1 - mult*scoreAbsoluteDiff/3;
+        let blunderAccuracy = 1 - mult*scoreAbsoluteDiff/1.5;
 
         // Empêche d'afficher des coups comme étant des erreurs graves si le score reste totalement gagnant
+        if(Math.sign(evalBefore) === 1 && moveEval.playerColor === 'w' && evalAfter > 5) blunderAccuracy = Math.max(0.65, blunderAccuracy);
+        if(Math.sign(evalBefore) === -1 && moveEval.playerColor === 'b' && evalAfter < -5) blunderAccuracy = Math.max(0.65, blunderAccuracy);
+
         if(Math.sign(evalBefore) === 1 && moveEval.playerColor === 'w' && evalAfter > 10) blunderAccuracy = Math.max(0.85, blunderAccuracy);
         if(Math.sign(evalBefore) === -1 && moveEval.playerColor === 'b' && evalAfter < -10) blunderAccuracy = Math.max(0.85, blunderAccuracy);
 

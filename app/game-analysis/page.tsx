@@ -172,8 +172,6 @@ const GameAnalysisPage = () => {
 
         const results = analysisResults.map((result: EvalResult, i: number) => {
             //const bestMoveSan = toolbox.convertMoveLanToSan2(history, i, result.bestMove, startingFen);
-            console.log(gameHistory.current[i].before);
-            console.log(result.bestMove);
             const bestMoveSan = toolbox.convertMoveLanToSan(gameHistory.current[i].before, result.bestMove);
             const movePlayed = pgnArray[i];
             const formatedResult = result as EvalResultFormated;

@@ -6,37 +6,20 @@ import Engine, { EvalResultSimplified } from "../engine/Engine";
 import GameToolBox from "../game-toolbox/GameToolbox";
 import { useEffect, useRef } from "react";
 
-// Bots "humains"
-// TODO: Jouent les coups trouvés dans la BDD de lichess puis stockfish prend le relai (déjà implanté)
-
 // Bots "célébrités"
 // TODO: Jouent les coups trouvés dans la BDD de chess.com pour des joueurs connus, puis stockfish
 
 // Bots "miroirs"
 // TODO: Jouent les coups trouvés dans la BDD de lichess ou chess.com de nos propres parties en utilisant le pseudo
 
-// Bots à gimmick
-// MultiPv 100, 'Classical' -> depth 14, 'Rapide' -> depth 12, 'Blitz' -> depth 10, 'Bullet' -> depth 8
-// TODO: Lister les coups qui remplissent l'objectif désiré et piocher un coup dans un intervalle d'éval estimé en fonction de la difficulté
-// TODO: Mélanger certains styles
-// TODO: Pouvoir choisir la difficulté pour les bots gimmick sans que celà n'affecte trop leur comportement (ex: skillValue min etc..)
-
-// TODO: Un bot qui aime jouer des sacrifices (sur le roque si possible) même quand ce n'est pas très bon
-/* TODO: Un bot qui adore envoyer ses pions sur le roque adverse et faire un roque opposé
- *       (vérifier si le roi adverse est roqué et chercher des coups de pions correspondant au côté où le roi a roqué)
- */
-/* TODO: Un bot qui détériore forcément sa position à chaque coup tant qu'on joue des coups solides, mais joue le meilleur coup si
- *       on blunder. Un fois la blunder passée, si on ne reblunder pas, le bot recommence à détériorer sa position.
- */
-// TODO: Un bot qui joue les meilleurs coups mais à une profondeur très faible (Ne semble pas marcher)
-// TODO: Un bot hyper agressif: mélange de gambit + sacrifice sur le roque
 
 export type Move = {
     notation: string,
     type: number
 }
 
-export type Behaviour = 'default' | 'stockfish-random' | 'stockfish-only' | 'human' | 'pawn-pusher' | 'fianchetto-sniper' | 'shy' | 'blundering' | 'drawish' | 'sacrifice-enjoyer' | 'exchanges-lover' | 'exchanges-hater' | 'queen-player' | 'botez-gambit' | 'castle-destroyer' | 'strategy-stranger' | 'openings-master' | 'openings-beginner' | 'random-player' | 'copycat' | 'bongcloud' | 'gambit-fanatic' | 'cow-lover' | 'hyper-aggressive';
+// TODO: 'strategy-stranger' | 'sacrifice-enjoyer' | 'min-max | 'botdanov' | 'sharp-player' | 'closed' | 'open' | 'hyper-aggressive'
+export type Behaviour = 'default' | 'stockfish-random' | 'stockfish-only' | 'human' | 'pawn-pusher' | 'fianchetto-sniper' | 'shy' | 'blundering' | 'drawish' | 'exchanges-lover' | 'exchanges-hater' | 'queen-player' | 'botez-gambit' | 'castle-destroyer' | 'openings-master' | 'openings-beginner' | 'random-player' | 'copycat' | 'bongcloud' | 'gambit-fanatic' | 'cow-lover' | 'indian-king';
 
 type DefaultBotParams = {
     randMoveChance: number, 
@@ -1922,6 +1905,127 @@ class BotsAI {
         return move;
     }
 
+    #indianKingOpenings(game: Chess): Move {
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+
+        if(game.history().length === 0) {
+            move.notation = 'g1f3';
+            move.type = 2;
+            return move;
+        }
+
+        if(game.history().length === 1) {
+            if(game.pgn() === '1.e4') {
+                move.notation = 'd7d6';
+                move.type = 2;
+                return move;
+            }
+            move.notation = 'g8f6';
+            move.type = 2;
+            return move;
+        }
+
+        if(game.history().length === 2) {
+            if(game.pgn() === '1.Nf3 e5') {
+                move.notation = 'f3e5';
+                move.type = 2;
+                return move;
+            }
+            move.notation = 'g2g3';
+            move.type = 2;
+            return move;
+        }
+
+        if(game.history().length === 3) {
+            if(game.pgn() !== '1.e4 d6 2.e5') {
+                move.notation = 'g8f6';
+                move.type = 2;
+                return move;
+            }
+        }
+
+        return move;
+    }
+
+    async #indianKingLogic(game: Chess): Promise<Move> {
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+
+        if(game.history().length > 10) {
+            return move;
+        }
+
+        let openingMove = this.#indianKingOpenings(game);
+        if(openingMove.type >= 0) {
+            return openingMove;
+        }
+
+        const pawnsCases: Square[] = ['b3', 'b6'];
+        const bishopCases: Square[] = ['b2', 'b7'];
+
+        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, this.#defaultBotParams.skillValue, 50, false);
+
+        stockfishMoves = stockfishMoves.map((evalRes) => {
+            const moveDestination = this.#toolbox.getMoveDestination(evalRes.bestMove);
+            if(!moveDestination){
+                evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox)).toString();
+                return evalRes;
+            }
+            let randBonus = Math.max(0.1, Math.random()/2);
+
+            // Si le coup est un coup de pion sur une case qui permet un fianchetto, on ajoute un bonus
+            if(this.#toolbox.getMovePiece(evalRes.bestMove, game.fen()).type === 'p' && pawnsCases.includes(moveDestination)) {
+                evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + randBonus).toString();
+                return evalRes;
+            }
+
+            // Si le coup est le placement d'un fou en fianchetto, on ajoute un gros bonus
+            if(this.#toolbox.getMovePiece(evalRes.bestMove, game.fen()).type === 'b' && bishopCases.includes(moveDestination)) {
+                evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + 2*randBonus).toString();
+                return evalRes;
+            }
+            evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox)).toString();
+            return evalRes;
+        });
+
+        stockfishMoves.sort(compareEval);
+
+        move.notation = stockfishMoves[0].bestMove;
+        move.type = 2;
+
+        return move;
+    }
+
+    /**
+     * Aime sacrifier sa dame le plus rapidement possible.
+     */
+    async #makeIndianKingMove(game: Chess): Promise<Move> {
+        console.log('Bot AI: Indian King');
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+
+        const gimmickMove = await this.#indianKingLogic(game);
+        if(gimmickMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return gimmickMove;
+        }
+
+        const defaultMove = await this.#defaultMoveLogic(game, true, true);
+        if(defaultMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return defaultMove;
+        }
+
+        return move;
+    }
+
     // TODO: Choisir le behaviour directement puis l'interface utilisateur
     async makeMove(game: Chess): Promise<Move> {
         let move: Move = {
@@ -2012,6 +2116,10 @@ class BotsAI {
 
             case 'castle-destroyer':
                 move = await this.#makeCastleDestroyerMove(game);
+                break;
+
+            case 'indian-king':
+                move = await this.#makeIndianKingMove(game); 
                 break;
 
             default:

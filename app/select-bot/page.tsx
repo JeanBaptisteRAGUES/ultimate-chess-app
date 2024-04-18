@@ -3,6 +3,9 @@
 import React, { useState } from 'react';
 import { Behaviour } from '../bots-ai/BotsAI';
 import Link from 'next/link';
+import { SiLichess } from 'react-icons/si';
+//import { SiChessdotcom } from 'react-icons/si';
+import { FaChessPawn } from 'react-icons/fa';
 
 /*TODO: Choix difficulté: [
     'Beginner': pawnIcon, 
@@ -73,9 +76,6 @@ const SelectBot = () => {
             <div onClick={() => setBehaviour('drawish')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: behaviour === 'drawish' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Drawish</span>
             </div>
-            <div onClick={() => setBehaviour('sacrifice-enjoyer')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: behaviour === 'sacrifice-enjoyer' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
-                <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Sacrifice Enjoyer</span>
-            </div>
             <div onClick={() => setBehaviour('exchanges-lover')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: behaviour === 'exchanges-lover' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Exchanges Lover</span>
             </div>
@@ -111,6 +111,9 @@ const SelectBot = () => {
             </div>
             <div onClick={() => setBehaviour('cow-lover')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: behaviour === 'cow-lover' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Cow Lover</span>
+            </div>
+            <div onClick={() => setBehaviour('indian-king')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: behaviour === 'indian-king' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Indian King</span>
             </div>
         </div>
 

@@ -6,7 +6,7 @@ async function isTheory(moves: Array<String>): Promise<boolean> {
     const movesFormated = moves.map((move, i) => i%2 === 0 ? `/${Math.ceil((i+1)/2)}._${move}` : `/${Math.ceil((i+1)/2)}...${move}`).join('').replaceAll('#', '');
     let req = `https://en.wikibooks.org/w/api.php?titles=Chess_Opening_Theory${movesFormated}&redirects&origin=*&action=query&prop=extracts&formatversion=2&format=json&exchars=1200`;
 
-    const res = await fetch(req, {signal: AbortSignal.timeout(500)});
+    const res = moves.length < 5 ? await fetch(req, {signal: AbortSignal.timeout(1000)}) : await fetch(req, {signal: AbortSignal.timeout(500)});
     const data = await res.json();
 
     console.log(data);
@@ -24,4 +24,4 @@ export async function safeFetchTheory(moves: string[]): Promise<boolean> {
         console.log(error);
         return false;
     }
-}
+} 
