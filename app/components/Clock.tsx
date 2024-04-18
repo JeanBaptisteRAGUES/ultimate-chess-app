@@ -134,18 +134,20 @@ const Clock: React.FC<ClockProps> = ({
 
     
     return (
-        <div className=" flex justify-end items-center w-full" >
+        timeControl !== 'infinite' ? <div className=" flex justify-end items-center flex-grow" >
             {
                 clockColor === 'b' ?
-                <div className=" bg-slate-900 text-slate-200">
+                <div className=" bg-slate-900 text-slate-200 py-1 px-2 rounded-sm">
                     {timestamp}
                 </div>
                 :
-                <div className=" bg-slate-200 text-slate-900">
+                <div className=" bg-slate-200 text-slate-900 py-1 px-2 rounded-sm">
                     {timestamp}
                 </div>
             }
         </div>
+        :
+        null
     )
 }
 

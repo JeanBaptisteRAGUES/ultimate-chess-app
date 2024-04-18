@@ -3,6 +3,11 @@
 import React, { useState } from 'react';
 import { Behaviour } from '../bots-ai/BotsAI';
 import Link from 'next/link';
+import { GiBulletBill } from 'react-icons/gi';
+import { SiStackblitz } from 'react-icons/si';
+import { LuAlarmClock } from 'react-icons/lu';
+import { IoHourglassOutline } from 'react-icons/io5';
+import { IoInfiniteSharp } from 'react-icons/io5';
 import { SiLichess } from 'react-icons/si';
 //import { SiChessdotcom } from 'react-icons/si';
 import { FaChessPawn } from 'react-icons/fa';
@@ -21,6 +26,7 @@ import { FaChessPawn } from 'react-icons/fa';
 const SelectBot = () => {
     const [difficulty, setDifficulty] = useState('Master');
     const [behaviour, setBehaviour] = useState<Behaviour>('default');
+    const [timeControl, setTimeControl] = useState('10+0');
 
     const difficultyComponent =
         <div className='flex flex-row justify-around items-center flex-wrap w-full' >
@@ -117,6 +123,49 @@ const SelectBot = () => {
             </div>
         </div>
 
+/*     ['1+0', {startingTime: 60, increment: 0}],
+    ['3+0', {startingTime: 180, increment: 0}],
+    ['3+2', {startingTime: 180, increment: 2}],
+    ['10+0', {startingTime: 600, increment: 0}],
+    ['15+10', {startingTime: 900, increment: 10}],
+    ['30+20', {startingTime: 1800, increment: 20}],
+    ['90+30', {startingTime: 5400, increment: 30}], */
+    const timeControlComponent =
+        <div className='flex mt-10 flex-row justify-around items-center flex-wrap w-full' >
+            <div onClick={() => setTimeControl('1+0')} className=' h-[200px] md:h-[110px] w-[200px] md:w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: timeControl === '1+0' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <GiBulletBill size={100} />
+                <span className=' w-full h-[10px] flex justify-center items-center' >1+0</span>
+            </div>
+            <div onClick={() => setTimeControl('3+0')} className=' h-[200px] md:h-[110px] w-[200px] md:w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: timeControl === '3+0' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <SiStackblitz size={100} />
+                <span className=' w-full h-[10px] flex justify-center items-center' >3+0</span>
+            </div>
+            <div onClick={() => setTimeControl('3+2')} className=' h-[200px] md:h-[110px] w-[200px] md:w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: timeControl === '3+2' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <SiStackblitz size={100} />
+                <span className=' w-full h-[10px] flex justify-center items-center' >3+2</span>
+            </div>
+            <div onClick={() => setTimeControl('10+0')} className=' h-[200px] md:h-[110px] w-[200px] md:w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: timeControl === '10+0' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <LuAlarmClock size={100} />
+                <span className=' w-full h-[10px] flex justify-center items-center' >10+0</span>
+            </div>
+            <div onClick={() => setTimeControl('15+10')} className=' h-[200px] md:h-[110px] w-[200px] md:w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: timeControl === '15+10' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <LuAlarmClock size={100} />
+                <span className=' w-full h-[10px] flex justify-center items-center' >15+10</span>
+            </div>
+            <div onClick={() => setTimeControl('30+20')} className=' h-[200px] md:h-[110px] w-[200px] md:w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: timeControl === '30+20' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <LuAlarmClock size={100} />
+                <span className=' w-full h-[10px] flex justify-center items-center' >30+20</span>
+            </div>
+            <div onClick={() => setTimeControl('90+30')} className=' h-[200px] md:h-[110px] w-[200px] md:w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: timeControl === '90+30' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <IoHourglassOutline size={100} />
+                <span className=' w-full h-[10px] flex justify-center items-center' >90+30</span>
+            </div>
+            <div onClick={() => setTimeControl('infinite')} className=' h-[200px] md:h-[110px] w-[200px] md:w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: timeControl === 'infinite' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <IoInfiniteSharp size={100} />
+                <span className=' w-full h-[10px] flex justify-center items-center' >Infini</span>
+            </div>
+        </div>
+
 
     return (
         <div className="flex flex-col justify-start items-center bg-cyan-900 h-screen w-full overflow-auto" >
@@ -124,13 +173,16 @@ const SelectBot = () => {
             {difficultyComponent}
             <div className=' w-full mt-20 flex justify-center items-center text-2xl font-semibold text-white' >Gimmick:</div>
             {behaviourComponent}
+            <div className=' w-full mt-20 flex justify-center items-center text-2xl font-semibold text-white' >Cadence:</div>
+            {timeControlComponent}
             <Link
                 className=' text-white hover:text-cyan-400 cursor-pointer text-3xl font-bold my-20 '
                 href = {{
                 pathname: '/chess',
                 query: {
                     difficulty: difficulty,
-                    behaviour: behaviour
+                    behaviour: behaviour,
+                    timeControl: timeControl,
                 }
                 }}
             >

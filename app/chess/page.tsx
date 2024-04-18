@@ -21,6 +21,7 @@ const ChessPage = () => {
     const searchParams = useSearchParams();
     const databaseRating = searchParams.get('difficulty') || 'Master';
     const botBehaviour: Behaviour = searchParams.get('behaviour') as Behaviour || 'default';
+    const timeControl = searchParams.get('timeControl') || 'infinite';
     const toolbox = new GameToolBox();
     const gameActive = useRef(true);
     const [game, setGame] = useState(new Chess());
@@ -60,7 +61,6 @@ const ChessPage = () => {
       ['30+20', {startingTime: 1800, increment: 20}],
       ['90+30', {startingTime: 5400, increment: 30}],
     ]);
-    const [timeControl, setTimeControl] = useState('infinite');
 
     useEffect(() => {
         engine.current = new Engine();
@@ -120,6 +120,20 @@ const ChessPage = () => {
         return true;
       }
       return false;
+    }
+
+    function resign() {
+      if(playerColor === 'w'){
+        setEngineEval('0 - 1');
+        setWinner('b');
+      }else{
+        setEngineEval('1 - 0');
+        setWinner('w');
+      }
+      console.log('Game Over !');
+      console.log(game.pgn());
+      gameActive.current = false;
+      setShowGameoverWindow(true);
     }
 
     function movesHistorySan(gamePGN: string){
@@ -227,7 +241,6 @@ const ChessPage = () => {
         case 5:
           return <span onClick={() => showMovePosition(i)} key={i} className=" text-rose-400 cursor-pointer" >{move}</span>             
         default:
-          console.log(`${move}: ${moveType}`);
           return <span onClick={() => showMovePosition(i)} key={i} className=" text-white cursor-pointer" >{move}</span>
       }
     }
@@ -311,8 +324,8 @@ const ChessPage = () => {
       :
       null
 
-    const titleComponent = <h4 className=" text-lg text-white" >
-      {`Adversaire: ${botBehaviour} (${databaseRating})`}
+    const titleComponent = <h4 className=" text-xl font-semibold text-white my-5" >
+      Entraînement
     </h4>
 
     const pgnComponentDesktop =
@@ -328,9 +341,9 @@ const ChessPage = () => {
     // TODO: Problème d'horloge lorsqu'on switch de position, le temps défile pour le mauvais joueur
     const boardComponent =
       <div className=" relative flex flex-col justify-center items-center h-[400px] md:h-[500px] w-[95vw] md:w-[500px] my-10" >
-          <div className=" relative flex justify-around p-2 w-full h-10 bg-slate-100 rounded-t-md">
-            <div className=" w-52 h-full flex justify-start items-center" >
-              {botBehaviour}
+          <div className=" relative flex justify-start p-2 w-full h-10 bg-slate-100 rounded-t-md">
+            <div className=" h-full flex justify-start items-center flex-grow-[4]" >
+              {botBehaviour} ({databaseRating})
             </div>
             <Clock 
               game={game} 
@@ -352,7 +365,7 @@ const ChessPage = () => {
             boardOrientation={playerColor === 'w' ? 'white' : 'black'}
           />
           <div className=" relative flex justify-around p-2 w-full h-10 rounded-b-md bg-slate-100">
-            <div className=" w-52 h-full flex justify-start items-center" >
+            <div className=" h-full flex justify-start items-center flex-grow-[4]" >
               Joueur
             </div>
             <Clock 
@@ -404,7 +417,7 @@ const ChessPage = () => {
         <option value="90+30">90+30</option>
       </select> */
 
-    const startGameButton = !gameStarted ? 
+    /* const startGameButton = !gameStarted ? 
       <button
         className=" bg-white border rounded cursor-pointer flex flex-none"
         onClick={() => {
@@ -425,9 +438,27 @@ const ChessPage = () => {
         onClick={() => setShowEval(!showEval)}
       >
         Show Eval
-      </button>
+      </button> */
 
-    const switchButton = 
+    const startGameButton = !gameStarted ? 
+    <div 
+      onClick={() => {
+        setGameStarted(true);
+        gameActive.current = true;
+        setShowEval(false);
+        if(game.turn() !== playerColor){
+          playComputerMove();
+        }
+      }}
+      className=' h-[50px] w-[50px] flex flex-col justify-center items-center cursor-pointer hover:text-cyan-400'>
+        <FaCirclePlay size={40} />
+    </div>
+    :
+    <div onClick={() => resign()} className=' h-[50px] w-[50px] flex flex-col justify-center items-center cursor-pointer hover:text-cyan-400'>
+      <FaFontAwesomeFlag size={40} />
+    </div>
+
+    /* const switchButton = 
       <button
           className=" bg-white border rounded cursor-pointer w-10"
           onClick={() => {
@@ -435,10 +466,19 @@ const ChessPage = () => {
           }}
       >
           ↺
-      </button>
+      </button> */
+    
+    const switchButton = 
+      <div 
+        onClick={() => {
+          playerColor === 'w' ? setPlayerColor('b') : setPlayerColor('w')
+        }} 
+        className=' h-[50px] w-[50px] flex flex-col justify-center items-center cursor-pointer hover:text-cyan-400'>
+          <FaRotate size={40} />
+    </div>
 
-    const virtualModeButton = <div onClick={() => switchMode()} className=' h-[30px] w-[30px] flex flex-col justify-start items-center cursor-pointer' style={{color: isVirtualMode ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
-        <PiVirtualReality size={30} />
+    const virtualModeButton = <div onClick={() => switchMode()} className=' h-[50px] w-[50px] flex flex-col justify-start items-start cursor-pointer hover:text-cyan-400' style={{color: isVirtualMode ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+        <PiVirtualReality size={50} />
     </div>
 
     const analysisButton = 
@@ -455,7 +495,7 @@ const ChessPage = () => {
       </Link>
 
     const buttonsComponent =
-      <div className="flex justify-center mt-10 md:mt-0 items-center gap-2 w-full h-fit" >
+      <div className="flex justify-center mt-10 pt-2 md:mt-0 items-center gap-5 w-full h-fit" >
         {/* resetButton */}
         {/* selectBotBehaviourButton */}
         {/* selectDifficultyButton */}
@@ -471,9 +511,9 @@ const ChessPage = () => {
 
     const gameComponent = 
       <div className="flex flex-col justify-start items-center h-full">
-        {titleComponent}
         {/* {evalComponent} */}
-        <EvalAndWinrate 
+        {titleComponent}
+        {/* <EvalAndWinrate 
           game={game} 
           databaseRating={databaseRating} 
           winner={winner} 
@@ -481,7 +521,7 @@ const ChessPage = () => {
           currentFen={currentFen} 
           movesList={toolbox.convertHistorySanToLan(toolbox.convertPgnToHistory(game.pgn()), DEFAULT_POSITION)}
           showEval={showEval} 
-        />
+        /> */}
         {boardComponent}
         {buttonsComponent}
       </div>
