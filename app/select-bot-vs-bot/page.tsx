@@ -146,11 +146,11 @@ const SelectBotVsBotPage = () => {
             <div onClick={() => setBot1_Behaviour('castle-destroyer')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot1_Behaviour === 'castle-destroyer' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Castle Destroyer</span>
             </div>
-            <div onClick={() => setBot1_Behaviour('openings-master')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot1_Behaviour === 'openings-master' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
-                <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Openings Master</span>
+            <div onClick={() => setBot1_Behaviour('chessable-master')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot1_Behaviour === 'chessable-master' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Chessable Master</span>
             </div>
-            <div onClick={() => setBot1_Behaviour('openings-beginner')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot1_Behaviour === 'openings-beginner' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
-                <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Openings Beginner</span>
+            <div onClick={() => setBot1_Behaviour('auto-didacte')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot1_Behaviour === 'auto-didacte' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Autodidacte</span>
             </div>
             <div onClick={() => setBot1_Behaviour('random-player')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot1_Behaviour === 'random-player' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Random Player</span>
@@ -216,11 +216,11 @@ const bot2_BehaviourComponent =
         <div onClick={() => setBot2_Behaviour('castle-destroyer')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot2_Behaviour === 'castle-destroyer' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
             <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Castle Destroyer</span>
         </div>
-        <div onClick={() => setBot2_Behaviour('openings-master')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot2_Behaviour === 'openings-master' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
-            <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Openings Master</span>
-        </div>
-        <div onClick={() => setBot2_Behaviour('openings-beginner')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot2_Behaviour === 'openings-beginner' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
-            <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Openings Beginner</span>
+        <div onClick={() => setBot2_Behaviour('chessable-master')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot2_Behaviour === 'chessable-master' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Chessable Master</span>
+            </div>
+            <div onClick={() => setBot2_Behaviour('auto-didacte')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot2_Behaviour === 'auto-didacte' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Autodidacte</span>
         </div>
         <div onClick={() => setBot2_Behaviour('random-player')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot2_Behaviour === 'random-player' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
             <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Random Player</span>

@@ -97,11 +97,11 @@ const SelectBot = () => {
             <div onClick={() => setBehaviour('castle-destroyer')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: behaviour === 'castle-destroyer' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Castle Destroyer</span>
             </div>
-            <div onClick={() => setBehaviour('openings-master')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: behaviour === 'openings-master' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
-                <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Openings Master</span>
+            <div onClick={() => setBehaviour('chessable-master')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: behaviour === 'chessable-master' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Chessable Master</span>
             </div>
-            <div onClick={() => setBehaviour('openings-beginner')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: behaviour === 'openings-beginner' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
-                <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Openings Beginner</span>
+            <div onClick={() => setBehaviour('auto-didacte')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: behaviour === 'auto-didacte' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Autodidacte</span>
             </div>
             <div onClick={() => setBehaviour('random-player')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: behaviour === 'random-player' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Random Player</span>
