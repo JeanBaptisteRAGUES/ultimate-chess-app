@@ -19,7 +19,7 @@ export type Move = {
 }
 
 // TODO: 'strategy-stranger' | 'sacrifice-enjoyer' | 'min-max | 'botdanov' | 'sharp-player' | 'closed' | 'open' | 'hyper-aggressive'
-export type Behaviour = 'default' | 'stockfish-random' | 'stockfish-only' | 'human' | 'pawn-pusher' | 'fianchetto-sniper' | 'shy' | 'blundering' | 'drawish' | 'exchanges-lover' | 'exchanges-hater' | 'queen-player' | 'botez-gambit' | 'castle-destroyer' | 'openings-master' | 'openings-beginner' | 'random-player' | 'copycat' | 'bongcloud' | 'gambit-fanatic' | 'cow-lover' | 'indian-king' | 'stonewall';
+export type Behaviour = 'default' | 'stockfish-random' | 'stockfish-only' | 'human' | 'pawn-pusher' | 'fianchetto-sniper' | 'shy' | 'blundering' | 'drawish' | 'exchanges-lover' | 'exchanges-hater' | 'queen-player' | 'botez-gambit' | 'castle-destroyer' | 'chessable-master' | 'auto-didacte' | 'random-player' | 'copycat' | 'bongcloud' | 'gambit-fanatic' | 'cow-lover' | 'indian-king' | 'stonewall';
 
 type DefaultBotParams = {
     randMoveChance: number, 
@@ -1872,7 +1872,7 @@ class BotsAI {
     /**
      * Joue très bien les ouvertures, mais assez mal le reste de la partie.
      */
-    async #makeOpeningsMasterMove(game: Chess): Promise<Move> {
+    async #makeChessableMasterMove(game: Chess): Promise<Move> {
         //console.log('Bot AI: Openings Master');
         let move: Move = {
             notation: '',
@@ -1905,9 +1905,9 @@ class BotsAI {
     }
 
     /**
-     * Joue très mal les ouvertures, mais assez bien le reste de la partie.
+     * Connait très mal les ouvertures, mais assez bien le reste de la partie.
      */
-    async #makeOpeningsBeginnerMove(game: Chess): Promise<Move> {
+    async #makeAutoDidacteMove(game: Chess): Promise<Move> {
         //console.log('Bot AI: Openings Beginner');
         let move: Move = {
             notation: '',
@@ -2196,11 +2196,6 @@ class BotsAI {
         }
 
         if(game.history().length === 2) {
-            if(formatedPGN === '1.d4 c5') {
-                move.notation = 'c2c3';
-                move.type = 2;
-                return move;
-            }
             move.notation = 'e2e3';
             move.type = 2;
             return move;
@@ -2208,7 +2203,7 @@ class BotsAI {
 
         if(game.history().length === 4) {
             if(formatedPGN === '1.d4 d5 2.e3 c5') {
-                move.notation = 'c2c3';
+                move.notation = 'f2f4';
                 move.type = 2;
                 return move;
             }
@@ -2217,8 +2212,8 @@ class BotsAI {
                 move.type = 2;
                 return move;
             }
-            if(formatedPGN === '1.d4 c5 2.c3 cxd4') {
-                move.notation = 'c3d4';
+            if(formatedPGN === '1.d4 c5 2.e3 cxd4') {
+                move.notation = 'e3d4';
                 move.type = 2;
                 return move;
             }
@@ -2563,12 +2558,12 @@ class BotsAI {
                 move = makeRandomMove(2, true, game);
                 break;
 
-            case 'openings-master':
-                move = await this.#makeOpeningsMasterMove(game);
+            case 'chessable-master':
+                move = await this.#makeChessableMasterMove(game);
                 break;
 
-            case 'openings-beginner':
-                move = await this.#makeOpeningsBeginnerMove(game);
+            case 'auto-didacte':
+                move = await this.#makeAutoDidacteMove(game);
                 break;
 
             case 'castle-destroyer':
