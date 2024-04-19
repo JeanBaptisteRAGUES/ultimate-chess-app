@@ -2404,7 +2404,7 @@ class BotsAI {
 
         const pawnsCases: Square[] = ['c3', 'c6', 'e3', 'e6', 'd4', 'd5', 'f4', 'f5'];
         const bishopCases: Square[] = ['d3', 'd6'];
-        const badStartingCases: Square[] = ['c3', 'c6', 'e3', 'e6', 'f4', 'f5'];
+        const badStartingCases: Square[] = ['c3', 'c6', 'e3', 'e6', 'd4', 'd5', 'f4', 'f5'];
 
         let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, 20, 50, false);
 
