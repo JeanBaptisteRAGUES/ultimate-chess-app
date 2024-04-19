@@ -175,7 +175,7 @@ const SelectThematicTrainingPage = () => {
     ];
 
     const difficultyComponent =
-        <div className='flex flex-row justify-around items-center flex-wrap w-full' >
+        <div className='flex flex-row justify-around items-center flex-wrap w-full mt-10' >
             <div onClick={() => setDifficulty('Beginner')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: difficulty === 'Beginner' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♙</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >Beginner</span>
@@ -203,7 +203,7 @@ const SelectThematicTrainingPage = () => {
         </div>
 
     const themeComponent =
-        <div className='flex flex-row justify-around items-center flex-wrap w-full' >
+        <div className='flex flex-row justify-around items-center flex-wrap w-full mt-10' >
             <div onClick={() => setThemeChoice('Attack')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: themeChoice === 'Attack' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <LuSwords size={100} />
                 <span className=' w-full h-[10px] flex justify-center items-center mt-2' >Attaque</span>
@@ -220,7 +220,7 @@ const SelectThematicTrainingPage = () => {
 
     // TODO: Afficher que si le thème choisi correspond (attaque, défense, finales)
     const attackPositionsComponent = themeChoice === 'Attack' ?
-        <div className='flex flex-row justify-around items-center flex-wrap w-full mt-2 px-2 gap-2' >
+        <div className='flex flex-row justify-around items-center flex-wrap w-full mt-10 px-2 gap-2' >
             {
                 attackingPositions.map((position, i) => {
                     return <div key={`attack${i}`} className=' relative w-fit h-fit flex flex-col justify-center items-center'>
@@ -254,7 +254,7 @@ const SelectThematicTrainingPage = () => {
         null
     
     const defensePositionsComponent = themeChoice === 'Defense' ?
-        <div className='flex flex-row justify-around items-center flex-wrap w-full mt-2 px-2 gap-2' >
+        <div className='flex flex-row justify-around items-center flex-wrap w-full mt-10 px-2 gap-2' >
             {
                 defensePositions.map((position, i) => {
                     return <div key={`defense${i}`} className=' relative w-fit h-fit flex flex-col justify-center items-center'>
@@ -288,7 +288,7 @@ const SelectThematicTrainingPage = () => {
         null
 
     const endgamePositionsComponent = themeChoice === 'Endgames' ?
-        <div className='flex flex-row justify-around items-center flex-wrap w-full mt-2 px-2 gap-2' >
+        <div className='flex flex-row justify-around items-center flex-wrap w-full mt-10 px-2 gap-2' >
             {
                 endgamePositions.map((position, i) => {
                     return <div key={`endgame${i}`} className=' relative w-fit h-fit flex flex-col justify-center items-center'>
@@ -324,9 +324,9 @@ const SelectThematicTrainingPage = () => {
 
     return (
         <div className="flex flex-col justify-around items-center bg-cyan-900 h-screen w-full overflow-auto" >
-            <div className=' w-full flex justify-center items-center text-2xl font-semibold text-white' >Difficulté:</div>
+            <div className=' w-full mt-10 flex justify-center items-center text-2xl font-semibold text-white' >Difficulté:</div>
             {difficultyComponent}
-            <div className=' w-full flex justify-center items-center text-2xl font-semibold text-white' >Thèmes:</div>
+            <div className=' w-full mt-20 flex justify-center items-center text-2xl font-semibold text-white' >Thèmes:</div>
             {themeComponent}
             {attackPositionsComponent}
             {defensePositionsComponent}

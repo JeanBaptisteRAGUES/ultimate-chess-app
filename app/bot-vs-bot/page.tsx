@@ -357,14 +357,14 @@ const BotVsBotPage = () => {
     const gameComponent = 
       <div className="flex flex-col justify-start items-center h-full">
         <EvalAndWinrate 
-          game={game} 
-          databaseRating={'Master'} 
-          winner={winner} 
-          startingFen={DEFAULT_POSITION}
-          currentFen={currentFen} 
-          movesList={toolbox.convertHistorySanToLan(toolbox.convertPgnToHistory(game.pgn()), DEFAULT_POSITION)}
-          showEval={showEval} 
-        />
+            game={game} 
+            databaseRating={'Master'} 
+            winner={winner} 
+            startingFen={DEFAULT_POSITION}
+            currentFen={currentFen} 
+            movesList={toolbox.convertHistorySanToLan(toolbox.convertPgnToHistory(game.pgn()), DEFAULT_POSITION)}
+            showEval={showEval} 
+          />
         {boardComponent}
         {buttonsComponent}
       </div>

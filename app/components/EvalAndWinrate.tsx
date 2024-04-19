@@ -49,7 +49,7 @@ const EvalAndWinrate: React.FC<EvalProps> = ({game, databaseRating, winner, star
     }, [currentFen]);
 
     return (
-        <div className=" h-20 w-full flex flex-col justify-center items-center">
+        <div className=" h-20 w-full flex flex-col justify-center items-center my-14 md:my-0">
             <div className=" text-white" >
                 {showEval ? engineEval : '???'}
             </div>
