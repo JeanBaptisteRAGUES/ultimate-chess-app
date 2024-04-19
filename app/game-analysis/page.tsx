@@ -10,8 +10,7 @@ import { Chessboard } from "react-chessboard";
 import { Piece, Square } from "react-chessboard/dist/chessboard/types";
 import EvalAndWinrate from "../components/EvalAndWinrate";
 import { useSearchParams } from "next/navigation";
-import { createRoot } from "react-dom/client";
-import { createPortal } from "react-dom";
+import { FaRegCopy } from "react-icons/fa6";
 
 type EvalResultFormated = {
     playerColor: Color,
@@ -32,7 +31,7 @@ const GameAnalysisPage = () => {
     
     const searchParams = useSearchParams();
     const startingFen = searchParams.get('startingFen') || DEFAULT_POSITION;
-    const pgn = searchParams.get('pgn')?.replaceAll(/\[.*\]/g, '').replaceAll(/\.{3,}/g, '..').trim() || '';
+    const pgn = searchParams.get('pgn')?.replaceAll(/\[.*\]/g, '').replaceAll(/\.{3,}/g, '..').replaceAll('. ', '.').trim() || '';
     //const history = searchParams.get('history') || [];
     const depth: number = eval(searchParams.get('depth') || '12');
     //const search = searchParams2.get('search');
@@ -402,6 +401,11 @@ const GameAnalysisPage = () => {
                     </div>
                 </div>
                 {formatedResultsComponent}
+                <div className="flex justify-center items-center w-full mb-5" >
+                    <div onClick={() => navigator.clipboard.writeText(pgn)} className=' h-[50px] w-[50px] flex flex-col justify-start items-start cursor-pointer text-white hover:text-cyan-400'>
+                        <FaRegCopy size={30} />
+                    </div>
+                    </div>
             </div>
         </div>
     :
