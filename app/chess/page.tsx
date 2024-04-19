@@ -103,6 +103,8 @@ const ChessPage = () => {
         console.log('Game Over !');
         console.log(game.pgn());
         gameActive.current = false;
+        engine.current?.quit();
+        botAI.current?.disable();
         if(game.isDraw() || game.isInsufficientMaterial() || game.isStalemate() || game.isInsufficientMaterial()) {
           setEngineEval('1/2 - 1/2');
           setWinner('d');
@@ -133,6 +135,8 @@ const ChessPage = () => {
       console.log('Game Over !');
       console.log(game.pgn());
       gameActive.current = false;
+      engine.current?.quit();
+      botAI.current?.disable();
       setShowGameoverWindow(true);
     }
 
@@ -341,7 +345,7 @@ const ChessPage = () => {
     // TODO: Problème d'horloge lorsqu'on switch de position, le temps défile pour le mauvais joueur
     const boardComponent =
       <div className=" relative flex flex-col justify-center items-center h-[400px] md:h-[500px] w-[95vw] md:w-[500px] my-10" >
-          <div className=" relative flex justify-start p-2 w-full h-10 bg-slate-100 rounded-t-md">
+          <div className=" relative flex justify-start p-2 w-full h-10 font-medium bg-slate-100 rounded-t-md">
             <div className=" h-full flex justify-start items-center flex-grow-[4]" >
               {botBehaviour} ({databaseRating})
             </div>
@@ -364,7 +368,7 @@ const ChessPage = () => {
             onPieceDrop={onDrop} 
             boardOrientation={playerColor === 'w' ? 'white' : 'black'}
           />
-          <div className=" relative flex justify-around p-2 w-full h-10 rounded-b-md bg-slate-100">
+          <div className=" relative flex justify-around p-2 w-full h-10 font-medium rounded-b-md bg-slate-100">
             <div className=" h-full flex justify-start items-center flex-grow-[4]" >
               Joueur
             </div>
@@ -402,43 +406,6 @@ const ChessPage = () => {
     >
       reset
     </button>
-
-    // TODO: Choisir le time control depuis la page de sélection des bots
-    /* const selectTimeControlButton = 
-      <select id='time-control' onChange={(e) => setTimeControl(e.target.value)} value={timeControl}>
-        <option value="">Sélectionnez une cadence</option>
-        <option value="infinite">Infini</option>
-        <option value="1+0">1+0</option>
-        <option value="3+0">3+0</option>
-        <option value="3+2">3+2</option>
-        <option value="10+0">10+0</option>
-        <option value="15+10">15+10</option>
-        <option value="30+20">30+20</option>
-        <option value="90+30">90+30</option>
-      </select> */
-
-    /* const startGameButton = !gameStarted ? 
-      <button
-        className=" bg-white border rounded cursor-pointer flex flex-none"
-        onClick={() => {
-          setGameStarted(true);
-          gameActive.current = true;
-          setShowEval(false);
-          if(game.turn() !== playerColor){
-            //makeLichessMove();
-            playComputerMove();
-          }
-        }}
-      >
-        Start Game
-      </button>
-    :
-      <button
-        className=" bg-white border rounded cursor-pointer"
-        onClick={() => setShowEval(!showEval)}
-      >
-        Show Eval
-      </button> */
 
     const startGameButton = !gameStarted ? 
       <div 
@@ -496,17 +463,9 @@ const ChessPage = () => {
 
     const buttonsComponent =
       <div className="flex justify-center mt-10 pt-2 md:mt-0 items-center gap-5 w-full h-fit" >
-        {/* resetButton */}
-        {/* selectBotBehaviourButton */}
-        {/* selectDifficultyButton */}
-        {/* selectTimeControlButton */}
         {virtualModeButton}
         {startGameButton}
         {switchButton}
-        {/* analysisButton */}
-        {
-          //TODO: faire un bouton 'hint' / 'indice'
-        }
       </div>
 
     const gameComponent = 

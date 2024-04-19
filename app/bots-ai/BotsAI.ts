@@ -2398,7 +2398,7 @@ class BotsAI {
             type: -1,
         };
 
-        if(game.history().length > 16) {
+        if(game.history().length > 22) {
             return move;
         }
 
@@ -2407,9 +2407,17 @@ class BotsAI {
             return openingMove;
         }
 
+        // TODO: Empecher les coups de pions hors ceux mentionnés !!!
         const pawnsCases: Square[] = ['c3', 'c6', 'e3', 'e6', 'd4', 'd5', 'f4', 'f5'];
-        const bishopCases: Square[] = ['d3', 'd6', 'd2', 'd7', 'e1', 'e8', 'h5', 'h4'];
-        const badStartingCases: Square[] = ['c3', 'c6', 'e3', 'e6', 'd4', 'd5', 'f4', 'f5'];
+        const bishopCases: Square[] = ['d3', 'd6', 'd2', 'd7', 'e1', 'e8', 'h4', 'h5'];
+        const knightsCases: Square[] = [ 'd2', 'd7', 'e4', 'e5', 'f3', 'f6'];
+        const queenCases: Square[] = ['e1', 'e8', 'g3', 'g6'];
+        const exchangesCasesOrigin_1:  Square[] = ['e3', 'e6'];
+        const exchangesCasesDestination_1:  Square[] = ['d4', 'd5']; 
+        const exchangesCasesOrigin_2:  Square[] = ['f4', 'f5'];
+        const exchangesCasesDestination_2:  Square[] = ['e4', 'e5']; 
+        const badPawnStartingCases: Square[] = ['c3', 'c6', 'e3', 'e6', 'd4', 'd5', 'f4', 'f5'];
+        const badKnightStartingCases: Square[] = [ 'd2', 'd7', 'e4', 'e5'];
 
         let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, 20, 50, false);
 
@@ -2421,20 +2429,53 @@ class BotsAI {
                 return evalRes;
             }
 
-            if(this.#toolbox.getMovePiece(evalRes.bestMove, game.fen()).type === 'p' && pawnsCases.includes(moveDestination)) {
-                if(badStartingCases.includes(moveOrigin)) {
-                    evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) - 0.5).toString();
-                    return evalRes;
-                }
-                if(moveDestination === 'f4' || moveDestination === 'f5') {
+            if(this.#toolbox.getMovePiece(evalRes.bestMove, game.fen()).type === 'p') {
+                // Si le coup de pion est un échange effectué avec le bon pion
+                if(exchangesCasesOrigin_1.includes(moveOrigin) && exchangesCasesDestination_1.includes(moveDestination)) {
                     evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + 0.7).toString();
                     return evalRes;
                 }
-                evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + 0.5).toString();
+
+                if(exchangesCasesOrigin_2.includes(moveOrigin) && exchangesCasesDestination_2.includes(moveDestination)) {
+                    evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + 0.7).toString();
+                    return evalRes;
+                }
+
+                // Si le coup de pion permet d'aller sur une des cases stratégiques de la structure stonewall
+                if(pawnsCases.includes(moveDestination)) {
+                    // Évite que le pion en f4 soit poussé en f5 par exemple
+                    if(badPawnStartingCases.includes(moveOrigin)) {
+                        evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) - 0.5).toString();
+                        return evalRes;
+                    }
+                    // f4 et f5 on un bonus plus élevé pour compensé la mauvaise évaluation dû à l'affaiblissement de la position
+                    if(moveDestination === 'f4' || moveDestination === 'f5') {
+                        evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + 0.7).toString();
+                        return evalRes;
+                    }
+                    evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + 0.5).toString();
+                    return evalRes;
+                }
+                // On évite les autres coups de pions pour garder une structure stonewall intacte
+                evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) - 0.3).toString();
                 return evalRes;
             }
 
             if(this.#toolbox.getMovePiece(evalRes.bestMove, game.fen()).type === 'b' && bishopCases.includes(moveDestination)) {
+                evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + 0.15).toString();
+                return evalRes;
+            }
+
+            if(this.#toolbox.getMovePiece(evalRes.bestMove, game.fen()).type === 'n' && knightsCases.includes(moveDestination)) {
+                if(badKnightStartingCases.includes(moveOrigin)) {
+                    evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox)).toString();
+                    return evalRes;
+                }
+                evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + 0.3).toString();
+                return evalRes;
+            }
+
+            if(this.#toolbox.getMovePiece(evalRes.bestMove, game.fen()).type === 'q' && queenCases.includes(moveDestination)) {
                 evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + 0.3).toString();
                 return evalRes;
             }
@@ -2605,6 +2646,10 @@ class BotsAI {
         const move = await makeStockfishMove(this.#defaultBotParams, game, this.#engine);
 
         return game.get(this.#toolbox.getMoveOrigin(move.notation) || 'a1').type;
+    }
+
+    disable() {
+        this.#engine.quit();
     }
 }
 

@@ -65,6 +65,10 @@ class Engine {
         })
     }
 
+    quit() {
+        this.stockfish.postMessage('quit');
+    }
+
     
     findBestMove(fen: string, depth: number, skillValue: number): Promise<string> {
         return new Promise((resolve, reject) => {

@@ -96,6 +96,9 @@ const BotVsBotPage = () => {
         console.log('Game Over !');
         console.log(game.pgn());
         gameActive.current = false;
+        engine.current?.quit();
+        bot1_AI.current?.disable();
+        bot2_AI.current?.disable();
         if(game.isDraw() || game.isInsufficientMaterial() || game.isStalemate() || game.isInsufficientMaterial()) {
           setEngineEval('1/2 - 1/2');
           setWinner('d');
@@ -121,6 +124,9 @@ const BotVsBotPage = () => {
       console.log('Game Over !');
       console.log(game.pgn());
       gameActive.current = false;
+      engine.current?.quit();
+      bot1_AI.current?.disable();
+      bot2_AI.current?.disable();
       setShowGameoverWindow(true);
     }
 
@@ -287,7 +293,7 @@ const BotVsBotPage = () => {
     // TODO: Problème d'horloge lorsqu'on switch de position, le temps défile pour le mauvais joueur
     const boardComponent =
       <div className=" flex flex-col justify-center items-center h-[300px] md:h-[500px] w-[95vw] md:w-[500px] my-10" >
-          <div className=" relative flex justify-start p-2 w-full h-10 bg-slate-100 rounded-t-md">
+          <div className=" relative flex justify-start p-2 w-full h-10 font-medium bg-slate-100 rounded-t-md">
             <div className=" h-full flex justify-start items-center flex-grow-[4]" >
               {playerColor === 'w' ?  `${bot2_Behaviour} (${bot2_Level})` : `${bot1_Behaviour} (${bot1_Level})`}
             </div>
@@ -298,7 +304,7 @@ const BotVsBotPage = () => {
             onPieceDrop={onDrop} 
             boardOrientation={playerColor === 'w' ? 'white' : 'black'}
           />
-          <div className=" relative flex justify-start p-2 w-full h-10 bg-slate-100 rounded-b-md">
+          <div className=" relative flex justify-start p-2 w-full h-10 font-medium bg-slate-100 rounded-b-md">
             <div className=" h-full flex justify-start items-center flex-grow-[4]" >
               {playerColor === 'b' ?  `${bot2_Behaviour} (${bot2_Level})` : `${bot1_Behaviour} (${bot1_Level})`}
             </div>

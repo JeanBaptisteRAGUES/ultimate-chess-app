@@ -10,6 +10,9 @@ import Engine from "../engine/Engine";
 import Link from "next/link";
 import BotsAI, { Behaviour, Move } from "../bots-ai/BotsAI";
 import { useSearchParams } from "next/navigation";
+import { FaCirclePlay, FaHandFist, FaRotate } from 'react-icons/fa6';
+import  { GiBrain } from 'react-icons/gi';
+import { FaFontAwesomeFlag } from "react-icons/fa";
 
 
 const HandAndBrainPage = () => {
@@ -98,6 +101,9 @@ const HandAndBrainPage = () => {
         console.log('Game Over !');
         console.log(game.pgn());
         gameActive.current = false;
+        engine.current?.quit();
+        allyAI.current?.disable();
+        opponentAI.current?.disable();
         if(game.isDraw() || game.isInsufficientMaterial() || game.isStalemate() || game.isInsufficientMaterial()) {
           setEngineEval('1/2 - 1/2');
           setWinner('d');
@@ -115,6 +121,22 @@ const HandAndBrainPage = () => {
         return true;
       }
       return false;
+    }
+
+    function resign() {
+      if(playerColor === 'w'){
+        setEngineEval('0 - 1');
+        setWinner('b');
+      }else{
+        setEngineEval('1 - 0');
+        setWinner('w');
+      }
+      console.log('Game Over !');
+      console.log(game.pgn());
+      engine.current?.quit();
+      allyAI.current?.disable();
+      opponentAI.current?.disable();
+      setShowGameoverWindow(true);
     }
 
     function movesHistorySan(gamePGN: string){
@@ -450,36 +472,64 @@ const selectPieceComponentSmartphone =
     // TODO: Problème d'horloge lorsqu'on switch de position, le temps défile pour le mauvais joueur
     const boardComponent =
       <div className=" flex flex-col justify-center items-center h-[300px] md:h-[500px] w-[95vw] md:w-[500px] my-10" >
-          <Clock 
-            game={game} 
-            turnColor={game.turn()} 
-            clockColor={playerColor === 'w' ? 'b' : 'w'}
-            timeControl={timeControl} 
-            timeControls={timeControls}
-            setEngineEval={setEngineEval}
-            setWinner={setWinner}
-            setShowGameoverWindow={setShowGameoverWindow}
-            gameStarted={gameStarted} 
-            gameActive={gameActive}
-          />
+          <div className=" relative flex justify-start p-2 w-full h-10 font-medium bg-slate-100 rounded-t-md">
+            <div className=" h-full flex justify-start items-center flex-grow-[4]" >
+              {opponentBehaviour} ({opponentBehaviour})
+            </div>
+            <Clock 
+              game={game} 
+              turnColor={game.turn()} 
+              clockColor={playerColor === 'w' ? 'b' : 'w'}
+              timeControl={timeControl} 
+              timeControls={timeControls}
+              setEngineEval={setEngineEval}
+              setWinner={setWinner}
+              setShowGameoverWindow={setShowGameoverWindow}
+              gameStarted={gameStarted} 
+              gameActive={gameActive}
+            />
+          </div>
           <Chessboard 
             id="PlayVsRandom"
             position={currentFen}
             onPieceDrop={onDrop} 
             boardOrientation={playerColor === 'w' ? 'white' : 'black'}
           />
-          <Clock 
-            game={game} 
-            turnColor={game.turn()} 
-            clockColor={playerColor === 'w' ? 'w' : 'b'}
-            timeControl={timeControl} 
-            timeControls={timeControls}
-            setEngineEval={setEngineEval}
-            setWinner={setWinner}
-            setShowGameoverWindow={setShowGameoverWindow}
-            gameStarted={gameStarted} 
-            gameActive={gameActive}
-          />
+          <div className=" relative flex justify-around p-2 w-full h-10 font-medium rounded-b-md bg-slate-100">
+              {
+                playerRole === 'Brain' ?
+                  <div className=" h-full flex justify-start items-center flex-grow-[4] gap-3" >
+                    <div className=" h-full w-fit flex justify-start items-center">
+                      <GiBrain size={25} /> Joueur
+                    </div>
+                    <div className=" h-full w-fit flex justify-start items-center">
+                      <FaHandFist size={25} /> Stockfish 16 ({allyRating})
+                    </div>
+                  </div>
+                :
+                <div className=" h-full flex justify-start items-center flex-grow-[4] gap-5" >
+                  <div className=" h-full w-fit flex justify-start items-center">
+                    <GiBrain size={25} />Ordinateur ({allyRating})
+                  </div>
+                  <div className=" h-full w-fit flex justify-start items-center">
+                    <FaHandFist size={25} />Joueur
+                  </div>
+                </div>
+              }
+            
+            <Clock 
+              game={game} 
+              turnColor={game.turn()} 
+              clockColor={playerColor === 'w' ? 'w' : 'b'}
+              timeControl={timeControl} 
+              timeControls={timeControls}
+              setEngineEval={setEngineEval}
+              setWinner={setWinner}
+              setShowGameoverWindow={setShowGameoverWindow}
+              gameStarted={gameStarted} 
+              gameActive={gameActive}
+            />
+          </div>
       </div>
 
     const resetButton = <button
@@ -495,22 +545,8 @@ const selectPieceComponentSmartphone =
       reset
     </button>
 
-    const selectTimeControlButton = 
-      <select id='time-control' onChange={(e) => setTimeControl(e.target.value)} value={timeControl}>
-        <option value="">Sélectionnez une cadence</option>
-        <option value="infinite">Infini</option>
-        <option value="1+0">1+0</option>
-        <option value="3+0">3+0</option>
-        <option value="3+2">3+2</option>
-        <option value="10+0">10+0</option>
-        <option value="15+10">15+10</option>
-        <option value="30+20">30+20</option>
-        <option value="90+30">90+30</option>
-      </select>
-
     const startGameButton = !gameStarted ? 
-      <button
-        className=" bg-white border rounded cursor-pointer flex flex-none"
+      <div 
         onClick={() => {
           setGameStarted(true);
           gameActive.current = true;
@@ -525,65 +561,32 @@ const selectPieceComponentSmartphone =
             } 
           }
         }}
-      >
-        Start Game
-      </button>
-    :
-      <button
-        className=" bg-white border rounded cursor-pointer"
-        onClick={() => setShowEval(!showEval)}
-      >
-        Show Eval
-      </button>
+        className=' h-[50px] w-[50px] flex flex-col justify-center items-center cursor-pointer hover:text-cyan-400'>
+          <FaCirclePlay size={40} />
+      </div>
+      :
+      <div onClick={() => resign()} className=' h-[50px] w-[50px] flex flex-col justify-center items-center cursor-pointer hover:text-cyan-400'>
+        <FaFontAwesomeFlag size={40} />
+      </div>
 
-    const switchButton = <button
-      className=" bg-white border rounded cursor-pointer"
-      onClick={() => {
-        playerColor === 'w' ? setPlayerColor('b') : setPlayerColor('w')
-      }}
-    >
-      Switch
-    </button>
-
-    const analysisButton = 
-      <Link
-        href = {{
-          pathname: '/game-analysis',
-          query: {
-            pgn: game.pgn(),
-            depth: 12
-          }
-        }}
-      >
-        Analyse PGN
-      </Link>
+    const switchButton = 
+      <div 
+        onClick={() => {
+          playerColor === 'w' ? setPlayerColor('b') : setPlayerColor('w')
+        }} 
+        className=' h-[50px] w-[50px] flex flex-col justify-center items-center cursor-pointer hover:text-cyan-400'>
+          <FaRotate size={40} />
+      </div>
 
     const buttonsComponent =
-      <div className="flex justify-center mt-10 md:mt-0 items-center gap-2 w-full h-fit" >
-        {/* resetButton */}
-        {/* selectBotBehaviourButton */}
-        {/* selectDifficultyButton */}
-        {selectTimeControlButton}
-        {startGameButton}
-        {switchButton}
-        {/* analysisButton */}
-        {
-          //TODO: faire un bouton 'hint' / 'indice'
-        }
-      </div>
+    <div className="flex justify-center mt-10 pt-2 md:mt-0 items-center gap-5 w-full h-fit" >
+      {startGameButton}
+      {switchButton}
+    </div>
 
     const gameComponent = 
       <div className="flex flex-col justify-start items-center h-full">
-        {titleComponent}
         {allyStatusComponent}
-        {/* <EvalAndWinrate 
-          game={game} 
-          databaseRating={opponentRating} 
-          winner={winner} 
-          currentFen={currentFen} 
-          showEval={showEval} 
-          gameActive={gameActive}
-        /> */}
         {boardComponent}
         {buttonsComponent}
       </div>
