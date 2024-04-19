@@ -2096,8 +2096,8 @@ class BotsAI {
         }
 
         if(game.history().length === 3) {
-            if(formatedPGN !== '1.e4 d6 2.e5') {
-                move.notation = 'g8f6';
+            if(game.history()[2] !== 'e5') {
+                move.notation = 'g7g6';
                 move.type = 2;
                 return move;
             }
@@ -2196,6 +2196,11 @@ class BotsAI {
         }
 
         if(game.history().length === 2) {
+            if(formatedPGN === '1.d4 c5') {
+                move.notation = 'c2c3';
+                move.type = 2;
+                return move;
+            }
             move.notation = 'e2e3';
             move.type = 2;
             return move;
@@ -2209,6 +2214,11 @@ class BotsAI {
             }
             if(formatedPGN === '1.d4 c5 2.e3 d5') {
                 move.notation = 'c2c3';
+                move.type = 2;
+                return move;
+            }
+            if(formatedPGN === '1.d4 c5 2.c3 cxd4') {
+                move.notation = 'c3d4';
                 move.type = 2;
                 return move;
             }

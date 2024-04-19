@@ -12,6 +12,7 @@ import BotsAI, { Behaviour, Move } from "../bots-ai/BotsAI";
 import { useSearchParams } from "next/navigation";
 import GameToolBox from "../game-toolbox/GameToolbox";
 import { ImSwitch } from "react-icons/im"; // TODO: Bouton pour stopper le match
+import { FaCirclePlay, FaRotate } from "react-icons/fa6";
 
 
 const BotVsBotPage = () => {
@@ -114,6 +115,15 @@ const BotVsBotPage = () => {
       return false;
     }
 
+    function stopMatch() {
+      setEngineEval('1/2 - 1/2');
+      setWinner('d');
+      console.log('Game Over !');
+      console.log(game.pgn());
+      gameActive.current = false;
+      setShowGameoverWindow(true);
+    }
+
     function movesHistorySan(gamePGN: string){
       let pgnAfter = gamePGN.replaceAll(/\d*\.\s/gm, (test) => test.trim());
 
@@ -122,11 +132,11 @@ const BotVsBotPage = () => {
 
     async function playComputerMove() {
       console.log('Play computer move');
-      if(game.pgn().includes('#')) return;
+      if(!gameActive.current || game.pgn().includes('#')) return;
  
       const move: Move | undefined = game.fen().includes(' w ') ? await bot1_AI.current?.makeMove(game) : await bot2_AI.current?.makeMove(game);
 
-      if(move && move.type >= 0){
+      if(gameActive.current && move && move.type >= 0){
         gameMove(move.notation, move.type);
         const newTimeout = setTimeout(playComputerMove, moveDelay);
         setCurrentTimeout(newTimeout);
@@ -277,12 +287,22 @@ const BotVsBotPage = () => {
     // TODO: Problème d'horloge lorsqu'on switch de position, le temps défile pour le mauvais joueur
     const boardComponent =
       <div className=" flex flex-col justify-center items-center h-[300px] md:h-[500px] w-[95vw] md:w-[500px] my-10" >
+          <div className=" relative flex justify-start p-2 w-full h-10 bg-slate-100 rounded-t-md">
+            <div className=" h-full flex justify-start items-center flex-grow-[4]" >
+              {playerColor === 'w' ?  `${bot2_Behaviour} (${bot2_Level})` : `${bot1_Behaviour} (${bot1_Level})`}
+            </div>
+          </div>
           <Chessboard 
             id="PlayVsRandom"
             position={currentFen}
             onPieceDrop={onDrop} 
             boardOrientation={playerColor === 'w' ? 'white' : 'black'}
           />
+          <div className=" relative flex justify-start p-2 w-full h-10 bg-slate-100 rounded-b-md">
+            <div className=" h-full flex justify-start items-center flex-grow-[4]" >
+              {playerColor === 'b' ?  `${bot2_Behaviour} (${bot2_Level})` : `${bot1_Behaviour} (${bot1_Level})`}
+            </div>
+          </div>
       </div>
 
     const resetButton = <button
@@ -298,35 +318,38 @@ const BotVsBotPage = () => {
       reset
     </button>
 
-    const startGameButton = <button
-        className=" bg-white border rounded cursor-pointer flex flex-none"
+    const startGameButton = !gameStarted ? 
+      <div 
         onClick={() => {
           setGameStarted(true);
           gameActive.current = true;
           playComputerMove();
         }}
-      >
-        Start Game
-      </button>
+        className=' h-[50px] w-[50px] flex flex-col justify-center items-center cursor-pointer hover:text-cyan-400'>
+          <FaCirclePlay size={40} />
+      </div>
+      :
+      <div onClick={() => stopMatch()} className=' h-[50px] w-[50px] flex flex-col justify-center items-center cursor-pointer hover:text-cyan-400'>
+        <ImSwitch size={40} />
+      </div>
 
-    const switchButton = <button
-      className=" bg-white border rounded cursor-pointer"
-      onClick={() => {
-        playerColor === 'w' ? setPlayerColor('b') : setPlayerColor('w')
-      }}
-    >
-      Switch
-    </button>
+    const switchButton = 
+      <div 
+        onClick={() => {
+          playerColor === 'w' ? setPlayerColor('b') : setPlayerColor('w')
+        }} 
+        className=' h-[50px] w-[50px] flex flex-col justify-center items-center cursor-pointer hover:text-cyan-400'>
+          <FaRotate size={40} />
+      </div>
 
     const buttonsComponent =
-      <div className="flex justify-center mt-10 md:mt-0 items-center gap-2 w-full h-fit" >
+      <div className="flex justify-center mt-10 pt-2 md:mt-0 items-center gap-5 w-full h-fit" >
         {startGameButton}
         {switchButton}
       </div>
 
     const gameComponent = 
       <div className="flex flex-col justify-start items-center h-full">
-        {titleComponent}
         <EvalAndWinrate 
           game={game} 
           databaseRating={'Master'} 

@@ -441,22 +441,22 @@ const ChessPage = () => {
       </button> */
 
     const startGameButton = !gameStarted ? 
-    <div 
-      onClick={() => {
-        setGameStarted(true);
-        gameActive.current = true;
-        setShowEval(false);
-        if(game.turn() !== playerColor){
-          playComputerMove();
-        }
-      }}
-      className=' h-[50px] w-[50px] flex flex-col justify-center items-center cursor-pointer hover:text-cyan-400'>
-        <FaCirclePlay size={40} />
-    </div>
-    :
-    <div onClick={() => resign()} className=' h-[50px] w-[50px] flex flex-col justify-center items-center cursor-pointer hover:text-cyan-400'>
-      <FaFontAwesomeFlag size={40} />
-    </div>
+      <div 
+        onClick={() => {
+          setGameStarted(true);
+          gameActive.current = true;
+          setShowEval(false);
+          if(game.turn() !== playerColor){
+            playComputerMove();
+          }
+        }}
+        className=' h-[50px] w-[50px] flex flex-col justify-center items-center cursor-pointer hover:text-cyan-400'>
+          <FaCirclePlay size={40} />
+      </div>
+      :
+      <div onClick={() => resign()} className=' h-[50px] w-[50px] flex flex-col justify-center items-center cursor-pointer hover:text-cyan-400'>
+        <FaFontAwesomeFlag size={40} />
+      </div>
 
     /* const switchButton = 
       <button
