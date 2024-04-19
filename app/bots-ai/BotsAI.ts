@@ -2398,7 +2398,7 @@ class BotsAI {
             type: -1,
         };
 
-        if(game.history().length > 14) {
+        if(game.history().length > 16) {
             return move;
         }
 
@@ -2408,7 +2408,7 @@ class BotsAI {
         }
 
         const pawnsCases: Square[] = ['c3', 'c6', 'e3', 'e6', 'd4', 'd5', 'f4', 'f5'];
-        const bishopCases: Square[] = ['d3', 'd6'];
+        const bishopCases: Square[] = ['d3', 'd6', 'd2', 'd7', 'e1', 'e8', 'h5', 'h4'];
         const badStartingCases: Square[] = ['c3', 'c6', 'e3', 'e6', 'd4', 'd5', 'f4', 'f5'];
 
         let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, 20, 50, false);
@@ -2420,22 +2420,22 @@ class BotsAI {
                 evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox)).toString();
                 return evalRes;
             }
-            let bonus = 0.5;
+
             if(this.#toolbox.getMovePiece(evalRes.bestMove, game.fen()).type === 'p' && pawnsCases.includes(moveDestination)) {
                 if(badStartingCases.includes(moveOrigin)) {
                     evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) - 0.5).toString();
-                    console.log(`${evalRes.bestMove} (origin: ${moveOrigin}, destination: ${moveDestination})`);
-                    console.log(`${evalRes.bestMove} est mauvais: ${evalRes.eval}`);
                     return evalRes;
                 }
-                if(moveDestination === 'f4' || moveDestination === 'f5') bonus = 0.7;
-                evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + bonus).toString();
-                console.log(`${evalRes.bestMove} est bon: ${evalRes.eval}`);
+                if(moveDestination === 'f4' || moveDestination === 'f5') {
+                    evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + 0.7).toString();
+                    return evalRes;
+                }
+                evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + 0.5).toString();
                 return evalRes;
             }
 
             if(this.#toolbox.getMovePiece(evalRes.bestMove, game.fen()).type === 'b' && bishopCases.includes(moveDestination)) {
-                evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + bonus).toString();
+                evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + 0.3).toString();
                 return evalRes;
             }
             evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox)).toString();
