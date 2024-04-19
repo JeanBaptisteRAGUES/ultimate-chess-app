@@ -19,7 +19,7 @@ export type Move = {
 }
 
 // TODO: 'strategy-stranger' | 'sacrifice-enjoyer' | 'min-max | 'botdanov' | 'sharp-player' | 'closed' | 'open' | 'hyper-aggressive'
-export type Behaviour = 'default' | 'stockfish-random' | 'stockfish-only' | 'human' | 'pawn-pusher' | 'fianchetto-sniper' | 'shy' | 'blundering' | 'drawish' | 'exchanges-lover' | 'exchanges-hater' | 'queen-player' | 'botez-gambit' | 'castle-destroyer' | 'openings-master' | 'openings-beginner' | 'random-player' | 'copycat' | 'bongcloud' | 'gambit-fanatic' | 'cow-lover' | 'indian-king';
+export type Behaviour = 'default' | 'stockfish-random' | 'stockfish-only' | 'human' | 'pawn-pusher' | 'fianchetto-sniper' | 'shy' | 'blundering' | 'drawish' | 'exchanges-lover' | 'exchanges-hater' | 'queen-player' | 'botez-gambit' | 'castle-destroyer' | 'openings-master' | 'openings-beginner' | 'random-player' | 'copycat' | 'bongcloud' | 'gambit-fanatic' | 'cow-lover' | 'indian-king' | 'stonewall';
 
 type DefaultBotParams = {
     randMoveChance: number, 
@@ -881,6 +881,8 @@ class BotsAI {
             type: -1,
         };
 
+        const formatedPGN = game.pgn().replaceAll(/\.\s/g, '.');
+
         if(game.history().length === 0) {
             move.notation = 'e2e4';
             move.type = 2;
@@ -888,7 +890,7 @@ class BotsAI {
         }
 
         if(game.history().length === 1) {
-            if(game.pgn() === '1.e4') {
+            if(formatedPGN === '1.e4') {
                 move.notation = 'e7e5';
                 move.type = 2;
                 return move;
@@ -2063,6 +2065,8 @@ class BotsAI {
             type: -1,
         };
 
+        const formatedPGN = game.pgn().replaceAll(/\.\s/g, '.');
+
         if(game.history().length === 0) {
             move.notation = 'g1f3';
             move.type = 2;
@@ -2070,7 +2074,7 @@ class BotsAI {
         }
 
         if(game.history().length === 1) {
-            if(game.pgn() === '1.e4') {
+            if(formatedPGN === '1.e4') {
                 move.notation = 'd7d6';
                 move.type = 2;
                 return move;
@@ -2081,7 +2085,7 @@ class BotsAI {
         }
 
         if(game.history().length === 2) {
-            if(game.pgn() === '1.Nf3 e5') {
+            if(formatedPGN === '1.Nf3 e5') {
                 move.notation = 'f3e5';
                 move.type = 2;
                 return move;
@@ -2092,7 +2096,7 @@ class BotsAI {
         }
 
         if(game.history().length === 3) {
-            if(game.pgn() !== '1.e4 d6 2.e5') {
+            if(formatedPGN !== '1.e4 d6 2.e5') {
                 move.notation = 'g8f6';
                 move.type = 2;
                 return move;
@@ -2164,6 +2168,297 @@ class BotsAI {
         };
 
         const gimmickMove = await this.#indianKingLogic(game);
+        if(gimmickMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return gimmickMove;
+        }
+
+        const defaultMove = await this.#defaultMoveLogic(game, true, true);
+        if(defaultMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return defaultMove;
+        }
+
+        return move;
+    }
+
+    #stonewallOpenings(game: Chess): Move {
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+        const formatedPGN = game.pgn().replaceAll(/\.\s/g, '.');
+
+        if(game.history().length === 0) {
+            move.notation = 'd2d4';
+            move.type = 2;
+            return move;
+        }
+
+        if(game.history().length === 2) {
+            move.notation = 'e2e3';
+            move.type = 2;
+            return move;
+        }
+
+        if(game.history().length === 4) {
+            if(formatedPGN === '1.d4 d5 2.e3 c5') {
+                move.notation = 'c2c3';
+                move.type = 2;
+                return move;
+            }
+            if(formatedPGN === '1.d4 c5 2.e3 d5') {
+                move.notation = 'c2c3';
+                move.type = 2;
+                return move;
+            }
+            move.notation = 'f1d3';
+            move.type = 2;
+            return move;
+        }
+
+        if(game.history().length === 1) {
+            console.log(formatedPGN);
+            console.log(formatedPGN === '1.e4');
+            if(formatedPGN === '1.e4') {
+                move.notation = 'e7e6';
+                move.type = 2;
+                return move;
+            }
+            if(formatedPGN === '1.d4') {
+                move.notation = 'd7d5';
+                move.type = 2;
+                return move;
+            }
+            move.notation = 'e7e6';
+            move.type = 2;
+            return move;
+        }
+
+        if(game.history().length === 3) {
+            if(game.history()[0] !== 'd4') {
+                console.log(game.history()[0]);
+                move.notation = 'd7d5';
+                move.type = 2;
+                return move;
+            }
+            move.notation = 'e7e6';
+            move.type = 2;
+            return move;
+        }
+
+        switch (game.pgn().replaceAll(/\.\s/g, '.')) {
+            // When Black
+            // e4
+            case '1.e4 e6 2.d4 d5 3.e5':
+                move.notation = 'f7f5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e6 2.d4 d5 3.e5 f5 4.exf6':
+                move.notation = 'g8f6';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e6 2.d4 d5 3.Nc3':
+                move.notation = 'f7f5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e6 2.d4 d5 3.Nd2':
+                move.notation = 'f7f5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e6 2.d4 d5 3.exd5':
+                move.notation = 'e6d5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e6 2.d4 d5 3.exd5 exd5 4.Nf3':
+                move.notation = 'f7f5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e6 2.d4 d5 3.exd5 exd5 4.Nc3':
+                move.notation = 'd7d5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e6 2.d4 d5 3.exd5 exd5 4.Bd3':
+                move.notation = 'c7c6';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e6 2.d4 d5 3.exd5 exd5 4.c4':
+                move.notation = 'c7c6';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e6 2.d4 d5 3.exd5 exd5 4.Qe2+':
+                move.notation = 'f8e7';
+                move.type = 2;
+                return move;
+
+            case '1.d4 d5 2.c4 e6 3.Nc3':
+                move.notation = 'f7f5';
+                move.type = 2;
+                return move;
+
+            case '1.d4 d5 2.c4 e6 3.Nf3':
+                move.notation = 'c7c6';
+                move.type = 2;
+                return move;
+
+            case '1.d4 d5 2.c4 e6 3.e3':
+                move.notation = 'c7c6';
+                move.type = 2;
+                return move;
+
+            case '1.d4 d5 2.c4 e6 3.cxd5':
+                move.notation = 'e6d5';
+                move.type = 2;
+                return move;
+
+            case '1.d4 d5 2.c4 e6 3.cxd5 exd5 4.Nc3':
+                move.notation = 'f7f5';
+                move.type = 2;
+                return move;
+
+            case '1.d4 d5 2.c4 e6 3.cxd5 exd5 4.Nf3':
+                move.notation = 'c7c6';
+                move.type = 2;
+                return move;
+
+            case '1.d4 d5 2.Nf3 e6 3.Bf4':
+                move.notation = 'c7c6';
+                move.type = 2;
+                return move;
+
+            case '1.d4 d5 2.Nf3 e6 3.Bf4 c6 4.e3':
+                move.notation = 'f7f5';
+                move.type = 2;
+                return move;
+
+            case '1. d4 d5 2.Bf4 e6 3.e3':
+                move.notation = 'c7c6';
+                move.type = 2;
+                return move;
+
+            case '1.d4 d5 2.Bf4 e6 3.e3 c6 4.Nf3':
+                move.notation = 'f7f5';
+                move.type = 2;
+                return move;
+
+            case '1.d4 d5 2.Bf4 e6 3.e3 c6 4.Bd3':
+                move.notation = 'f7f5';
+                move.type = 2;
+                return move;
+
+            case '1.d4 d5 2.Bf4 e6 3.Nf3':
+                move.notation = 'c7c6';
+                move.type = 2;
+                return move;
+
+            case '1.d4 d5 2.Bf4 e6 3.Nf3 c6 4.e3':
+                move.notation = 'f7f5';
+                move.type = 2;
+                return move;
+
+            case '1.d4 d5 2.Bf4 e6 3.Nf3 c6 4.Nbd2':
+                move.notation = 'f7f5';
+                move.type = 2;
+                return move;
+
+            case '1.d4 d5 2.Bf4 e6 3.Nf3 c6 4.c3':
+                move.notation = 'f7f5';
+                move.type = 2;
+                return move;
+
+            case '1.d4 d5 2.Bf4 e6 3.Nf3 c6 4.Nc3':
+                move.notation = 'f7f5';
+                move.type = 2;
+                return move;
+
+            default:
+                break;
+        }
+
+        return move;
+    }
+
+    async #stonewallLogic(game: Chess): Promise<Move> {
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+
+        if(game.history().length > 14) {
+            return move;
+        }
+
+        let openingMove = this.#stonewallOpenings(game);
+        if(openingMove.type >= 0) {
+            return openingMove;
+        }
+
+        const pawnsCases: Square[] = ['c3', 'c6', 'e3', 'e6', 'd4', 'd5', 'f4', 'f5'];
+        const bishopCases: Square[] = ['d3', 'd6'];
+        const badStartingCases: Square[] = ['c3', 'c6', 'e3', 'e6', 'f4', 'f5'];
+
+        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, 20, 50, false);
+
+        stockfishMoves = stockfishMoves.map((evalRes) => {
+            const moveDestination = this.#toolbox.getMoveDestination(evalRes.bestMove);
+            const moveOrigin = this.#toolbox.getMoveOrigin(evalRes.bestMove);
+            if(!moveDestination || !moveOrigin){
+                evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox)).toString();
+                return evalRes;
+            }
+            let bonus = 0.5;
+            if(this.#toolbox.getMovePiece(evalRes.bestMove, game.fen()).type === 'p' && pawnsCases.includes(moveDestination)) {
+                if(badStartingCases.includes(moveOrigin)) {
+                    evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) - 0.5).toString();
+                    console.log(`${evalRes.bestMove} (origin: ${moveOrigin}, destination: ${moveDestination})`);
+                    console.log(`${evalRes.bestMove} est mauvais: ${evalRes.eval}`);
+                    return evalRes;
+                }
+                if(moveDestination === 'f4' || moveDestination === 'f5') bonus = 0.7;
+                evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + bonus).toString();
+                console.log(`${evalRes.bestMove} est bon: ${evalRes.eval}`);
+                return evalRes;
+            }
+
+            if(this.#toolbox.getMovePiece(evalRes.bestMove, game.fen()).type === 'b' && bishopCases.includes(moveDestination)) {
+                evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + bonus).toString();
+                return evalRes;
+            }
+            evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox)).toString();
+            return evalRes;
+        });
+
+        stockfishMoves.sort(compareEval);
+
+        
+        
+
+        move.notation = stockfishMoves[0].bestMove;
+        move.type = 2;
+
+        return move;
+    }
+
+    /**
+     * Aime sacrifier sa dame le plus rapidement possible.
+     */
+    async #makeStonewallMove(game: Chess): Promise<Move> {
+        console.log('Bot AI: Stonewall');
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+
+        const gimmickMove = await this.#stonewallLogic(game);
         if(gimmickMove.type >= 0) {
             this.#lastRandomMove = this.#lastRandomMove-1;
             return gimmickMove;
@@ -2272,6 +2567,10 @@ class BotsAI {
 
             case 'indian-king':
                 move = await this.#makeIndianKingMove(game); 
+                break;
+
+            case 'stonewall':
+                move = await this.#makeStonewallMove(game); 
                 break;
 
             default:

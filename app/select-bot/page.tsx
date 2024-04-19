@@ -121,6 +121,9 @@ const SelectBot = () => {
             <div onClick={() => setBehaviour('indian-king')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: behaviour === 'indian-king' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Indian King</span>
             </div>
+            <div onClick={() => setBehaviour('stonewall')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: behaviour === 'stonewall' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Stonewall</span>
+            </div>
         </div>
 
 /*     ['1+0', {startingTime: 60, increment: 0}],

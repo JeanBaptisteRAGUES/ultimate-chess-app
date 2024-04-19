@@ -170,6 +170,9 @@ const SelectBotVsBotPage = () => {
             <div onClick={() => setBot1_Behaviour('indian-king')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot1_Behaviour === 'indian-king' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Indian King</span>
             </div>
+            <div onClick={() => setBot1_Behaviour('stonewall')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot1_Behaviour === 'stonewall' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Stonewall</span>
+            </div>
         </div>
 
 const bot2_BehaviourComponent = 
@@ -235,8 +238,11 @@ const bot2_BehaviourComponent =
             <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Cow Lover</span>
         </div>
         <div onClick={() => setBot2_Behaviour('indian-king')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot2_Behaviour === 'indian-king' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
-                <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Indian King</span>
-            </div>
+            <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Indian King</span>
+        </div>
+        <div onClick={() => setBot2_Behaviour('stonewall')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot2_Behaviour === 'stonewall' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Stonewall</span>
+        </div>
     </div>
 
 
