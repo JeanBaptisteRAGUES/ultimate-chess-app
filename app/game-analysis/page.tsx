@@ -95,8 +95,18 @@ const GameAnalysisPage = () => {
         const whiteAccuracySum = results.reduce((acc, curr, i) => {
             return acc + (i%2 === startColorIndex && curr.accuracy ? 100*curr.accuracy : 0);
         }, 0);
-        console.log("White accuracy sum: " + whiteAccuracySum);
-        return Math.round(10*whiteAccuracySum/Math.ceil(results.length/2))/10;
+
+        const whiteMovesNumber = startColorIndex === 0 ?
+            Math.ceil(results.length/2)
+            :
+            Math.floor(results.length/2)
+        
+        const accuracy = Math.round(10*whiteAccuracySum/whiteMovesNumber)/10;
+            
+        
+        console.log(`White accuracy: ${accuracy} (${whiteAccuracySum}/${whiteMovesNumber})`);
+
+        return accuracy;
     }
 
     function getBlackAccuracy(results: EvalResult[]) {
@@ -105,8 +115,18 @@ const GameAnalysisPage = () => {
         const blackAccuracySum = results.reduce((acc, curr, i) => {
             return acc + (i%2 !== startColorIndex && curr.accuracy ? 100*curr.accuracy : 0);
         }, 0);
-        console.log("Black accuracy sum: " + blackAccuracySum);
-        return Math.round(10*blackAccuracySum/Math.floor(results.length/2))/10;
+
+        const blackMovesNumber = startColorIndex === 1 ?
+            Math.ceil(results.length/2)
+            :
+            Math.floor(results.length/2)
+        
+        const accuracy = Math.round(10*blackAccuracySum/blackMovesNumber)/10;
+            
+        
+        console.log(`Black accuracy: ${accuracy} (${blackAccuracySum}/${blackMovesNumber})`);
+
+        return accuracy;
     }
 
     function launchStockfishAnalysis(pgn: string, depth: number) {

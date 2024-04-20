@@ -240,7 +240,8 @@ class Engine {
         let scoreAccuracy = Math.max(1 - scoreAbsoluteDiff/1.5, 0);
         
         // Utilisé pour évaluer les erreurs
-        let blunderAccuracy = 1 - mult*scoreAbsoluteDiff/1.5;
+        //let blunderAccuracy = 1 - mult*scoreAbsoluteDiff/1.5;
+        let blunderAccuracy = 1 - (0.5 + mult/2)*scoreAbsoluteDiff/1.5;
 
         // Empêche d'afficher des coups comme étant des erreurs graves si le score reste totalement gagnant
         if(Math.sign(evalBefore) === 1 && moveEval.playerColor === 'w' && evalAfter > 5) blunderAccuracy = Math.max(0.65, blunderAccuracy);
@@ -259,27 +260,32 @@ class Engine {
             blunderAccuracy = 1;
         }
 
-        // TODO: On a quand même des fois des accuracy < 0
-        if(scoreAccuracy < 0) moveEval.accuracy = 0;
-        if(moveEval.bestMove === moveEval.movePlayed) moveEval.accuracy = 1;
-
-        console.log(`\x1B[34m${moveEval.movePlayed}`);
-        console.log('Player Color: ' + moveEval.playerColor);
-        console.log('Eval before: ' + evalBefore);
-        console.log('Eval before sign: ' + Math.sign(evalBefore));
-        console.log('Eval after: ' + evalAfter);
-        console.log('Score diff abs: ' + scoreAbsoluteDiff);
-        console.log('Accuracy: ' + scoreAccuracy);
-        console.log('Mult: ' + mult);
-        console.log('Blunder Accuracy: ' + blunderAccuracy);
-        console.log('Marked as book move: ' + isBookMove);
-        
         if(isBookMove && scoreAbsoluteDiff < 1) {
             moveEval.accuracy = 1;
             moveEval.isTheory = true;
             return moveEval;
         }
         moveEval.isTheory = false;
+
+        if(scoreAccuracy < 0) scoreAccuracy = 0;
+
+        /* console.log(`\x1B[34m${moveEval.movePlayed}`);
+        console.log('Player Color: ' + moveEval.playerColor);
+        console.log('Eval before: ' + evalBefore);
+        console.log('Eval before sign: ' + Math.sign(evalBefore));
+        console.log('Eval after: ' + evalAfter);
+        console.log('Score diff abs: ' + scoreAbsoluteDiff);
+        console.log('Accuracy: ' + scoreAccuracy);
+        console.log('Best Move: ' + moveEval.bestMove);
+        console.log('Mult: ' + mult);
+        console.log('Blunder Accuracy: ' + blunderAccuracy);
+        console.log('Marked as book move: ' + isBookMove); */
+        
+
+        if(moveEval.bestMove === moveEval.movePlayed) {
+            moveEval.accuracy = 1;
+            return moveEval;
+        }
 
         if(scoreAccuracy > 1){
             moveEval.accuracy = 1;
@@ -293,7 +299,7 @@ class Engine {
         if(scoreAbsoluteDiff > 2 && blunderAccuracy < 0.5 && moveEval.bestMove !== moveEval.movePlayed) moveEval.quality = "??";
         moveEval.accuracy = scoreAccuracy;
 
-        console.log('Quality: ' + moveEval.quality);
+        //console.log('Quality: ' + moveEval.quality);
 
         return moveEval;
     }
@@ -315,6 +321,8 @@ class Engine {
         //movesSetArray_san.unshift(['']);
         const fen = startingFen ? startingFen : DEFAULT_POSITION;
         const coeffBase = fen.includes(' w ') ? 1 : -1;
+        console.log('Starting fen: ' + fen);
+        console.log(coeffBase > 0 ? 'Au tour des blancs de commencer à jouer (1)' : 'Au tour des noirs de commencer à jouer (-1)');
         //Il a fallu ajouter "downlevelIteration": true dans le tsconfig.json pour que ça marche
         for(let [i, movesSet] of movesSetArray.entries()){
             //const coeff = i%2 === 0 ? 1 : -1;

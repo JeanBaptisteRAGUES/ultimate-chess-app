@@ -1257,7 +1257,7 @@ class BotsAI {
                 move.type = 2;
                 return move;
             case '1.d4 e5 2.dxe5 Bc5 3.Nf3 d6 4.exd6 Ne7 5.dxe7 Bxf2+ 6.Kxf2':
-                move.notation = 'd8e1';
+                move.notation = 'd8d1';
                 move.type = 2;
                 return move;
 
