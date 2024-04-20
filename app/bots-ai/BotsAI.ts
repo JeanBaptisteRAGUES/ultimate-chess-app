@@ -1215,7 +1215,7 @@ class BotsAI {
 
             // d4
             case '1.d4':;
-                if(rand >= 30){
+                if(rand <= 75){
                     move.notation = 'e7e5';
                     move.type = 2;
                     return move;
@@ -1226,6 +1226,11 @@ class BotsAI {
 
             // Englud Gambit Accepted
             case '1.d4 e5 2.dxe5':
+                if(rand <= 65){
+                    move.notation = 'f8c5';
+                    move.type = 2;
+                    return move;
+                }
                 move.notation = 'b8c6';
                 move.type = 2;
                 return move;
@@ -1235,6 +1240,24 @@ class BotsAI {
                 return move;
             case '1.d4 e5 2.dxe5 Nc6 3.Nf3 Qe7 4.Bf4':
                 move.notation = 'e7b4';
+                move.type = 2;
+                return move;
+
+            case '1.d4 e5 2.dxe5 Bc5 3.Nf3':
+                move.notation = 'd7d6';
+                move.type = 2;
+                return move;
+            case '1.d4 e5 2.dxe5 Bc5 3.Nf3 d6 4.exd6':
+                move.notation = 'g8e7';
+                move.type = 2;
+                return move;
+
+            case '1.d4 e5 2.dxe5 Bc5 3.Nf3 d6 4.exd6 Ne7 5.dxe7':
+                move.notation = 'c5f2';
+                move.type = 2;
+                return move;
+            case '1.d4 e5 2.dxe5 Bc5 3.Nf3 d6 4.exd6 Ne7 5.dxe7 Bxf2+ 6.Kxf2':
+                move.notation = 'd8e1';
                 move.type = 2;
                 return move;
 
@@ -1462,6 +1485,37 @@ class BotsAI {
                 move.notation = 'h2h3';
                 move.type = 2;
                 return move;
+
+            // Scandinavian Defense
+            case '1.e4 d5':
+                move.notation = 'g1f3';
+                move.type = 2;
+                return move;
+            case '1.e4 d5 2.Nf3 dxe4':
+                move.notation = 'f3g5';
+                move.type = 2;
+                return move; 
+            case '1.e4 d5 2.Nf3 dxe4 3.Ng5 Nf6':
+                move.notation = 'd2d3';
+                move.type = 2;
+                return move;
+            case '1.e4 d5 2.Nf3 dxe4 3.Ng5 Nf6 4.d3 exd3':
+                move.notation = 'f1d3';
+                move.type = 2;
+                return move;
+            case '1.e4 d5 2.Nf3 dxe4 3.Ng5 Nf6 4.d3 exd3 5.Bxd3 h6':
+                move.notation = 'g5f7';
+                move.type = 2;
+                return move; 
+            case '1.e4 d5 2.Nf3 dxe4 3.Ng5 Nf6 4.d3 exd3 5.Bxd3 h6 6.Nxf7 Kxf7':
+                move.notation = 'd3g6';
+                move.type = 2;
+                return move;
+            case '1.e4 d5 2.Nf3 dxe4 3.Ng5 Nf6 4.d3 exd3 5.Bxd3 h6 6.Nxf7 Kxf7 7.Bg6+ Kxg6':
+                move.notation = 'd1d8';
+                move.type = 2;
+                return move;
+
             default:
                 break;
         }
