@@ -1932,15 +1932,6 @@ class BotsAI {
             notation: '',
             type: -1,
         };
-        const openingsMasterParams: DefaultBotParams = {
-            randMoveChance: 20, 
-            randMoveInterval: 3, 
-            filterLevel: 0,
-            securityLvl: 0,
-            skillValue: 2,
-            depth: 12,
-            playForcedMate: 0,
-        }
         const movesList = this.#toolbox.convertHistorySanToLan(this.#toolbox.convertPgnToHistory(game.pgn()));
 
         const lichessMove = await makeLichessMove(movesList, 'Master', '');
@@ -1949,11 +1940,11 @@ class BotsAI {
             return lichessMove;
         }
 
-        const stockfishMove = await makeStockfishMove(openingsMasterParams, game, this.#engine);
-        if(stockfishMove.type >= 0) {
-            //this.#lastRandomMove = this.#lastRandomMove-1;
-            return stockfishMove;
-        } 
+        const defaultMove = await this.#defaultMoveLogic(game, false, true);
+        if(defaultMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return defaultMove;
+        }
 
         return move;
     }
@@ -1967,15 +1958,6 @@ class BotsAI {
             notation: '',
             type: -1,
         };
-        const openingsBeginnerParams: DefaultBotParams = {
-            randMoveChance: 3, 
-            randMoveInterval: 15, 
-            filterLevel: 3,
-            securityLvl: 2,
-            skillValue: 10,
-            depth: 12,
-            playForcedMate: 3,
-        }
 
         const movesList = this.#toolbox.convertHistorySanToLan(this.#toolbox.convertPgnToHistory(game.pgn()));
 
@@ -1985,11 +1967,11 @@ class BotsAI {
             return lichessMove;
         }
 
-        const stockfishMove = await makeStockfishMove(openingsBeginnerParams, game, this.#engine);
-        if(stockfishMove.type >= 0) {
-            //this.#lastRandomMove = this.#lastRandomMove-1;
-            return stockfishMove;
-        } 
+        const defaultMove = await this.#defaultMoveLogic(game, false, true);
+        if(defaultMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return defaultMove;
+        }
 
         return move;
     }
@@ -2654,10 +2636,12 @@ class BotsAI {
                 break;
 
             case 'chessable-master':
+                initDefaultBotParams('Casual');
                 move = await this.#makeChessableMasterMove(game);
                 break;
 
             case 'auto-didacte':
+                initDefaultBotParams('Advanced');
                 move = await this.#makeAutoDidacteMove(game);
                 break;
 

@@ -237,7 +237,7 @@ class Engine {
         //TODO: Tester différentes valeurs
         // Utilisé pour le score de précision
         //let scoreAccuracy = Math.max(1 - scoreAbsoluteDiff/3, 0);
-        let scoreAccuracy = Math.max(1 - scoreAbsoluteDiff/1.5, 0);
+        let scoreAccuracy = Math.max(1 - scoreAbsoluteDiff/1.2, 0);
         
         // Utilisé pour évaluer les erreurs
         //let blunderAccuracy = 1 - mult*scoreAbsoluteDiff/1.5;

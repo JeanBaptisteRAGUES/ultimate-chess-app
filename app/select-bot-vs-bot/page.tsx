@@ -247,7 +247,7 @@ const bot2_BehaviourComponent =
 
 
     return (
-        <div className="flex flex-col justify-start items-center bg-cyan-900 h-screen w-full overflow-auto" >
+        <div className="flex flex-col justify-start items-center bg-cyan-900 h-[95vh] w-full overflow-auto" >
             <div className=' w-full mt-20 flex justify-center items-center text-2xl font-semibold text-white' >Cadence:</div>
             {timeControlComponent}
             <div className=' w-full mt-20 flex justify-center items-center text-2xl font-semibold text-white' >Niveau Bot n°1:</div>

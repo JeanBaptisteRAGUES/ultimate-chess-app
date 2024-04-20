@@ -327,12 +327,12 @@ const HandAndBrainPage = () => {
     </h4>
 
     const allyStatusComponent = allyStatus === 0 ?
-        <h3 className=" text-xl text-white my-2" >Votre équipier est pret !</h3>
+        <h3 className=" text-xl text-white mt-5 mb-20 md:my-2 md:py-0" >Votre équipier est pret !</h3>
         :
         allyStatus === 1 ?
-              <h3 className=" text-xl text-white my-2" >Votre équipier réfléchit..</h3>
+              <h3 className=" text-xl text-white mt-5 mb-20 md:my-2 md:py-0" >Votre équipier réfléchit..</h3>
               :
-              <h3 className=" text-xl text-white my-2" >Attente du coup de l'adversaire..</h3>
+              <h3 className=" text-xl text-white mt-5 mb-20 md:my-2 md:py-0" >Attente du coup de l'adversaire..</h3>
 
     async function selectPiece(piece: string) {
         setSelectedPiece(piece);
@@ -354,53 +354,53 @@ const HandAndBrainPage = () => {
     }
 
     const selectPieceComponentDesktop =
-        <div className=' absolute flex flex-col justify-around items-center flex-wrap w-full gap-2 ' >
+        <div className=' absolute flex flex-col justify-around items-center flex-wrap w-full gap-3 mt-5' >
             <div 
                 onClick={playerRole === 'Brain' ? () => selectPiece('p') : void(0)} 
-                className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' 
+                className=' h-[100px] w-[100px] flex flex-col justify-start items-center cursor-pointer' 
                 style={{color: selectedPiece === 'p' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  
             >
-                <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♙</div>
+                <div className=' h-[80px] w-full text-8xl flex justify-center items-center' >♙</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >Pawn</span>
             </div>
             <div 
                 onClick={playerRole === 'Brain' ? () => selectPiece('n') : void(0)} 
-                className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' 
+                className=' h-[100px] w-[100px] flex flex-col justify-start items-center cursor-pointer' 
                 style={{color: selectedPiece === 'n' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}
             >
-                <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♘</div>
+                <div className=' h-[80px] w-full text-8xl flex justify-center items-center' >♘</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >Knight</span>
             </div>
             <div 
                 onClick={playerRole === 'Brain' ? () => selectPiece('b') : void(0)} 
-                className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' 
+                className=' h-[100px] w-[100px] flex flex-col justify-start items-center cursor-pointer' 
                 style={{color: selectedPiece === 'b' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}
             >
-                <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♗</div>
+                <div className=' h-[80px] w-full text-8xl flex justify-center items-center' >♗</div>
                 <span className=' w-full h-[10px] flex justify-center items-center mt-3' >Bishop</span>
             </div>
             <div 
                 onClick={playerRole === 'Brain' ? () => selectPiece('r') : void(0)} 
-                className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' 
+                className=' h-[100px] w-[100px] flex flex-col justify-start items-center cursor-pointer' 
                 style={{color: selectedPiece === 'r' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}
             >
-                <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♖</div>
+                <div className=' h-[80px] w-full text-8xl flex justify-center items-center' >♖</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >Rook</span>
             </div>
             <div 
                 onClick={playerRole === 'Brain' ? () => selectPiece('q') : void(0)} 
-                className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' 
+                className=' h-[100px] w-[100px] flex flex-col justify-start items-center cursor-pointer' 
                 style={{color: selectedPiece === 'q' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}
             >
-                <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♕</div>
+                <div className=' h-[80px] w-full text-8xl flex justify-center items-center' >♕</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >Queen</span>
             </div>
             <div 
                 onClick={playerRole === 'Brain' ? () => selectPiece('k') : void(0)} 
-                className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' 
+                className=' h-[100px] w-[100px] flex flex-col justify-start items-center cursor-pointer' 
                 style={{color: selectedPiece === 'k' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  
             >
-                <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♔</div>
+                <div className=' h-[80px] w-full text-8xl flex justify-center items-center' >♔</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >King</span>
             </div>
         </div>
@@ -464,7 +464,7 @@ const selectPieceComponentSmartphone =
         </div>
     
     const pgnComponentSmartphone =
-      <div className=" text-white overflow-y-auto w-full md:hidden h-full flex flex-col flex-wrap mt-10">
+      <div className=" text-white overflow-y-auto w-full md:hidden h-full flex flex-col flex-wrap mt-5">
         {/* gamePGN() */}
         {selectPieceComponentSmartphone}
       </div>
@@ -474,7 +474,7 @@ const selectPieceComponentSmartphone =
       <div className=" flex flex-col justify-center items-center h-[300px] md:h-[500px] w-[95vw] md:w-[500px] my-10" >
           <div className=" relative flex justify-start p-2 w-full h-10 font-medium bg-slate-100 rounded-t-md">
             <div className=" h-full flex justify-start items-center flex-grow-[4]" >
-              {opponentBehaviour} ({opponentBehaviour})
+              {opponentBehaviour} ({opponentRating})
             </div>
             <Clock 
               game={game} 
@@ -532,19 +532,6 @@ const selectPieceComponentSmartphone =
           </div>
       </div>
 
-    const resetButton = <button
-      className=" m-4 p-1 bg-white border rounded cursor-pointer"
-      onClick={() => {
-        game.reset();
-        clearTimeout(currentTimeout);
-        setGameStarted(false);
-        scoreHistory.current = [];
-        setWinner('');
-      }}
-    >
-      reset
-    </button>
-
     const startGameButton = !gameStarted ? 
       <div 
         onClick={() => {
@@ -597,7 +584,7 @@ const selectPieceComponentSmartphone =
       </div>
 
     return (
-      <div className="flex flex-col md:flex-row justify-start md:justify-stretch items-center md:items-start bg-cyan-900 h-screen w-full overflow-auto" >
+      <div className="flex flex-col md:flex-row justify-start md:justify-stretch items-center md:items-start bg-cyan-900 h-[95vh] w-full overflow-auto" >
           {pgnComponentDesktop}
           {gameContainer}
           {gameOverWindow}

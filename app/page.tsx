@@ -6,7 +6,7 @@ export default function Home() {
   const [pgn, setPgn] = useState('');
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24 w-full">
+    <main className="flex h-[95vh] flex-col items-center justify-between p-24 w-full">
       <h1 className=' text-3xl font-bold' >Welcome to Lazer Chess</h1>
       <h3 className=' text-xl'>Train your chess with laser precision</h3>
       <textarea

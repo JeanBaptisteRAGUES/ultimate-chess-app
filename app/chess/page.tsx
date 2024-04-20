@@ -328,7 +328,7 @@ const ChessPage = () => {
       :
       null
 
-    const titleComponent = <h4 className=" text-xl font-semibold text-white my-5" >
+    const titleComponent = <h4 className=" text-xl font-semibold text-white my-5 md:my-2" >
       Entraînement
     </h4>
 
@@ -448,19 +448,6 @@ const ChessPage = () => {
         <PiVirtualReality size={50} />
     </div>
 
-    const analysisButton = 
-      <Link
-        href = {{
-          pathname: '/game-analysis',
-          query: {
-            pgn: game.pgn(),
-            depth: 12
-          }
-        }}
-      >
-        Analyse PGN
-      </Link>
-
     const buttonsComponent =
       <div className="flex justify-center mt-10 pt-2 md:mt-0 items-center gap-5 w-full h-fit" >
         {virtualModeButton}
@@ -491,7 +478,7 @@ const ChessPage = () => {
       </div>
 
     return (
-      <div className="flex flex-col md:flex-row justify-start md:justify-stretch items-center md:items-start bg-cyan-900 h-screen w-full overflow-auto" >
+      <div className="flex flex-col md:flex-row justify-start md:justify-stretch items-center md:items-start bg-cyan-900 h-[95vh] w-full overflow-auto" >
           {pgnComponentDesktop}
           {gameContainer}
           {gameOverWindow}
