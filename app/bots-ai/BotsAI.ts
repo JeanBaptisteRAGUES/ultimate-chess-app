@@ -2311,6 +2311,56 @@ class BotsAI {
                 move.type = 2;
                 return move;
 
+            case '1.e4 e6 2.Bc4 d5 3.exd5':
+                move.notation = 'e6d5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e6 2.Bc4 d5 3.exd5 exd5 4.Bd3':
+                move.notation = 'f7f5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e6 2.Bc4 d5 3.exd5 exd5 4.Be2':
+                move.notation = 'f7f5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e6 2.Bc4 d5 3.exd5 exd5 4.Bf1':
+                move.notation = 'f7f5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e6 2.Bc4 d5 3.exd5 exd5 4.Bb3':
+                move.notation = 'f7f5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e6 2.Bc4 d5 3.exd5 exd5 4.Bb5+':
+                move.notation = 'c7c6';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e6 2.Bc4 d5 3.exd5 exd5 4.Bb5+ c6 5.Ba4':
+                move.notation = 'f7f5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e6 2.Bc4 d5 3.exd5 exd5 4.Bb5+ c6 5.Be2':
+                move.notation = 'f7f5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e6 2.Bc4 d5 3.exd5 exd5 4.Bb5+ c6 5.Bf1':
+                move.notation = 'f7f5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e6 2.Bc4 d5 3.exd5 exd5 4.Bb5+ c6 5.Bd3':
+                move.notation = 'f7f5';
+                move.type = 2;
+                return move;
+
             case '1.e4 e6 2.d4 d5 3.exd5':
                 move.notation = 'e6d5';
                 move.type = 2;
