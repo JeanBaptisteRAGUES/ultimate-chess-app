@@ -406,7 +406,7 @@ const HandAndBrainPage = () => {
         </div>
 
 const selectPieceComponentSmartphone =
-    <div className=' absolute flex flex-row justify-around items-center flex-wrap w-full gap-2 ' >
+    <div className=' flex flex-row justify-around items-center flex-wrap w-full gap-2 ' >
         <div 
             onClick={playerRole === 'Brain' ? () => selectPiece('p') : void(0)} 
             className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' 
@@ -459,13 +459,11 @@ const selectPieceComponentSmartphone =
 
     const pgnComponentDesktop =
         <div className=" relative text-white w-1/4 hidden h-full md:flex flex-col flex-wrap">
-            {/* gamePGN() */}
             {selectPieceComponentDesktop}
         </div>
     
     const pgnComponentSmartphone =
-      <div className=" text-white overflow-y-auto w-full md:hidden h-full flex flex-col flex-wrap mt-5">
-        {/* gamePGN() */}
+      <div className=" text-white w-full md:hidden h-fullflex flex-col flex-wrap mt-5">
         {selectPieceComponentSmartphone}
       </div>
 
