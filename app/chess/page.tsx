@@ -344,7 +344,7 @@ const ChessPage = () => {
 
     // TODO: Problème d'horloge lorsqu'on switch de position, le temps défile pour le mauvais joueur
     const boardComponent =
-      <div className=" relative flex flex-col justify-center items-center h-[400px] md:h-[500px] w-[95vw] md:w-[500px] my-10" >
+      <div className=" relative flex flex-col justify-center items-center h-fit md:h-[500px] w-[95vw] md:w-[500px] my-10" >
           <div className=" relative flex justify-start p-2 w-full h-10 font-medium bg-slate-100 rounded-t-md">
             <div className=" h-full flex justify-start items-center flex-grow-[4]" >
               {botBehaviour} ({databaseRating})
@@ -386,26 +386,13 @@ const ChessPage = () => {
             />
           </div>
           {
-            isVirtualMode ? <div className=" absolute w-full h-full opacity-10 bg-cyan-400 pointer-events-none" >
+            isVirtualMode ? <div className=" absolute w-full h-full opacity-20 bg-cyan-400 pointer-events-none" >
 
             </div>
             :
             null
           }
       </div>
-
-    const resetButton = <button
-      className=" m-4 p-1 bg-white border rounded cursor-pointer"
-      onClick={() => {
-        game.reset();
-        clearTimeout(currentTimeout);
-        setGameStarted(false);
-        scoreHistory.current = [];
-        setWinner('');
-      }}
-    >
-      reset
-    </button>
 
     const startGameButton = !gameStarted ? 
       <div 
@@ -424,16 +411,6 @@ const ChessPage = () => {
       <div onClick={() => resign()} className=' h-[50px] w-[50px] flex flex-col justify-center items-center cursor-pointer hover:text-cyan-400'>
         <FaFontAwesomeFlag size={40} />
       </div>
-
-    /* const switchButton = 
-      <button
-          className=" bg-white border rounded cursor-pointer w-10"
-          onClick={() => {
-            playerColor === 'w' ? setPlayerColor('b') : setPlayerColor('w')
-          }}
-      >
-          ↺
-      </button> */
     
     const switchButton = 
       <div 
@@ -449,7 +426,7 @@ const ChessPage = () => {
     </div>
 
     const buttonsComponent =
-      <div className="flex justify-center mt-10 pt-2 md:mt-0 items-center gap-5 w-full h-fit" >
+      <div className="flex justify-center mt-5 pt-2 md:mt-0 items-center gap-5 w-full h-fit" >
         {virtualModeButton}
         {startGameButton}
         {switchButton}
