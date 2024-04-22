@@ -2536,7 +2536,7 @@ class BotsAI {
                     }
                     // f4 et f5 on un bonus plus élevé pour compensé la mauvaise évaluation dû à l'affaiblissement de la position
                     if(moveDestination === 'f4' || moveDestination === 'f5') {
-                        evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + 0.7).toString();
+                        evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + 0.9).toString();
                         return evalRes;
                     }
                     evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + 0.5).toString();
@@ -2557,7 +2557,7 @@ class BotsAI {
                     evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox)).toString();
                     return evalRes;
                 }
-                evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + 0.3).toString();
+                evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + 0.2).toString();
                 return evalRes;
             }
 
