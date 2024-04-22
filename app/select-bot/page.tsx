@@ -124,6 +124,9 @@ const SelectBot = () => {
             <div onClick={() => setBehaviour('stonewall')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: behaviour === 'stonewall' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Stonewall</span>
             </div>
+            <div onClick={() => setBehaviour('dragon')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: behaviour === 'dragon' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Dragon</span>
+            </div>
         </div>
 
 /*     ['1+0', {startingTime: 60, increment: 0}],
@@ -172,11 +175,11 @@ const SelectBot = () => {
 
     return (
         <div className="flex flex-col justify-start items-center bg-cyan-900 h-[95vh] w-full overflow-auto" >
-            <div className=' w-full flex justify-center items-center text-2xl font-semibold text-white' >Difficulté:</div>
+            <div className=' w-full md:ml-10 flex justify-center md:justify-start items-center text-2xl font-semibold text-white mt-5 mb-2' >Difficulté:</div>
             {difficultyComponent}
-            <div className=' w-full mt-20 flex justify-center items-center text-2xl font-semibold text-white' >Gimmick:</div>
+            <div className=' w-full mt-20 md:ml-10 flex justify-center md:justify-start items-center text-2xl font-semibold text-white' >Gimmick:</div>
             {behaviourComponent}
-            <div className=' w-full mt-20 flex justify-center items-center text-2xl font-semibold text-white' >Cadence:</div>
+            <div className=' w-full mt-20 md:ml-10 flex justify-center md:justify-start items-center text-2xl font-semibold text-white' >Cadence:</div>
             {timeControlComponent}
             <Link
                 className=' text-white hover:text-cyan-400 cursor-pointer text-3xl font-bold my-20 '

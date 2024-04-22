@@ -66,6 +66,18 @@ class GameToolBox {
         return (move[2] + move[3]) as Square;
     }
 
+    /**
+     * Renvoie vrai si le coup en paramètre est une capture, faux sinon.
+     * @param fen string
+     * @param move string
+     */
+    isCapture(fen: string, move: string): boolean {
+        this.game.load(fen);
+        this.game.move(move);
+
+        return this.game.history().pop()?.includes('x') || false;
+    }
+
     getCaseIndex(myCase: Square, boardOrientation: Color): number {
         const fileValue = myCase.charCodeAt(0) - 'a'.charCodeAt(0);
         const rankValue = eval(myCase.charAt(1))-1;

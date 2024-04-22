@@ -19,7 +19,7 @@ export type Move = {
 }
 
 // TODO: 'strategy-stranger' | 'sacrifice-enjoyer' | 'min-max | 'botdanov' | 'sharp-player' | 'closed' | 'open' | 'hyper-aggressive'
-export type Behaviour = 'default' | 'stockfish-random' | 'stockfish-only' | 'human' | 'pawn-pusher' | 'fianchetto-sniper' | 'shy' | 'blundering' | 'drawish' | 'exchanges-lover' | 'exchanges-hater' | 'queen-player' | 'botez-gambit' | 'castle-destroyer' | 'chessable-master' | 'auto-didacte' | 'random-player' | 'copycat' | 'bongcloud' | 'gambit-fanatic' | 'cow-lover' | 'indian-king' | 'stonewall';
+export type Behaviour = 'default' | 'stockfish-random' | 'stockfish-only' | 'human' | 'pawn-pusher' | 'fianchetto-sniper' | 'shy' | 'blundering' | 'drawish' | 'exchanges-lover' | 'exchanges-hater' | 'queen-player' | 'botez-gambit' | 'castle-destroyer' | 'chessable-master' | 'auto-didacte' | 'random-player' | 'copycat' | 'bongcloud' | 'gambit-fanatic' | 'cow-lover' | 'indian-king' | 'stonewall' | 'dragon';
 
 type DefaultBotParams = {
     randMoveChance: number, 
@@ -2194,7 +2194,7 @@ class BotsAI {
     }
 
     /**
-     * Aime sacrifier sa dame le plus rapidement possible.
+     * Aime jouer la KID, KIA ou la Pirc sur 1.e4
      */
     async #makeIndianKingMove(game: Chess): Promise<Move> {
         console.log('Bot AI: Indian King');
@@ -2581,7 +2581,7 @@ class BotsAI {
     }
 
     /**
-     * Aime sacrifier sa dame le plus rapidement possible.
+     * Aime jouer la structure Stonewall.
      */
     async #makeStonewallMove(game: Chess): Promise<Move> {
         console.log('Bot AI: Stonewall');
@@ -2591,6 +2591,133 @@ class BotsAI {
         };
 
         const gimmickMove = await this.#stonewallLogic(game);
+        if(gimmickMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return gimmickMove;
+        }
+
+        const defaultMove = await this.#defaultMoveLogic(game, true, true);
+        if(defaultMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return defaultMove;
+        }
+
+        return move;
+    }
+
+    #dragonOpenings(game: Chess): Move {
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+
+        const formatedPGN = game.pgn().replaceAll(/\.\s/g, '.');
+
+        if(game.history().length === 0) {
+            move.notation = 'c2c4';
+            move.type = 2;
+            return move;
+        }
+
+        if(game.history().length === 1) {
+            if(formatedPGN === '1.e4') {
+                move.notation = 'c7c5';
+                move.type = 2;
+                return move;
+            }
+            move.notation = 'g8f6';
+            move.type = 2;
+            return move;
+        }
+
+        if(game.history().length === 2) {
+            if(formatedPGN === '1.c4 d5') {
+                move.notation = 'c4d5';
+                move.type = 2;
+                return move;
+            }
+            move.notation = 'g2g3';
+            move.type = 2;
+            return move;
+        }
+
+        return move;
+    }
+
+    async #dragonLogic(game: Chess): Promise<Move> {
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+
+        if(game.history().length > 10) {
+            return move;
+        }
+
+        let openingMove = this.#dragonOpenings(game);
+        if(openingMove.type >= 0) {
+            return openingMove;
+        }
+
+
+        const exchangesPawnsCases: Square[] = ['d4', 'd5'];
+        const sidePawnsCases: Square[] = ['c5'];
+        const fianchettoPawnsCases: Square[] = ['g3', 'g6'];
+        const bishopCases: Square[] = ['g2', 'g7'];
+
+        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, this.#defaultBotParams.skillValue, 50, false);
+
+        stockfishMoves = stockfishMoves.map((evalRes) => {
+            const moveDestination = this.#toolbox.getMoveDestination(evalRes.bestMove);
+            if(!moveDestination){
+                evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox)).toString();
+                return evalRes;
+            }
+            
+
+            // Si le coup est un coup de pion sur une case qui permet un fianchetto, on ajoute un bonus
+            if(this.#toolbox.getMovePiece(evalRes.bestMove, game.fen()).type === 'p') {
+                if(exchangesPawnsCases.includes(moveDestination) && this.#toolbox.isCapture(game.fen(), evalRes.bestMove)) {
+                    evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + 0.9).toString();
+                    return evalRes;
+                }
+                if(sidePawnsCases.includes(moveDestination)) {
+                    evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + 0.9).toString();
+                    return evalRes;
+                }
+                if(fianchettoPawnsCases.includes(moveDestination)) {
+                    evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + 0.6).toString();
+                    return evalRes;
+                }
+            }
+
+            if(this.#toolbox.getMovePiece(evalRes.bestMove, game.fen()).type === 'b' && bishopCases.includes(moveDestination)) {
+                evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + 0.3).toString();
+                return evalRes;
+            }
+            evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox)).toString();
+            return evalRes;
+        });
+
+        stockfishMoves.sort(compareEval);
+
+        move.notation = stockfishMoves[0].bestMove;
+        move.type = 2;
+
+        return move;
+    }
+
+    /**
+     * Aime jouer un coup de pion sur le flanc (c4 ou c5) et le fou en fianchetto côté roi.
+     */
+    async #makeDragonMove(game: Chess): Promise<Move> {
+        console.log('Bot AI: Indian King');
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+
+        const gimmickMove = await this.#dragonLogic(game);
         if(gimmickMove.type >= 0) {
             this.#lastRandomMove = this.#lastRandomMove-1;
             return gimmickMove;
@@ -2705,6 +2832,10 @@ class BotsAI {
 
             case 'stonewall':
                 move = await this.#makeStonewallMove(game); 
+                break;
+
+            case 'dragon':
+                move = await this.#makeDragonMove(game); 
                 break;
 
             default:

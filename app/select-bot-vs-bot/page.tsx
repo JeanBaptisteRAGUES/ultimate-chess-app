@@ -173,6 +173,9 @@ const SelectBotVsBotPage = () => {
             <div onClick={() => setBot1_Behaviour('stonewall')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot1_Behaviour === 'stonewall' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Stonewall</span>
             </div>
+            <div onClick={() => setBot1_Behaviour('dragon')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot1_Behaviour === 'dragon' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Dragon</span>
+            </div>
         </div>
 
 const bot2_BehaviourComponent = 
@@ -217,10 +220,10 @@ const bot2_BehaviourComponent =
             <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Castle Destroyer</span>
         </div>
         <div onClick={() => setBot2_Behaviour('chessable-master')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot2_Behaviour === 'chessable-master' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
-                <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Chessable Master</span>
-            </div>
-            <div onClick={() => setBot2_Behaviour('auto-didacte')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot2_Behaviour === 'auto-didacte' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
-                <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Autodidacte</span>
+            <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Chessable Master</span>
+        </div>
+        <div onClick={() => setBot2_Behaviour('auto-didacte')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot2_Behaviour === 'auto-didacte' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Autodidacte</span>
         </div>
         <div onClick={() => setBot2_Behaviour('random-player')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot2_Behaviour === 'random-player' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
             <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Random Player</span>
@@ -243,20 +246,23 @@ const bot2_BehaviourComponent =
         <div onClick={() => setBot2_Behaviour('stonewall')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot2_Behaviour === 'stonewall' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
             <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Stonewall</span>
         </div>
+        <div onClick={() => setBot2_Behaviour('dragon')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot2_Behaviour === 'dragon' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Dragon</span>
+        </div>
     </div>
 
 
     return (
         <div className="flex flex-col justify-start items-center bg-cyan-900 h-[95vh] w-full overflow-auto" >
-            <div className=' w-full mt-20 flex justify-center items-center text-2xl font-semibold text-white' >Cadence:</div>
+            <div className=' w-full mt-10 mb-2 md:ml-10 flex justify-center md:justify-start items-center text-2xl font-semibold text-white' >Cadence:</div>
             {timeControlComponent}
-            <div className=' w-full mt-20 flex justify-center items-center text-2xl font-semibold text-white' >Niveau Bot n°1:</div>
+            <div className=' w-full mt-20 md:ml-10 flex justify-center md:justify-start items-center text-2xl font-semibold text-white' >Niveau Bot n°1:</div>
             {bot1_LevelComponent}
-            <div className=' w-full mt-20 flex justify-center items-center text-2xl font-semibold text-white' >Gimmick Bot n°1:</div>
+            <div className=' w-full mt-20 md:ml-10 flex justify-center md:justify-start items-center text-2xl font-semibold text-white' >Gimmick Bot n°1:</div>
             {bot1_BehaviourComponent}
-            <div className=' w-full mt-20 flex justify-center items-center text-2xl font-semibold text-white' >Niveau Bot n°2:</div>
+            <div className=' w-full mt-20 md:ml-10 flex justify-center md:justify-start items-center text-2xl font-semibold text-white' >Niveau Bot n°2:</div>
             {bot2_LevelComponent}
-            <div className=' w-full mt-20 flex justify-center items-center text-2xl font-semibold text-white' >Gimmick Bot n°2:</div>
+            <div className=' w-full mt-20 md:ml-10 flex justify-center md:justify-start items-center text-2xl font-semibold text-white' >Gimmick Bot n°2:</div>
             {bot2_BehaviourComponent}
             <Link
                 className=' text-white hover:text-cyan-400 cursor-pointer text-3xl font-bold my-20 '
