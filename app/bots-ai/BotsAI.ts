@@ -19,7 +19,7 @@ export type Move = {
 }
 
 // TODO: 'strategy-stranger' | 'sacrifice-enjoyer' | 'min-max | 'botdanov' | 'sharp-player' | 'closed' | 'open' | 'hyper-aggressive'
-export type Behaviour = 'default' | 'stockfish-random' | 'stockfish-only' | 'human' | 'pawn-pusher' | 'fianchetto-sniper' | 'shy' | 'blundering' | 'drawish' | 'exchanges-lover' | 'exchanges-hater' | 'queen-player' | 'botez-gambit' | 'castle-destroyer' | 'chessable-master' | 'auto-didacte' | 'random-player' | 'copycat' | 'bongcloud' | 'gambit-fanatic' | 'cow-lover' | 'indian-king' | 'stonewall' | 'dragon';
+export type Behaviour = 'default' | 'stockfish-random' | 'stockfish-only' | 'human' | 'pawn-pusher' | 'fianchetto-sniper' | 'shy' | 'blundering' | 'drawish' | 'exchanges-lover' | 'exchanges-hater' | 'queen-player' | 'botez-gambit' | 'castle-destroyer' | 'chessable-master' | 'auto-didacte' | 'random-player' | 'copycat' | 'bongcloud' | 'gambit-fanatic' | 'cow-lover' | 'indian-king' | 'stonewall' | 'dragon' | 'caro-london';
 
 type DefaultBotParams = {
     randMoveChance: number, 
@@ -2636,9 +2636,59 @@ class BotsAI {
                 move.type = 2;
                 return move;
             }
+            let rand = Math.random()*100;
+            if(rand < 50) {
+                move.notation = 'b1c3';
+                move.type = 2;
+                return move; 
+            }
             move.notation = 'g2g3';
             move.type = 2;
             return move;
+        }
+
+        if(game.history().length === 3) {
+            if(formatedPGN === '1.e4 c5 2.Nf3') {
+                let rand = Math.random()*100;
+                if(rand < 50) {
+                    move.notation = 'b8c6';
+                    move.type = 2;
+                    return move; 
+                }
+                move.notation = 'g7g6';
+                move.type = 2;
+                return move;
+            }
+            if(formatedPGN === '1.e4 c5 2.Nc3') {
+                let rand = Math.random()*100;
+                if(rand < 80) {
+                    move.notation = 'b8c6';
+                    move.type = 2;
+                    return move; 
+                }
+                move.notation = 'g7g6';
+                move.type = 2;
+                return move;
+            }
+            if(formatedPGN === '1.e4 c5 2.f4') {
+                let rand = Math.random()*100;
+                if(rand < 30) {
+                    move.notation = 'b8c6';
+                    move.type = 2;
+                    return move; 
+                }
+                move.notation = 'g7g6';
+                move.type = 2;
+                return move;
+            }
+        }
+
+        if(game.history().length === 5) {
+            if(formatedPGN === '1.e4 c5 2.Nf3 Nc6 3.Bb5') {
+                move.notation = 'g7g6';
+                move.type = 2;
+                return move;
+            }
         }
 
         return move;
@@ -2650,7 +2700,7 @@ class BotsAI {
             type: -1,
         };
 
-        if(game.history().length > 10) {
+        if(game.history().length > 8) {
             return move;
         }
 
@@ -2724,6 +2774,89 @@ class BotsAI {
         };
 
         const gimmickMove = await this.#dragonLogic(game);
+        if(gimmickMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return gimmickMove;
+        }
+
+        const defaultMove = await this.#defaultMoveLogic(game, true, true);
+        if(defaultMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return defaultMove;
+        }
+
+        return move;
+    }
+
+    #caroLondonOpenings(game: Chess): Move {
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+
+        const formatedPGN = game.pgn().replaceAll(/\.\s/g, '.');
+
+        if(game.history().length === 0) {
+            move.notation = 'd2d4';
+            move.type = 2;
+            return move;
+        }
+
+        if(game.history().length === 1) {
+            move.notation = 'c7c6';
+            move.type = 2;
+            return move;
+        }
+
+        if(game.history().length === 2) {
+            if(formatedPGN === '1.c4 d5') {
+                move.notation = 'c4d5';
+                move.type = 2;
+                return move;
+            }
+            move.notation = 'c1f4';
+            move.type = 2;
+            return move;
+        }
+
+        if(game.history().length === 3) {
+            move.notation = 'd7d5';
+            move.type = 2;
+            return move;
+        }
+
+        return move;
+    }
+
+    async #caroLondonLogic(game: Chess): Promise<Move> {
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+
+        if(game.history().length > 3) {
+            return move;
+        }
+
+        let openingMove = this.#caroLondonOpenings(game);
+        if(openingMove.type >= 0) {
+            return openingMove;
+        }
+
+        return move;
+    }
+
+    /**
+     * Aime jouer un coup de pion sur le flanc (c4 ou c5) et le fou en fianchetto côté roi.
+     */
+    async #makeCaroLondonMove(game: Chess): Promise<Move> {
+        console.log('Bot AI: Indian King');
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+
+        const gimmickMove = await this.#caroLondonLogic(game);
         if(gimmickMove.type >= 0) {
             this.#lastRandomMove = this.#lastRandomMove-1;
             return gimmickMove;
@@ -2842,6 +2975,10 @@ class BotsAI {
 
             case 'dragon':
                 move = await this.#makeDragonMove(game); 
+                break;
+
+            case 'caro-london':
+                move = await this.#makeCaroLondonMove(game); 
                 break;
 
             default:

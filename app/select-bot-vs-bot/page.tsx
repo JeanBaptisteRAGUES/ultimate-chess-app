@@ -176,6 +176,9 @@ const SelectBotVsBotPage = () => {
             <div onClick={() => setBot1_Behaviour('dragon')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot1_Behaviour === 'dragon' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Dragon</span>
             </div>
+            <div onClick={() => setBot1_Behaviour('caro-london')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot1_Behaviour === 'caro-london' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Caro London</span>
+            </div>
         </div>
 
 const bot2_BehaviourComponent = 
@@ -248,6 +251,9 @@ const bot2_BehaviourComponent =
         </div>
         <div onClick={() => setBot2_Behaviour('dragon')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot2_Behaviour === 'dragon' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
             <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Dragon</span>
+        </div>
+        <div onClick={() => setBot2_Behaviour('caro-london')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot2_Behaviour === 'caro-london' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Caro London</span>
         </div>
     </div>
 
