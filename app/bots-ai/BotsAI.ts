@@ -2662,13 +2662,19 @@ class BotsAI {
 
         const exchangesPawnsCases: Square[] = ['d4', 'd5'];
         const sidePawnsCases: Square[] = ['c5'];
+        const badPawnStartingCases: Square[] = ['c4'];
         const fianchettoPawnsCases: Square[] = ['g3', 'g6'];
         const bishopCases: Square[] = ['g2', 'g7'];
 
         let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, this.#defaultBotParams.skillValue, 50, false);
 
         stockfishMoves = stockfishMoves.map((evalRes) => {
+            const moveOrigin = this.#toolbox.getMoveOrigin(evalRes.bestMove);
             const moveDestination = this.#toolbox.getMoveDestination(evalRes.bestMove);
+            if(!moveOrigin){
+                evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox)).toString();
+                return evalRes;
+            }
             if(!moveDestination){
                 evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox)).toString();
                 return evalRes;
@@ -2681,7 +2687,7 @@ class BotsAI {
                     evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + 0.9).toString();
                     return evalRes;
                 }
-                if(sidePawnsCases.includes(moveDestination)) {
+                if(sidePawnsCases.includes(moveDestination) && !badPawnStartingCases.includes(moveOrigin)) {
                     evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + 0.9).toString();
                     return evalRes;
                 }

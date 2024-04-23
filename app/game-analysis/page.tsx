@@ -503,7 +503,7 @@ const GameAnalysisPage = () => {
         </div>
 
     const boardComponent = 
-        <div className=" relative flex flex-col justify-center items-center h-[304px] md:h-[512px] w-[304px] md:w-[512px] my-10" >
+        <div className=" relative flex flex-col justify-center items-center h-[304px] md:h-[512px] w-[304px] md:w-[512px] my-5" >
             <Chessboard 
             id="PlayVsRandom"
             position={currentFen}

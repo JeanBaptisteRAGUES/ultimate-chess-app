@@ -61,6 +61,30 @@ const ChessPage = () => {
       ['30+20', {startingTime: 1800, increment: 20}],
       ['90+30', {startingTime: 5400, increment: 30}],
     ]);
+    const pieceValues = new Map([
+      ['p', 1],
+      ['n', 3],
+      ['b', 3],
+      ['r', 5],
+      ['q', 9],
+    ]);
+    const [whiteMaterialAdvantage, setWhiteMaterialAdvantage] = useState({
+      pawn: 0,
+      knight: 0,
+      bishop: 0,
+      rook: 0,
+      queen: 0,
+      points: 0,
+    });
+
+    const [blackMaterialAdvantage, setBlackMaterialAdvantage] = useState({
+      pawn: 0,
+      knight: 0,
+      bishop: 0,
+      rook: 0,
+      queen: 0,
+      points: 0,
+    });
 
     useEffect(() => {
         engine.current = new Engine();
@@ -77,11 +101,115 @@ const ChessPage = () => {
       botAI.current = new BotsAI(botBehaviour, databaseRating, botColor);
     }, [playerColor]);
 
+    const countMaterial = () => {
+      let whitePawns = 0;
+      let whiteKnights = 0;
+      let whiteBishops = 0;
+      let whiteRooks = 0;
+      let whiteQueens = 0;
+
+      let blackPawns = 0;
+      let blackKnights = 0;
+      let blackBishops = 0;
+      let blackRooks = 0;
+      let blackQueens = 0;
+
+      game.board().forEach((rank) => {
+        rank.forEach((boardCase) => {
+          if(boardCase?.color === 'w') {
+            switch (boardCase.type) {
+              case 'p':
+                whitePawns++;
+                break;
+              case 'n':
+                whiteKnights++;
+                break;
+              case 'b':
+                whiteBishops++;
+                break;
+              case 'r':
+                whiteRooks++;
+                break;
+              case 'q':
+                whiteQueens++;
+                break;
+            
+              default:
+                break;
+            }
+          }
+          if(boardCase?.color === 'b') {
+            switch (boardCase.type) {
+              case 'p':
+                blackPawns++;
+                break;
+              case 'n':
+                blackKnights++;
+                break;
+              case 'b':
+                blackBishops++;
+                break;
+              case 'r':
+                blackRooks++;
+                break;
+              case 'q':
+                blackQueens++;
+                break;
+            
+              default:
+                break;
+            }
+          }
+        })
+      });
+
+      let whitePawnsAdvantage = whitePawns - blackPawns;
+      let whiteKnightsAdvantage = whiteKnights - blackKnights;
+      let whiteBishopsAdvantage = whiteBishops - blackBishops;
+      let whiteRooksAdvantage = whiteRooks - blackRooks;
+      let whiteQueensAdvantage = whiteQueens - blackQueens;
+      let whitePoints = whitePawnsAdvantage +
+        whiteKnightsAdvantage*3 +
+        whiteBishopsAdvantage*3 +
+        whiteRooksAdvantage*5 +
+        whiteQueensAdvantage*9;
+
+      let blackPawnsAdvantage = blackPawns - whitePawns;
+      let blackKnightsAdvantage = blackKnights - whiteKnights;
+      let blackBishopsAdvantage = blackBishops - whiteBishops;
+      let blackRooksAdvantage = blackRooks - whiteRooks;
+      let blackQueensAdvantage = blackQueens - whiteQueens;
+      let blackPoints = blackPawnsAdvantage +
+        blackKnightsAdvantage*3 +
+        blackBishopsAdvantage*3 +
+        blackRooksAdvantage*5 +
+        blackQueensAdvantage*9;
+
+      setWhiteMaterialAdvantage({
+        pawn: whitePawnsAdvantage,
+        knight: whiteKnightsAdvantage,
+        bishop: whiteBishopsAdvantage,
+        rook: whiteRooksAdvantage,
+        queen: whiteQueensAdvantage,
+        points: whitePoints,
+      });
+
+      setBlackMaterialAdvantage({
+        pawn: blackPawnsAdvantage,
+        knight: blackKnightsAdvantage,
+        bishop: blackBishopsAdvantage,
+        rook: blackRooksAdvantage,
+        queen: blackQueensAdvantage,
+        points: blackPoints,
+      });
+    }
+
     const gameMove = (moveNotation: string, moveType: number) => {
       game.move(moveNotation);
       setCurrentFen(game.fen());
       setVirtualFen(game.fen());
       movesTypeRef.current.push(moveType);
+      countMaterial();
       checkGameOver();
     }
 
@@ -257,6 +385,58 @@ const ChessPage = () => {
       setCurrentFen(newGame.fen());
     }
 
+    const showMaterialAdvantage = (piecesColor: Color): string => {
+      console.log('Show Material Advantage for ' + piecesColor);
+      console.log('White Material Advantage: ');
+      console.log(whiteMaterialAdvantage);
+      console.log('Black Material Advantage: ');
+      console.log(blackMaterialAdvantage);
+      let materialAdvantage = '';
+      if(piecesColor === 'w') {
+        if(whiteMaterialAdvantage.points <= 0) return '';
+
+        for(let i = 0; i < whiteMaterialAdvantage.pawn; i++) {
+          materialAdvantage += '♙';
+        }
+        for(let i = 0; i < whiteMaterialAdvantage.knight; i++) {
+          materialAdvantage += '♘';
+        }
+        for(let i = 0; i < whiteMaterialAdvantage.bishop; i++) {
+          materialAdvantage += '♗';
+        }
+        for(let i = 0; i < whiteMaterialAdvantage.rook; i++) {
+          materialAdvantage += '♖';
+        }
+        for(let i = 0; i < whiteMaterialAdvantage.queen; i++) {
+          materialAdvantage += '♕';
+        }
+
+        console.log(materialAdvantage + ` +${whiteMaterialAdvantage.points}`);
+
+        return materialAdvantage + ` +${whiteMaterialAdvantage.points}`;
+      }
+
+      if(blackMaterialAdvantage.points <= 0) return '';
+
+      for(let i = 0; i < blackMaterialAdvantage.pawn; i++) {
+        materialAdvantage += '♙';
+      }
+      for(let i = 0; i < blackMaterialAdvantage.knight; i++) {
+        materialAdvantage += '♘';
+      }
+      for(let i = 0; i < blackMaterialAdvantage.bishop; i++) {
+        materialAdvantage += '♗';
+      }
+      for(let i = 0; i < blackMaterialAdvantage.rook; i++) {
+        materialAdvantage += '♖';
+      }
+      for(let i = 0; i < blackMaterialAdvantage.queen; i++) {
+        materialAdvantage += '♕';
+      }
+      
+      return materialAdvantage + ` +${blackMaterialAdvantage.points}`;
+    }
+
     const gamePGN = () => {
       const history = movesHistorySan(game.pgn());
 
@@ -347,7 +527,11 @@ const ChessPage = () => {
       <div className=" relative flex flex-col justify-center items-center h-fit md:h-[500px] w-[95vw] md:w-[500px] my-10" >
           <div className=" relative flex justify-start p-2 w-full h-10 font-medium bg-slate-100 rounded-t-md">
             <div className=" h-full flex justify-start items-center flex-grow-[4]" >
-              {botBehaviour} ({databaseRating})
+              {botBehaviour} ({databaseRating}) {playerColor === 'w' ? (
+                showMaterialAdvantage('b')
+              ) : (
+                showMaterialAdvantage('w')
+              )}
             </div>
             <Clock 
               game={game} 
@@ -370,7 +554,11 @@ const ChessPage = () => {
           />
           <div className=" relative flex justify-around p-2 w-full h-10 font-medium rounded-b-md bg-slate-100">
             <div className=" h-full flex justify-start items-center flex-grow-[4]" >
-              Joueur
+              Joueur {playerColor === 'w' ? (
+                showMaterialAdvantage('w')
+              ) : (
+                showMaterialAdvantage('b')
+              )}
             </div>
             <Clock 
               game={game} 

@@ -292,7 +292,7 @@ const BotVsBotPage = () => {
 
     // TODO: Problème d'horloge lorsqu'on switch de position, le temps défile pour le mauvais joueur
     const boardComponent =
-      <div className=" flex flex-col justify-center items-center h-[300px] md:h-[500px] w-[95vw] md:w-[500px] my-10" >
+      <div className=" flex flex-col justify-center items-center h-[300px] md:h-[500px] w-[95vw] md:w-[500px] my-16 md:my-10" >
           <div className=" relative flex justify-start p-2 w-full h-10 font-medium bg-slate-100 rounded-t-md">
             <div className=" h-full flex justify-start items-center flex-grow-[4]" >
               {playerColor === 'w' ?  `${bot2_Behaviour} (${bot2_Level})` : `${bot1_Behaviour} (${bot1_Level})`}
@@ -370,14 +370,14 @@ const BotVsBotPage = () => {
       </div>
 
     const gameContainer =
-      <div className="flex flex-row justify-center items-center w-full md:w-1/2 h-full md:pl-5" >
+      <div className="flex flex-row justify-center items-center w-full pt-5 md:mt-0 md:w-1/2 h-full md:pl-5" >
         {gameComponent}
       </div>
 
     return (
       <div className="flex flex-col md:flex-row justify-start md:justify-stretch items-center md:items-start bg-cyan-900 h-[95vh] w-full overflow-auto" >
           {pgnComponentDesktop}
-          {gameContainer}
+          {gameComponent}
           {gameOverWindow}
           {pgnComponentSmartphone}
       </div>
