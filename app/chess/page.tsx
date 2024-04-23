@@ -393,8 +393,6 @@ const ChessPage = () => {
       console.log(blackMaterialAdvantage);
       let materialAdvantage = '';
       if(piecesColor === 'w') {
-        if(whiteMaterialAdvantage.points <= 0) return '';
-
         for(let i = 0; i < whiteMaterialAdvantage.pawn; i++) {
           materialAdvantage += '♙';
         }
@@ -411,12 +409,10 @@ const ChessPage = () => {
           materialAdvantage += '♕';
         }
 
-        console.log(materialAdvantage + ` +${whiteMaterialAdvantage.points}`);
+        if(whiteMaterialAdvantage.points <= 0) return materialAdvantage;
 
         return materialAdvantage + ` +${whiteMaterialAdvantage.points}`;
       }
-
-      if(blackMaterialAdvantage.points <= 0) return '';
 
       for(let i = 0; i < blackMaterialAdvantage.pawn; i++) {
         materialAdvantage += '♙';
@@ -433,6 +429,8 @@ const ChessPage = () => {
       for(let i = 0; i < blackMaterialAdvantage.queen; i++) {
         materialAdvantage += '♕';
       }
+
+      if(blackMaterialAdvantage.points <= 0) return materialAdvantage;
       
       return materialAdvantage + ` +${blackMaterialAdvantage.points}`;
     }
