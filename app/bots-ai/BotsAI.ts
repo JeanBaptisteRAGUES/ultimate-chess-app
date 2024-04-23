@@ -2157,7 +2157,8 @@ class BotsAI {
             return openingMove;
         }
 
-        const pawnsCases: Square[] = ['b3', 'b6'];
+        const pawnsCases: Square[] = ['b3', 'b6', 'd3', 'd6'];
+        const badPawnsCases: Square[] = ['d4', 'd5'];
         const bishopCases: Square[] = ['b2', 'b7'];
 
         let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, this.#defaultBotParams.skillValue, 50, false);
@@ -2168,17 +2169,19 @@ class BotsAI {
                 evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox)).toString();
                 return evalRes;
             }
-            let randBonus = Math.max(0.1, Math.random()/2);
 
-            // Si le coup est un coup de pion sur une case qui permet un fianchetto, on ajoute un bonus
             if(this.#toolbox.getMovePiece(evalRes.bestMove, game.fen()).type === 'p' && pawnsCases.includes(moveDestination)) {
-                evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + randBonus).toString();
+                evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + 0.6).toString();
                 return evalRes;
             }
 
-            // Si le coup est le placement d'un fou en fianchetto, on ajoute un gros bonus
+            if(this.#toolbox.getMovePiece(evalRes.bestMove, game.fen()).type === 'p' && badPawnsCases.includes(moveDestination)) {
+                evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) - 0.9).toString();
+                return evalRes;
+            }
+
             if(this.#toolbox.getMovePiece(evalRes.bestMove, game.fen()).type === 'b' && bishopCases.includes(moveDestination)) {
-                evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + 2*randBonus).toString();
+                evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + 0.9).toString();
                 return evalRes;
             }
             evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox)).toString();
