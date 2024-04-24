@@ -227,7 +227,7 @@ class Engine {
         evalAfter = Math.min(20, Math.max(-20, evalAfter));
         //let scoreAbsoluteDiff = Math.max(Math.abs(evalAfter - evalBefore) - 0.1, 0);
         //let scoreAbsoluteDiff = Math.max(Math.abs(evalAfter - evalBefore), 0);
-        let scoreAbsoluteDiff = Math.max(Math.abs(evalAfter - evalBefore) - (0.1 + 0.02*Math.abs(evalBefore)), 0);
+        let scoreAbsoluteDiff = Math.max(Math.abs(evalAfter - evalBefore) - (0.05 + 0.02*Math.abs(evalBefore)), 0);
         let mult = 1;
         
         if(Math.sign(evalBefore) === Math.sign(evalAfter)){
@@ -237,7 +237,7 @@ class Engine {
         //TODO: Tester différentes valeurs
         // Utilisé pour le score de précision
         //let scoreAccuracy = Math.max(1 - scoreAbsoluteDiff/3, 0);
-        let scoreAccuracy = Math.max(1 - scoreAbsoluteDiff, 0);
+        let scoreAccuracy = Math.max(1 - scoreAbsoluteDiff/1.5, -0.5);
         
         // Utilisé pour évaluer les erreurs
         //let blunderAccuracy = 1 - mult*scoreAbsoluteDiff/1.5;
@@ -266,8 +266,6 @@ class Engine {
             return moveEval;
         }
         moveEval.isTheory = false;
-
-        if(scoreAccuracy < 0) scoreAccuracy = 0;
 
         /* console.log(`\x1B[34m${moveEval.movePlayed}`);
         console.log('Player Color: ' + moveEval.playerColor);

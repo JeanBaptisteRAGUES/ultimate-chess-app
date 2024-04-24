@@ -2157,9 +2157,9 @@ class BotsAI {
             return openingMove;
         }
 
-        const pawnsCases: Square[] = ['b3', 'b6', 'd3', 'd6'];
+        const pawnsCases: Square[] = ['b3', 'd3', 'd6'];
         const badPawnsCases: Square[] = ['d4', 'd5'];
-        const bishopCases: Square[] = ['b2', 'b7'];
+        const bishopCases: Square[] = ['b2', 'g2', 'g7'];
 
         let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, this.#defaultBotParams.skillValue, 50, false);
 
@@ -2812,8 +2812,13 @@ class BotsAI {
         }
 
         if(game.history().length === 2) {
-            if(formatedPGN === '1.c4 d5') {
-                move.notation = 'c4d5';
+            if(formatedPGN === '1.d4 e5') {
+                move.notation = 'd4e5';
+                move.type = 2;
+                return move;
+            }
+            if(formatedPGN === '1.d4 g5') {
+                move.notation = 'c1g5';
                 move.type = 2;
                 return move;
             }

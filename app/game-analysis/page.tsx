@@ -123,7 +123,7 @@ const GameAnalysisPage = () => {
         
         console.log(`White accuracy: ${accuracy} (${whiteAccuracySum}/${whiteMovesNumber})`);
 
-        return accuracy;
+        return Math.max(0, accuracy);
     }
 
     function getBlackAccuracy(results: EvalResult[]) {
@@ -143,7 +143,7 @@ const GameAnalysisPage = () => {
         
         console.log(`Black accuracy: ${accuracy} (${blackAccuracySum}/${blackMovesNumber})`);
 
-        return accuracy;
+        return Math.max(0, accuracy);
     }
 
     function launchStockfishAnalysis(pgn: string, depth: number) {
@@ -168,50 +168,13 @@ const GameAnalysisPage = () => {
         });
     }
 
-    // TODO: Entourer le coup dont l'index = currentIndex
-    /* function formatAnalyseResults(pgn: string, analysisResults: EvalResult[]) {
-        //console.log(analysisResults);
-        const timestampStart = performance.now();
-        console.log(pgn);
-        const pgnArray = toolbox.convertPgnToArray(pgn);
-        const history = toolbox.convertPgnToHistory(pgn);
-
-        const results = analysisResults.map((result: EvalResult, i: number) => {
-            const bestMoveSan = toolbox.convertMoveLanToSan2(history, i, result.bestMove, startingFen);
-            const movePlayed = pgnArray[i];
-            const bestMoveSpan = result.quality !== '' ? 
-                <span>
-                    {movePlayed + result.quality} <span onClick={(e) => {
-                            e.stopPropagation()
-                            showMovePosition(bestMoveSan, i, false)
-                        }
-                    }>({bestMoveSan} was best)</span>
-                </span>
-            :
-                <span>
-                    {movePlayed}
-                </span>
-
-            // TODO: Prendre en compte les coups théoriques
-            if(result.isTheory) return <span onClick={() => showMovePosition(movePlayed, i, true)} key={i} className=" text-amber-800 cursor-pointer select-none" style={{backgroundColor: currentIndex === i ? "rgba(34, 211, 238, 0.3)" : "rgba(0,0,0,0)" }} >{bestMoveSpan}</span>;
-            if(result.quality === '??') return <span onClick={() => showMovePosition(movePlayed, i, true)} key={i} className=" text-red-600 cursor-pointer select-none" style={{backgroundColor: currentIndex === i ? "rgba(34, 211, 238, 0.3)" : "rgba(0,0,0,0)" }} >{bestMoveSpan}</span>;
-            if(result.quality === '?') return <span onClick={() => showMovePosition(movePlayed, i, true)} key={i} className=" text-orange-500 cursor-pointer select-none" style={{backgroundColor: currentIndex === i ? "rgba(34, 211, 238, 0.3)" : "rgba(0,0,0,0)" }} >{bestMoveSpan}</span>;
-            if(result.quality === '?!') return <span onClick={() => showMovePosition(movePlayed, i, true)} key={i} className=" text-yellow-400 cursor-pointer select-none" style={{backgroundColor: currentIndex === i ? "rgba(34, 211, 238, 0.3)" : "rgba(0,0,0,0)" }} >{bestMoveSpan}</span>;
-            return <span onClick={() => showMovePosition(movePlayed, i, true)} key={i} className=" text-white cursor-pointer select-none" style={{backgroundColor: currentIndex === i ? "rgba(34, 211, 238, 0.3)" : "rgba(0,0,0,0)" }} >{bestMoveSpan}</span>;
-        });
-        console.log(`Durée du formatage: ${(performance.now() - timestampStart)/1000}s`);
-        setFormatedResults(results);
-    }  */
-
     function formatAnalyseResults(pgn: string, analysisResults: EvalResult[]) {
         //console.log(analysisResults);
         const timestampStart = performance.now();
         console.log(pgn);
         const pgnArray = toolbox.convertPgnToArray(pgn);
-        const history = toolbox.convertPgnToHistory(pgn);
 
         const results = analysisResults.map((result: EvalResult, i: number) => {
-            //const bestMoveSan = toolbox.convertMoveLanToSan2(history, i, result.bestMove, startingFen);
             const bestMoveSan = toolbox.convertMoveLanToSan(gameHistory.current[i].before, result.bestMove);
             const movePlayed = pgnArray[i];
             const formatedResult = result as EvalResultFormated;
