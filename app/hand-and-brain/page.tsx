@@ -13,6 +13,7 @@ import { useSearchParams } from "next/navigation";
 import { FaCirclePlay, FaHandFist, FaRotate } from 'react-icons/fa6';
 import  { GiBrain } from 'react-icons/gi';
 import { FaFontAwesomeFlag } from "react-icons/fa";
+import GameToolBox from "../game-toolbox/GameToolbox";
 
 
 const HandAndBrainPage = () => {
@@ -25,6 +26,7 @@ const HandAndBrainPage = () => {
     const gameActive = useRef(true);
     const [game, setGame] = useState(new Chess());
     const engine = useRef<Engine>();
+    const toolbox = new GameToolBox();
     const allyAI = useRef<BotsAI>();
     const opponentAI = useRef<BotsAI>();
     const [playerColor, setPlayerColor] = useState<Color>('w');
@@ -61,6 +63,23 @@ const HandAndBrainPage = () => {
     const [timeControl, setTimeControl] = useState('infinite');
     const [selectedPiece, setSelectedPiece] = useState<string>('');
     const [allyStatus, setAllyStatus] = useState(0); // 0: ready, 1: thinking, 2: waiting
+    const [whiteMaterialAdvantage, setWhiteMaterialAdvantage] = useState({
+      pawn: 0,
+      knight: 0,
+      bishop: 0,
+      rook: 0,
+      queen: 0,
+      points: 0,
+    });
+
+    const [blackMaterialAdvantage, setBlackMaterialAdvantage] = useState({
+      pawn: 0,
+      knight: 0,
+      bishop: 0,
+      rook: 0,
+      queen: 0,
+      points: 0,
+    });
 
     useEffect(() => {
         engine.current = new Engine();
@@ -89,6 +108,7 @@ const HandAndBrainPage = () => {
     // TODO: Problème lors de la promotion d'un pion (promeut automatiquement en cavalier)
     const gameMove = (moveNotation: string, moveType: number) => {
       game.move(moveNotation);
+      toolbox.countMaterial(game.board(), setWhiteMaterialAdvantage, setBlackMaterialAdvantage);
       setCurrentFen(game.fen());
       movesTypeRef.current.push(moveType);
       checkGameOver();
@@ -249,6 +269,51 @@ const HandAndBrainPage = () => {
       const positionPGN = movesHistorySan(game.pgn()).slice(0, moveIndex+1).join(' ');
       newGame.loadPgn(positionPGN);
       setCurrentFen(newGame.fen());
+    }
+
+    const showMaterialAdvantage = (piecesColor: Color): string => {
+      let materialAdvantage = '';
+      if(piecesColor === 'w') {
+        for(let i = 0; i < whiteMaterialAdvantage.pawn; i++) {
+          materialAdvantage += '♙';
+        }
+        for(let i = 0; i < whiteMaterialAdvantage.knight; i++) {
+          materialAdvantage += '♘';
+        }
+        for(let i = 0; i < whiteMaterialAdvantage.bishop; i++) {
+          materialAdvantage += '♗';
+        }
+        for(let i = 0; i < whiteMaterialAdvantage.rook; i++) {
+          materialAdvantage += '♖';
+        }
+        for(let i = 0; i < whiteMaterialAdvantage.queen; i++) {
+          materialAdvantage += '♕';
+        }
+
+        if(whiteMaterialAdvantage.points <= 0) return materialAdvantage;
+
+        return materialAdvantage + ` +${whiteMaterialAdvantage.points}`;
+      }
+
+      for(let i = 0; i < blackMaterialAdvantage.pawn; i++) {
+        materialAdvantage += '♙';
+      }
+      for(let i = 0; i < blackMaterialAdvantage.knight; i++) {
+        materialAdvantage += '♘';
+      }
+      for(let i = 0; i < blackMaterialAdvantage.bishop; i++) {
+        materialAdvantage += '♗';
+      }
+      for(let i = 0; i < blackMaterialAdvantage.rook; i++) {
+        materialAdvantage += '♖';
+      }
+      for(let i = 0; i < blackMaterialAdvantage.queen; i++) {
+        materialAdvantage += '♕';
+      }
+
+      if(blackMaterialAdvantage.points <= 0) return materialAdvantage;
+      
+      return materialAdvantage + ` +${blackMaterialAdvantage.points}`;
     }
 
     const gamePGN = () => {
@@ -472,7 +537,11 @@ const selectPieceComponentSmartphone =
       <div className=" flex flex-col justify-center items-center h-[300px] md:h-[500px] w-[95vw] md:w-[500px] my-10" >
           <div className=" relative flex justify-start p-2 w-full h-10 font-medium bg-slate-100 rounded-t-md">
             <div className=" h-full flex justify-start items-center flex-grow-[4]" >
-              {opponentBehaviour} ({opponentRating})
+              {opponentBehaviour} ({opponentRating}) {playerColor === 'w' ? (
+                showMaterialAdvantage('b')
+              ) : (
+                showMaterialAdvantage('w')
+              )}
             </div>
             <Clock 
               game={game} 
@@ -498,10 +567,14 @@ const selectPieceComponentSmartphone =
                 playerRole === 'Brain' ?
                   <div className=" h-full flex justify-start items-center flex-grow-[4] gap-3" >
                     <div className=" h-full w-fit flex justify-start items-center">
-                      <GiBrain size={25} /> Joueur
+                      <GiBrain size={25} /> Joueur 
                     </div>
                     <div className=" h-full w-fit flex justify-start items-center">
-                      <FaHandFist size={25} /> Stockfish 16 ({allyRating})
+                      <FaHandFist size={25} /> Stockfish 16 ({allyRating}) {playerColor === 'w' ? (
+                        showMaterialAdvantage('w')
+                      ) : (
+                        showMaterialAdvantage('b')
+                      )}
                     </div>
                   </div>
                 :
@@ -510,7 +583,11 @@ const selectPieceComponentSmartphone =
                     <GiBrain size={25} />Ordinateur ({allyRating})
                   </div>
                   <div className=" h-full w-fit flex justify-start items-center">
-                    <FaHandFist size={25} />Joueur
+                    <FaHandFist size={25} />Joueur {playerColor === 'w' ? (
+                        showMaterialAdvantage('w')
+                      ) : (
+                        showMaterialAdvantage('b')
+                      )}
                   </div>
                 </div>
               }

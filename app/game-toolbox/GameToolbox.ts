@@ -1,4 +1,4 @@
-import { Chess, Color, DEFAULT_POSITION, Move, Piece, Square } from "chess.js";
+import { Chess, Color, DEFAULT_POSITION, Move, Piece, PieceSymbol, Square } from "chess.js";
 
 // TODO: Faire un type pour les coups de type san ou uci/lan
 // TODO: Faire attention aux complications que celà peut amener (conversion, méthodes string inutilisables etc..)
@@ -15,6 +15,14 @@ function testF(param: San2) {
 } */
 
 export type MateChar = '#' | 'M';
+export type MaterialAdvantage = {
+    pawn: number,
+    knight: number,
+    bishop: number,
+    rook: number,
+    queen: number,
+    points: number,
+  }
 
 class GameToolBox {
     game: Chess;
@@ -22,6 +30,113 @@ class GameToolBox {
     constructor() {
         this.game = new Chess();
     }
+
+    countMaterial(
+        board: ({square: Square; type: PieceSymbol; color: Color;} | null)[][], 
+        setWhiteMaterialAdvantage: (advantage: MaterialAdvantage) => any,
+        setBlackMaterialAdvantage: (advantage: MaterialAdvantage) => any,
+    ) {
+        let whitePawns = 0;
+        let whiteKnights = 0;
+        let whiteBishops = 0;
+        let whiteRooks = 0;
+        let whiteQueens = 0;
+  
+        let blackPawns = 0;
+        let blackKnights = 0;
+        let blackBishops = 0;
+        let blackRooks = 0;
+        let blackQueens = 0;
+  
+        board.forEach((rank) => {
+          rank.forEach((boardCase) => {
+            if(boardCase?.color === 'w') {
+              switch (boardCase.type) {
+                case 'p':
+                  whitePawns++;
+                  break;
+                case 'n':
+                  whiteKnights++;
+                  break;
+                case 'b':
+                  whiteBishops++;
+                  break;
+                case 'r':
+                  whiteRooks++;
+                  break;
+                case 'q':
+                  whiteQueens++;
+                  break;
+              
+                default:
+                  break;
+              }
+            }
+            if(boardCase?.color === 'b') {
+              switch (boardCase.type) {
+                case 'p':
+                  blackPawns++;
+                  break;
+                case 'n':
+                  blackKnights++;
+                  break;
+                case 'b':
+                  blackBishops++;
+                  break;
+                case 'r':
+                  blackRooks++;
+                  break;
+                case 'q':
+                  blackQueens++;
+                  break;
+              
+                default:
+                  break;
+              }
+            }
+          })
+        });
+  
+        let whitePawnsAdvantage = whitePawns - blackPawns;
+        let whiteKnightsAdvantage = whiteKnights - blackKnights;
+        let whiteBishopsAdvantage = whiteBishops - blackBishops;
+        let whiteRooksAdvantage = whiteRooks - blackRooks;
+        let whiteQueensAdvantage = whiteQueens - blackQueens;
+        let whitePoints = whitePawnsAdvantage +
+          whiteKnightsAdvantage*3 +
+          whiteBishopsAdvantage*3 +
+          whiteRooksAdvantage*5 +
+          whiteQueensAdvantage*9;
+  
+        let blackPawnsAdvantage = blackPawns - whitePawns;
+        let blackKnightsAdvantage = blackKnights - whiteKnights;
+        let blackBishopsAdvantage = blackBishops - whiteBishops;
+        let blackRooksAdvantage = blackRooks - whiteRooks;
+        let blackQueensAdvantage = blackQueens - whiteQueens;
+        let blackPoints = blackPawnsAdvantage +
+          blackKnightsAdvantage*3 +
+          blackBishopsAdvantage*3 +
+          blackRooksAdvantage*5 +
+          blackQueensAdvantage*9;
+  
+        setWhiteMaterialAdvantage({
+          pawn: whitePawnsAdvantage,
+          knight: whiteKnightsAdvantage,
+          bishop: whiteBishopsAdvantage,
+          rook: whiteRooksAdvantage,
+          queen: whiteQueensAdvantage,
+          points: whitePoints,
+        });
+  
+        setBlackMaterialAdvantage({
+          pawn: blackPawnsAdvantage,
+          knight: blackKnightsAdvantage,
+          bishop: blackBishopsAdvantage,
+          rook: blackRooksAdvantage,
+          queen: blackQueensAdvantage,
+          points: blackPoints,
+        });
+      }
 
     /**
      * Prend un coup en entrée et renvoie la distance parcourue par la pièce

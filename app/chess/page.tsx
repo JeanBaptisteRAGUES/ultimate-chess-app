@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 'use client'
 import { useEffect, useRef, useState } from "react";
-import {Chess, Color, DEFAULT_POSITION} from "chess.js";
+import {Chess, Color, DEFAULT_POSITION, PieceSymbol} from "chess.js";
 import { Chessboard } from "react-chessboard";
 import { Piece, Square } from "react-chessboard/dist/chessboard/types";
 import EvalAndWinrate from "../components/EvalAndWinrate";
@@ -101,126 +101,25 @@ const ChessPage = () => {
       botAI.current = new BotsAI(botBehaviour, databaseRating, botColor);
     }, [playerColor]);
 
-    const countMaterial = () => {
-      let whitePawns = 0;
-      let whiteKnights = 0;
-      let whiteBishops = 0;
-      let whiteRooks = 0;
-      let whiteQueens = 0;
-
-      let blackPawns = 0;
-      let blackKnights = 0;
-      let blackBishops = 0;
-      let blackRooks = 0;
-      let blackQueens = 0;
-
-      game.board().forEach((rank) => {
-        rank.forEach((boardCase) => {
-          if(boardCase?.color === 'w') {
-            switch (boardCase.type) {
-              case 'p':
-                whitePawns++;
-                break;
-              case 'n':
-                whiteKnights++;
-                break;
-              case 'b':
-                whiteBishops++;
-                break;
-              case 'r':
-                whiteRooks++;
-                break;
-              case 'q':
-                whiteQueens++;
-                break;
-            
-              default:
-                break;
-            }
-          }
-          if(boardCase?.color === 'b') {
-            switch (boardCase.type) {
-              case 'p':
-                blackPawns++;
-                break;
-              case 'n':
-                blackKnights++;
-                break;
-              case 'b':
-                blackBishops++;
-                break;
-              case 'r':
-                blackRooks++;
-                break;
-              case 'q':
-                blackQueens++;
-                break;
-            
-              default:
-                break;
-            }
-          }
-        })
-      });
-
-      let whitePawnsAdvantage = whitePawns - blackPawns;
-      let whiteKnightsAdvantage = whiteKnights - blackKnights;
-      let whiteBishopsAdvantage = whiteBishops - blackBishops;
-      let whiteRooksAdvantage = whiteRooks - blackRooks;
-      let whiteQueensAdvantage = whiteQueens - blackQueens;
-      let whitePoints = whitePawnsAdvantage +
-        whiteKnightsAdvantage*3 +
-        whiteBishopsAdvantage*3 +
-        whiteRooksAdvantage*5 +
-        whiteQueensAdvantage*9;
-
-      let blackPawnsAdvantage = blackPawns - whitePawns;
-      let blackKnightsAdvantage = blackKnights - whiteKnights;
-      let blackBishopsAdvantage = blackBishops - whiteBishops;
-      let blackRooksAdvantage = blackRooks - whiteRooks;
-      let blackQueensAdvantage = blackQueens - whiteQueens;
-      let blackPoints = blackPawnsAdvantage +
-        blackKnightsAdvantage*3 +
-        blackBishopsAdvantage*3 +
-        blackRooksAdvantage*5 +
-        blackQueensAdvantage*9;
-
-      setWhiteMaterialAdvantage({
-        pawn: whitePawnsAdvantage,
-        knight: whiteKnightsAdvantage,
-        bishop: whiteBishopsAdvantage,
-        rook: whiteRooksAdvantage,
-        queen: whiteQueensAdvantage,
-        points: whitePoints,
-      });
-
-      setBlackMaterialAdvantage({
-        pawn: blackPawnsAdvantage,
-        knight: blackKnightsAdvantage,
-        bishop: blackBishopsAdvantage,
-        rook: blackRooksAdvantage,
-        queen: blackQueensAdvantage,
-        points: blackPoints,
-      });
-    }
-
     const gameMove = (moveNotation: string, moveType: number) => {
       game.move(moveNotation);
       setCurrentFen(game.fen());
       setVirtualFen(game.fen());
       movesTypeRef.current.push(moveType);
-      countMaterial();
+      toolbox.countMaterial(game.board(), setWhiteMaterialAdvantage, setBlackMaterialAdvantage);
       checkGameOver();
     }
 
     const gameVirtualMove = (moveNotation: string) => {
       virtualGame.current.move(moveNotation);
       setVirtualFen(virtualGame.current.fen());
+      toolbox.countMaterial(virtualGame.current.board(), setWhiteMaterialAdvantage, setBlackMaterialAdvantage);
     }
 
     // TODO: Problème de dame noire qui ne peut plus bouger dans la scandinave (cf photo)
     const switchMode = () => {
       virtualGame.current.load(currentFen);
+      toolbox.countMaterial(game.board(), setWhiteMaterialAdvantage, setBlackMaterialAdvantage);
       setVirtualFen(currentFen);
       setIsVirtualMode(!isVirtualMode);
     }
@@ -386,11 +285,6 @@ const ChessPage = () => {
     }
 
     const showMaterialAdvantage = (piecesColor: Color): string => {
-      console.log('Show Material Advantage for ' + piecesColor);
-      console.log('White Material Advantage: ');
-      console.log(whiteMaterialAdvantage);
-      console.log('Black Material Advantage: ');
-      console.log(blackMaterialAdvantage);
       let materialAdvantage = '';
       if(piecesColor === 'w') {
         for(let i = 0; i < whiteMaterialAdvantage.pawn; i++) {

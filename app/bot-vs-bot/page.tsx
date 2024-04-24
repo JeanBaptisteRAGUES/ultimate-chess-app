@@ -47,26 +47,23 @@ const BotVsBotPage = () => {
     const movesTypeRef = useRef(new Array()); // -1: erreur, 0(blanc): joueur, 1(jaune): lichess, 2(vert clair): stockfish, 3(vert foncé): stockfish forcé, 4(rouge): random
     const [showGameoverWindow, setShowGameoverWindow] = useState(false);
     const [winner, setWinner] = useState(''); // 'w' -> blancs gagnent, 'b' -> noirs gagnent, 'd' -> draw
-    /* const whiteTimeControl = useRef({
-      startingTime: 600,
-      increment: 0,
-      timeElapsed: 0,
+    const [whiteMaterialAdvantage, setWhiteMaterialAdvantage] = useState({
+      pawn: 0,
+      knight: 0,
+      bishop: 0,
+      rook: 0,
+      queen: 0,
+      points: 0,
     });
-    const blackTimeControl = useRef({
-      startingTime: 600,
-      increment: 0,
-      timeElapsed: 0,
+
+    const [blackMaterialAdvantage, setBlackMaterialAdvantage] = useState({
+      pawn: 0,
+      knight: 0,
+      bishop: 0,
+      rook: 0,
+      queen: 0,
+      points: 0,
     });
-    const timeControls = new Map([
-      ['1+0', {startingTime: 60, increment: 0}],
-      ['3+0', {startingTime: 180, increment: 0}],
-      ['3+2', {startingTime: 180, increment: 2}],
-      ['10+0', {startingTime: 600, increment: 0}],
-      ['15+10', {startingTime: 900, increment: 10}],
-      ['30+20', {startingTime: 1800, increment: 20}],
-      ['90+30', {startingTime: 5400, increment: 30}],
-    ]);
-    const [timeControl, setTimeControl] = useState('infinite'); */
 
     useEffect(() => {
         engine.current = new Engine();
@@ -75,16 +72,9 @@ const BotVsBotPage = () => {
         bot2_AI.current = new BotsAI(bot2_Behaviour, bot2_Level, 'b');
     }, []);
 
-    // TODO: Supprimer ?
-    /* useEffect(() => {
-      console.log('New Level : ' + databaseRating);
-      const botColor = playerColor === 'w' ? 'b' : 'w';
-      botAI.current = new BotsAI(botBehaviour, databaseRating, botColor);
-    }, [playerColor]); */
-
-    // TODO: Problème lors de la promotion d'un pion (promeut automatiquement en cavalier)
     const gameMove = (moveNotation: string, moveType: number) => {
       game.move(moveNotation);
+      toolbox.countMaterial(game.board(), setWhiteMaterialAdvantage, setBlackMaterialAdvantage);
       setCurrentFen(game.fen());
       movesTypeRef.current.push(moveType);
       checkGameOver();
@@ -205,6 +195,51 @@ const BotVsBotPage = () => {
       setCurrentFen(newGame.fen());
     }
 
+    const showMaterialAdvantage = (piecesColor: Color): string => {
+      let materialAdvantage = '';
+      if(piecesColor === 'w') {
+        for(let i = 0; i < whiteMaterialAdvantage.pawn; i++) {
+          materialAdvantage += '♙';
+        }
+        for(let i = 0; i < whiteMaterialAdvantage.knight; i++) {
+          materialAdvantage += '♘';
+        }
+        for(let i = 0; i < whiteMaterialAdvantage.bishop; i++) {
+          materialAdvantage += '♗';
+        }
+        for(let i = 0; i < whiteMaterialAdvantage.rook; i++) {
+          materialAdvantage += '♖';
+        }
+        for(let i = 0; i < whiteMaterialAdvantage.queen; i++) {
+          materialAdvantage += '♕';
+        }
+
+        if(whiteMaterialAdvantage.points <= 0) return materialAdvantage;
+
+        return materialAdvantage + ` +${whiteMaterialAdvantage.points}`;
+      }
+
+      for(let i = 0; i < blackMaterialAdvantage.pawn; i++) {
+        materialAdvantage += '♙';
+      }
+      for(let i = 0; i < blackMaterialAdvantage.knight; i++) {
+        materialAdvantage += '♘';
+      }
+      for(let i = 0; i < blackMaterialAdvantage.bishop; i++) {
+        materialAdvantage += '♗';
+      }
+      for(let i = 0; i < blackMaterialAdvantage.rook; i++) {
+        materialAdvantage += '♖';
+      }
+      for(let i = 0; i < blackMaterialAdvantage.queen; i++) {
+        materialAdvantage += '♕';
+      }
+
+      if(blackMaterialAdvantage.points <= 0) return materialAdvantage;
+      
+      return materialAdvantage + ` +${blackMaterialAdvantage.points}`;
+    }
+
     const gamePGN = () => {
       const history = movesHistorySan(game.pgn());
 
@@ -295,7 +330,11 @@ const BotVsBotPage = () => {
       <div className=" flex flex-col justify-center items-center h-[300px] md:h-[500px] w-[95vw] md:w-[500px] my-16 md:my-10" >
           <div className=" relative flex justify-start p-2 w-full h-10 font-medium bg-slate-100 rounded-t-md">
             <div className=" h-full flex justify-start items-center flex-grow-[4]" >
-              {playerColor === 'w' ?  `${bot2_Behaviour} (${bot2_Level})` : `${bot1_Behaviour} (${bot1_Level})`}
+              {playerColor === 'w' ?  
+                  `${bot2_Behaviour} (${bot2_Level}) ${showMaterialAdvantage('b')}` 
+                : 
+                  `${bot1_Behaviour} (${bot1_Level}) ${showMaterialAdvantage('w')}`
+              }
             </div>
           </div>
           <Chessboard 
@@ -306,7 +345,11 @@ const BotVsBotPage = () => {
           />
           <div className=" relative flex justify-start p-2 w-full h-10 font-medium bg-slate-100 rounded-b-md">
             <div className=" h-full flex justify-start items-center flex-grow-[4]" >
-              {playerColor === 'b' ?  `${bot2_Behaviour} (${bot2_Level})` : `${bot1_Behaviour} (${bot1_Level})`}
+              {playerColor === 'b' ?  
+                  `${bot2_Behaviour} (${bot2_Level}) ${showMaterialAdvantage('b')}` 
+                : 
+                  `${bot1_Behaviour} (${bot1_Level}) ${showMaterialAdvantage('w')}`
+              }
             </div>
           </div>
       </div>

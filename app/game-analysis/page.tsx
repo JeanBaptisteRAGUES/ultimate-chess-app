@@ -61,6 +61,23 @@ const GameAnalysisPage = () => {
     const blunderIndexRef = useRef(-1);
     const startCaseRef = useRef<Element | null>(null);
     const endCaseRef = useRef<Element | null>(null);
+    const [whiteMaterialAdvantage, setWhiteMaterialAdvantage] = useState({
+        pawn: 0,
+        knight: 0,
+        bishop: 0,
+        rook: 0,
+        queen: 0,
+        points: 0,
+      });
+  
+      const [blackMaterialAdvantage, setBlackMaterialAdvantage] = useState({
+        pawn: 0,
+        knight: 0,
+        bishop: 0,
+        rook: 0,
+        queen: 0,
+        points: 0,
+      });
     
     useEffect(() => {
         engine.current = new Engine();
@@ -277,6 +294,7 @@ const GameAnalysisPage = () => {
         //newGame.load(gameHistory.current[moveIndex].after);
         newGame.load(gameHistory.current[moveIndex].before);
         newGame.move(move.replaceAll(/\d*\./g, ''));
+        toolbox.countMaterial(newGame.board(), setWhiteMaterialAdvantage, setBlackMaterialAdvantage);
 
         // Highlight Move
         let lastMove = isMovePlayed ? gameHistory.current[moveIndex].lan : toolbox.convertMoveSanToLan(gameHistory.current[moveIndex].before, move.replaceAll(/\d*\./g, ''));
@@ -292,6 +310,51 @@ const GameAnalysisPage = () => {
         console.log('Changement de position');
     }
 
+    const showMaterialAdvantage = (piecesColor: Color): string => {
+        let materialAdvantage = '';
+        if(piecesColor === 'w') {
+          for(let i = 0; i < whiteMaterialAdvantage.pawn; i++) {
+            materialAdvantage += '♙';
+          }
+          for(let i = 0; i < whiteMaterialAdvantage.knight; i++) {
+            materialAdvantage += '♘';
+          }
+          for(let i = 0; i < whiteMaterialAdvantage.bishop; i++) {
+            materialAdvantage += '♗';
+          }
+          for(let i = 0; i < whiteMaterialAdvantage.rook; i++) {
+            materialAdvantage += '♖';
+          }
+          for(let i = 0; i < whiteMaterialAdvantage.queen; i++) {
+            materialAdvantage += '♕';
+          }
+  
+          if(whiteMaterialAdvantage.points <= 0) return materialAdvantage;
+  
+          return materialAdvantage + ` +${whiteMaterialAdvantage.points}`;
+        }
+  
+        for(let i = 0; i < blackMaterialAdvantage.pawn; i++) {
+          materialAdvantage += '♙';
+        }
+        for(let i = 0; i < blackMaterialAdvantage.knight; i++) {
+          materialAdvantage += '♘';
+        }
+        for(let i = 0; i < blackMaterialAdvantage.bishop; i++) {
+          materialAdvantage += '♗';
+        }
+        for(let i = 0; i < blackMaterialAdvantage.rook; i++) {
+          materialAdvantage += '♖';
+        }
+        for(let i = 0; i < blackMaterialAdvantage.queen; i++) {
+          materialAdvantage += '♕';
+        }
+  
+        if(blackMaterialAdvantage.points <= 0) return materialAdvantage;
+        
+        return materialAdvantage + ` +${blackMaterialAdvantage.points}`;
+      }
+
     const previousMove = (moveIndex: number) => {
         if(moveIndex < 0) {
             console.log('Impossible de revenir plus en arrière !');
@@ -299,6 +362,7 @@ const GameAnalysisPage = () => {
         }
         const newGame = new Chess();
         newGame.load(gameHistory.current[moveIndex].before);
+        toolbox.countMaterial(newGame.board(), setWhiteMaterialAdvantage, setBlackMaterialAdvantage);
 
         // Highlight Move
         let lastMove = (moveIndex-1) > 0 ? gameHistory.current[moveIndex-1].lan : undefined;
@@ -322,6 +386,7 @@ const GameAnalysisPage = () => {
         }
         const newGame = new Chess();
         newGame.load(gameHistory.current[moveIndex+1].after);
+        toolbox.countMaterial(newGame.board(), setWhiteMaterialAdvantage, setBlackMaterialAdvantage);
 
         // Highlight Move
         let lastMove = gameHistory.current[moveIndex+1].lan;
@@ -357,6 +422,7 @@ const GameAnalysisPage = () => {
         const promotion = getPromotion(sourceSquare, piece);
   
         game.move(sourceSquare + targetSquare + promotion);
+        toolbox.countMaterial(game.board(), setWhiteMaterialAdvantage, setBlackMaterialAdvantage);
     
         setCurrentFen(game.fen());
         
@@ -496,20 +562,38 @@ const GameAnalysisPage = () => {
 
     // TODO: Ajouter un bouton '<' et un bouton '>' pour faire défiler les coups de l'analyse
     const buttonsComponent =
-        <div className="flex justify-center items-center gap-5 w-full h-fit" >
+        <div className="flex justify-center items-center mb-3 gap-5 w-full h-fit" >
             {previousButton}
             {switchButton}
             {nextButton}
         </div>
 
     const boardComponent = 
-        <div className=" relative flex flex-col justify-center items-center h-[304px] md:h-[512px] w-[304px] md:w-[512px] my-5" >
+        <div className=" relative flex flex-col justify-center items-center h-[304px] md:h-[512px] w-[304px] md:w-[512px] my-12" >
+            <div className=" relative flex justify-start p-2 w-full h-10 font-medium bg-slate-100 rounded-t-md">
+                <div className=" h-full flex justify-start items-center flex-grow-[4]" >
+                {playerColor === 'w' ? (
+                    'Blancs ' + showMaterialAdvantage('b')
+                ) : (
+                    'Noirs' + showMaterialAdvantage('w')
+                )}
+                </div>
+            </div>
             <Chessboard 
             id="PlayVsRandom"
             position={currentFen}
             onPieceDrop={onDrop} 
             boardOrientation={playerColor === 'w' ? 'white' : 'black'}
             />
+            <div className=" relative flex justify-around p-2 w-full h-10 font-medium rounded-b-md bg-slate-100">
+                <div className=" h-full flex justify-start items-center flex-grow-[4]" >
+                {playerColor === 'w' ? (
+                    'Noirs ' + showMaterialAdvantage('w')
+                ) : (
+                    'Blancs ' + showMaterialAdvantage('b')
+                )}
+                </div>
+            </div>
             <div className=" absolute flex flex-wrap h-[304px] md:h-[512px] w-[304px] md:w-[512px] pointer-events-none" >
                 {
                     board.map((e,i) => {
