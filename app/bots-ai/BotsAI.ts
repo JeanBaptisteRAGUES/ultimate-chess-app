@@ -161,67 +161,67 @@ function initDefaultBotParams(level: string): DefaultBotParams {
 
     switch (level) {
         case 'Beginner':
-        // ~900 Elo (Bot chess.com)
-        randMoveChance = 20; 
-        randMoveInterval = 3; 
-        filterLevel = 0;
-        securityLvl = 0;
-        skillValue = 0;
-        depth = 10;
-        playForcedMate = 0;
-        break;
+            // ~900 Elo (Bot chess.com)
+            randMoveChance = 20; 
+            randMoveInterval = 3; 
+            filterLevel = 0;
+            securityLvl = 0;
+            skillValue = 0;
+            depth = 10;
+            playForcedMate = 0;
+            break;
         case 'Casual':
-        // ~1400 bot chess.com
-        randMoveChance = 20;
-        randMoveInterval = 5;
-        filterLevel = 1;
-        securityLvl = 2;
-        skillValue = 2;
-        depth = 10;
-        playForcedMate = 1;
-        break;
+            // ~1400 bot chess.com
+            randMoveChance = 20;
+            randMoveInterval = 5;
+            filterLevel = 1;
+            securityLvl = 2;
+            skillValue = 2;
+            depth = 10;
+            playForcedMate = 1;
+            break;
         case 'Intermediate':
-        // 1700~1800 bot chess.comm
-        randMoveChance = 10; 
-        randMoveInterval = 10;
-        filterLevel = 2;
-        securityLvl = 2; 
-        skillValue = 5; 
-        depth = 12;
-        playForcedMate = 2;
-        break;
+            // 1700~1800 bot chess.comm
+            randMoveChance = 10; 
+            randMoveInterval = 10;
+            filterLevel = 2;
+            securityLvl = 2; 
+            skillValue = 5; 
+            depth = 12;
+            playForcedMate = 2;
+            break;
         case 'Advanced':
-        // ~2000 bot chess.com
-        randMoveChance = 3;
-        randMoveInterval = 15;
-        filterLevel = 3;
-        securityLvl = 2;
-        skillValue = 10;
-        depth = 12;
-        playForcedMate = 3;
-        break;
+            // ~2000 bot chess.com
+            randMoveChance = 3;
+            randMoveInterval = 15;
+            filterLevel = 3;
+            securityLvl = 2;
+            skillValue = 10;
+            depth = 12;
+            playForcedMate = 3;
+            break;
         case 'Master':
-        // ???
-        randMoveChance = 1;
-        randMoveInterval = 20;
-        filterLevel = 4;
-        securityLvl = 2;
-        skillValue = 15;
-        depth = 16;
-        playForcedMate = 4;
-        break;
+            // ???
+            randMoveChance = 1;
+            randMoveInterval = 20;
+            filterLevel = 4;
+            securityLvl = 2;
+            skillValue = 15;
+            depth = 16;
+            playForcedMate = 4;
+            break;
         case 'Maximum':
-        randMoveChance = 0;
-        randMoveInterval = 0;
-        filterLevel = 0;
-        securityLvl = 0;
-        skillValue = 20;
-        depth = 20;
-        break;
+            randMoveChance = 0;
+            randMoveInterval = 0;
+            filterLevel = 0;
+            securityLvl = 0;
+            skillValue = 20;
+            depth = 20;
+            break;
         default:
-        randMoveChance = 10;
-        skillValue = 10;
-        depth = 10;
+            randMoveChance = 10;
+            skillValue = 10;
+            depth = 10;
         break;
     }
 
@@ -250,6 +250,7 @@ async function makeForcedStockfishMove(botParams: DefaultBotParams, botColor: Co
         const stockfishRes = await engine.findBestMove(game.fen(), 12, 20);
         stockfishMove.notation = stockfishRes;
         stockfishMove.type = 3;
+        console.log(stockfishRes);
         return stockfishMove;
     }
     
@@ -334,7 +335,7 @@ class BotsAI {
         this.#toolbox = new GameToolBox();
         this.#botLevel = level;
         this.#behaviour = behaviour;
-        this.#lastRandomMove = 0;
+        this.#lastRandomMove = Math.floor(Math.random()*5 - 2);
         this.#botColor = botColor;
         this.#engine.init();
         this.#defaultBotParams = initDefaultBotParams(level);
@@ -354,7 +355,6 @@ class BotsAI {
             const lichessMove = await makeLichessMove(movesList, this.#botLevel, startingFen);
             if(lichessMove.type >= 0){
                 console.log(`${this.#botColor} make Lichess move`);
-                this.#lastRandomMove = this.#lastRandomMove-1;
                 return lichessMove;
             } 
             console.log('No more moves in the Lichess Database for ' + this.#botColor);
@@ -1273,6 +1273,21 @@ class BotsAI {
                 move.type = 2;
                 return move;
 
+            case '1.d4 Nf6 2.c4 c5 3.d5':
+                move.notation = 'b7b5';
+                move.type = 2;
+                return move;
+
+            case '1.d4 Nf6 2.c4 c5 3.d5 b5 4.cxb5':
+                move.notation = 'a7a6';
+                move.type = 2;
+                return move;
+
+            case '1.d4 Nf6 2.c4 c5 3.d5 b5 4.cxb5 a6 5.bxa6':
+                move.notation = 'g7g6';
+                move.type = 2;
+                return move;
+
             // Accelerated Catalan
             case '1.d4 Nf6 2.g3':
                 move.notation = 'c7c5';
@@ -1782,6 +1797,11 @@ class BotsAI {
             type: -1,
         };
 
+        if(isRandomMovePlayable(this.#defaultBotParams, this.#botLevel, this.#lastRandomMove)) {
+            this.#lastRandomMove = this.#defaultBotParams.randMoveInterval;
+            return makeRandomMove(this.#defaultBotParams.filterLevel, this.#defaultBotParams.securityLvl > 1, game);
+        }
+
         const gimmickMove = await this.#exchangesLoverLogic(game);
         if(gimmickMove.type >= 0) {
             this.#lastRandomMove = this.#lastRandomMove-1;
@@ -1837,6 +1857,11 @@ class BotsAI {
             notation: '',
             type: -1,
         };
+
+        if(isRandomMovePlayable(this.#defaultBotParams, this.#botLevel, this.#lastRandomMove)) {
+            this.#lastRandomMove = this.#defaultBotParams.randMoveInterval;
+            return makeRandomMove(this.#defaultBotParams.filterLevel, this.#defaultBotParams.securityLvl > 1, game);
+        }
 
         const gimmickMove = await this.#exchangesHaterLogic(game);
         if(gimmickMove.type >= 0) {
@@ -2993,6 +3018,14 @@ class BotsAI {
                 move = await this.#makeDefaultMove(game);
                 break;
         }
+
+        // TODO: Vérifier si ça peut faire match nul
+        if(!move || this.#botLevel === 'Maximum') return move;
+        const underPromoteMove = move.notation.match(/(?<move>.{4})[bnr]/)?.groups?.move;
+        if(underPromoteMove) {
+            console.log(move.notation + ' est une sous-promotion');
+            move.notation = move.notation.replace(/.{4}[bnr]/, underPromoteMove + 'q');
+        } 
 
         return move;
     }
