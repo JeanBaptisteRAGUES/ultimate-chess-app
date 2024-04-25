@@ -2733,10 +2733,29 @@ class BotsAI {
                 move.type = 2;
                 return move;
             }
+
+            if(formatedPGN === '1.e4 c5 2.d4') {
+                move.notation = 'c5d4';
+                move.type = 2;
+                return move;
+            }
         }
 
         if(game.history().length === 5) {
             if(formatedPGN === '1.e4 c5 2.Nf3 Nc6 3.Bb5') {
+                move.notation = 'g7g6';
+                move.type = 2;
+                return move;
+            }
+            if(formatedPGN === '1.e4 c5 2.d4 cxd4 3.c3') {
+                move.notation = 'd4c3';
+                move.type = 2;
+                return move;
+            }
+        }
+
+        if(game.history().length === 7) {
+            if(formatedPGN === '1.e4 c5 2.d4 cxd4 3.c3 dxc3 4.Nc3') {
                 move.notation = 'g7g6';
                 move.type = 2;
                 return move;
