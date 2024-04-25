@@ -1,7 +1,7 @@
 // TODO: Niveaux de difficulté Beginner, Casual, Intermediate, Advanced, Master, Maximum
 
 import { Chess, Color, DEFAULT_POSITION, Piece, Square } from "chess.js";
-import { fetchLichessDatabase } from "../libs/fetchLichess";
+import { fetchLichessDatabase, getHandMoveFromLichessDB } from "../libs/fetchLichess";
 import Engine, { EvalResultSimplified } from "../engine/Engine";
 import GameToolBox from "../game-toolbox/GameToolbox";
 import { useEffect, useRef } from "react";
@@ -35,6 +35,30 @@ type DefaultBotParams = {
 function getMoveDestination(move: string) {
     //Qd4 -> d4, Ngf3 -> f3, exd4 -> d4, Bb5+ -> b5, Re8# -> e8, e4 -> e4
     return move.match(/[a-h][1-8]/);
+}
+
+function correctCastleMove(lichessMove: Move, fen: string, toolbox: GameToolBox): Move {
+    const lichessCastleNotations = ['e1a1', 'e1h1', 'e8a8', 'e8h8'];
+    if(!lichessCastleNotations.includes(lichessMove.notation)) return lichessMove;
+    if(!(toolbox.getMovePiece(lichessMove.notation, fen).type === 'k')) return lichessMove;
+
+    switch (lichessMove.notation) {
+        case 'e1a1':
+            lichessMove.notation = 'e1c1';
+            return lichessMove;
+        case 'e1h1':
+            lichessMove.notation = 'e1g1';
+            return lichessMove;
+        case 'e8a8':
+            lichessMove.notation = 'e8c8';
+            return lichessMove;
+        case 'e8h8':
+            lichessMove.notation = 'e8g8';
+            return lichessMove;
+    
+        default:
+            return lichessMove;
+    }
 }
 
 function filterMoves(movesList: string[], filterLevel: number) {
@@ -355,7 +379,7 @@ class BotsAI {
             const lichessMove = await makeLichessMove(movesList, this.#botLevel, startingFen);
             if(lichessMove.type >= 0){
                 console.log(`${this.#botColor} make Lichess move`);
-                return lichessMove;
+                return correctCastleMove(lichessMove, game.fen(), this.#toolbox);
             } 
             console.log('No more moves in the Lichess Database for ' + this.#botColor);
         }
@@ -3036,6 +3060,15 @@ class BotsAI {
             type: -1,
         };
 
+        const startingFen = game.history().length > 0 ? game.history({verbose: true})[0].before : DEFAULT_POSITION;
+        const movesList = this.#toolbox.convertHistorySanToLan(game.history(), startingFen);
+
+        const lichessMove = await getHandMoveFromLichessDB(selectedPiece, movesList, this.#botLevel, game.fen());
+        if(lichessMove.type >= 0){
+            console.log(`${this.#botColor} make Lichess move`);
+            return correctCastleMove(lichessMove, game.fen(), this.#toolbox);
+        } 
+
         let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 12, this.#defaultBotParams.skillValue, 50, false);
         
         const bestMoveIndex = stockfishMoves.findIndex((evalRes) => this.#toolbox.getMovePiece(evalRes.bestMove, game.fen()).type === selectedPiece);
@@ -3046,6 +3079,18 @@ class BotsAI {
 
     async getBrainPieceChoice(game: Chess): Promise<string> {
         console.log(this.#botColor + ' réfléchit à une pièce à bouger');
+
+        const startingFen = game.history().length > 0 ? game.history({verbose: true})[0].before : DEFAULT_POSITION;
+        const movesList = this.#toolbox.convertHistorySanToLan(game.history(), startingFen);
+
+        const lichessMove = await makeLichessMove(movesList, this.#botLevel, startingFen);
+        if(lichessMove.type >= 0){
+            console.log(`${this.#botColor} make Lichess move`);
+            return game.get(this.#toolbox.getMoveOrigin(lichessMove.notation) || 'a1').type;
+        } 
+        console.log('No more moves in the Lichess Database for ' + this.#botColor);
+
+
         const move = await makeStockfishMove(this.#defaultBotParams, game, this.#engine);
 
         return game.get(this.#toolbox.getMoveOrigin(move.notation) || 'a1').type;
@@ -3057,5 +3102,4 @@ class BotsAI {
 }
 
 export default BotsAI;
-
 

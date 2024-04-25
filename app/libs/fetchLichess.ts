@@ -1,7 +1,36 @@
+import { Piece } from "chess.js"
+import GameToolBox from "../game-toolbox/GameToolbox"
+import { Move } from "../bots-ai/BotsAI"
+
 export type Winrate = {
     white: number,
     draws: number,
     black: number
+}
+
+export type LichessMove = {
+    uci: string,
+    san: string,
+    averageRating: number,
+    white: number,
+    draws: number,
+    black: number,
+    game: {
+        id: string,
+        winner: string,
+        speed: string,
+        mode: string,
+        black: {
+        name: string,
+        rating: number
+        },
+        white: {
+        name: string,
+        rating: number
+        },
+        year: number,
+        month: string
+    }
 }
 
 function randomIntFromInterval(min: number, max: number) { // min and max included 
@@ -65,6 +94,51 @@ export async function fetchLichessDatabase(moves: Array<String>, level: string, 
         san: data.moves[moveIndex]?.san,
         uci: data.moves[moveIndex]?.uci,
         winrate: calculateWinrate(data)
+    }
+}
+
+export async function getHandMoveFromLichessDB(selectedPiece: string, moves: Array<String>, level: string, fen = ""): Promise<Move> {
+    if(!ratings.has(level)) level = 'Master';
+    const startingFen = "rnbqkbnr%2Fpppppppp%2F8%2F8%2F8%2F8%2FPPPPPPPP%2FRNBQKBNR+w+KQkq+-+0+1";
+
+    const movesFormated = moves.join("%2C");
+    let req = "";
+
+    if(level === 'Master') {
+        req = `https://explorer.lichess.ovh/masters?variant=standard&fen=${startingFen}&play=${movesFormated}&source=analysis`
+    }else {
+        const eloRange = ratings.get(level);
+        req = `https://explorer.lichess.ovh/lichess?variant=standard&fen=${startingFen}&play=${movesFormated}&since=2012-01&until=2022-12&speeds=rapid%2Cclassical&ratings=${eloRange}`;
+    }
+
+    const res = await fetch(req);
+    const data = await res.json();
+    const toolbox = new GameToolBox();
+    const selectedPieceMoves: LichessMove[] = data.moves.filter((move: LichessMove) => {
+        return toolbox.getMovePiece(move.uci, fen).type === selectedPiece;
+    });
+
+    const gamesTotalWithSelectedPiece: number = selectedPieceMoves.reduce((acc: number, curr: LichessMove) => acc + curr.white + curr.draws + curr.black, 0);
+
+    let randMove = randomIntFromInterval(0, gamesTotalWithSelectedPiece);
+    let moveIndex = -1;
+    let gamesArray: number[] = [];
+
+    selectedPieceMoves.map((move: LichessMove, i: number, array: Array<any>) => (
+        gamesArray.push(array.slice(0,i+1).reduce((acc: number, curr: LichessMove) => acc + curr.white + curr.draws + curr.black, 0))
+    ));
+
+    //moveIndex = gamesArray.length - gamesArray.filter(value => value > randMove).length;
+    moveIndex = gamesArray.findIndex(value => value > randMove);
+
+    if(moveIndex < 0) return {
+        type: -1,
+        notation: '',
+    }
+
+    return {
+        notation: selectedPieceMoves[moveIndex].uci,
+        type: 1,
     }
 }
 
