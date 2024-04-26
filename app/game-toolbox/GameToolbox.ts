@@ -24,6 +24,14 @@ export type MaterialAdvantage = {
     points: number,
   }
 
+export const pieceValues = new Map([
+    ['p', 1],
+    ['n', 3],
+    ['b', 3.25],
+    ['r', 5],
+    ['q', 9],
+  ]);
+
 class GameToolBox {
     game: Chess;
 
@@ -159,10 +167,9 @@ class GameToolBox {
      * @param move Coup au format lan (ex: g1f3, e2e4 etc..)
      * @returns Retourne la case de départ (ex: g1, e2 etc..)
      */
-    getMoveOrigin(move: string): Square | undefined {
+    getMoveOrigin(move: string): Square {
         if(!move.match(/[a-z]\d[a-z]\d/)){
-            console.log('Erreur avec le format du coup');
-            return;
+            throw new Error('Erreur avec le format du coup: ' + move);
         }
         return (move[0] + move[1]) as Square;
     }
@@ -173,10 +180,9 @@ class GameToolBox {
      * @param move Coup au format lan (ex: g1f3, e2e4 etc..)
      * @returns Retourne la case de d'arrivée (ex: f3, e4 etc..)
      */
-    getMoveDestination(move: string): Square | undefined {
+    getMoveDestination(move: string): Square {
         if(!move.match(/[a-z]\d[a-z]\d/)){
-            console.log('Erreur avec le format du coup');
-            return;
+            throw new Error('Erreur avec le format du coup: ' + move);
         }
         return (move[2] + move[3]) as Square;
     }
@@ -191,6 +197,19 @@ class GameToolBox {
         this.game.move(move);
 
         return this.game.history().pop()?.includes('x') || false;
+    }
+
+    /**
+     * Renvoie la valeur de l'échange entre deux pièces en supposant que la pièce qui capture va être re-mangée après
+     * @param fen string
+     * @param move string au format lan/uci 'e2e4' 'g1f3' etc..
+     */
+    getExchangeValue(fen: string, move: string): number {
+      this.game.load(fen);
+      const attackingPieceValue = pieceValues.get(this.game.get(this.getMoveOrigin(move)).type) || 0;
+      const attackedPieceValue = pieceValues.get(this.game.get(this.getMoveDestination(move)).type) || 0;
+
+      return attackedPieceValue - attackingPieceValue;
     }
 
     getCaseIndex(myCase: Square, boardOrientation: Color): number {
@@ -258,14 +277,17 @@ class GameToolBox {
      * @param lanNotation string -> 'f1c4'
      * @returns string -> 'Bc4'
      */
-    convertMoveLanToSan(fen: string, lanNotation: string): string | undefined{
+    convertMoveLanToSan(fen: string, lanNotation: string): string{
         this.game.load(fen);
         try {
             this.game.move(lanNotation);
-            return this.game.history().pop();
+            const lastMove = this.game.history().pop();
+            if(lastMove === undefined) throw new Error(`Erreur lors de la conversion du coup ${lanNotation} vers sa notation SAN`);
+            return lastMove;
         } catch (error) {
-            console.log(`Erreur lors de la conversion du coup ${lanNotation} vers sa notation SAN: ${error}`);
-            return lanNotation;
+            /* console.log(`Erreur lors de la conversion du coup ${lanNotation} vers sa notation SAN: ${error}`);
+            return lanNotation; */
+            throw new Error(`Erreur lors de la conversion du coup ${lanNotation} vers sa notation SAN: ${error}`);
         }
     }
 
@@ -303,10 +325,13 @@ class GameToolBox {
      * @param sanNotation string -> 'Bc4'
      * @returns string -> 'f1c4'
      */
-    convertMoveSanToLan(fen: string, sanNotation: string): string | undefined {
+    convertMoveSanToLan(fen: string, sanNotation: string): string {
         this.game.load(fen);
         this.game.move(sanNotation);
-        return this.game.history({verbose: true}).pop()?.lan;
+
+        const lastMove = this.game.history({verbose: true}).pop()?.lan;
+        if(lastMove === undefined) throw new Error(`Erreur lors de la conversion du coup ${sanNotation} vers sa notation SAN`);
+        return lastMove;
     }
 
     /**

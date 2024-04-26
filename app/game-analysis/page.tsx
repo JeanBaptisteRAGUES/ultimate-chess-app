@@ -536,9 +536,9 @@ const GameAnalysisPage = () => {
             <div className=" relative flex justify-start p-2 w-full h-10 font-medium bg-slate-100 rounded-t-md">
                 <div className=" h-full flex justify-start items-center flex-grow-[4]" >
                 {playerColor === 'w' ? (
-                    'Blancs ' + showMaterialAdvantage('b')
+                    'Noirs ' + showMaterialAdvantage('b')
                 ) : (
-                    'Noirs' + showMaterialAdvantage('w')
+                    'Blancs' + showMaterialAdvantage('w')
                 )}
                 </div>
             </div>
@@ -551,9 +551,9 @@ const GameAnalysisPage = () => {
             <div className=" relative flex justify-around p-2 w-full h-10 font-medium rounded-b-md bg-slate-100">
                 <div className=" h-full flex justify-start items-center flex-grow-[4]" >
                 {playerColor === 'w' ? (
-                    'Noirs ' + showMaterialAdvantage('w')
+                    'Blancs ' + showMaterialAdvantage('w')
                 ) : (
-                    'Blancs ' + showMaterialAdvantage('b')
+                    'Noirs ' + showMaterialAdvantage('b')
                 )}
                 </div>
             </div>

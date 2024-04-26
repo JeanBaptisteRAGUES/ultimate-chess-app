@@ -142,6 +142,47 @@ export async function getHandMoveFromLichessDB(selectedPiece: string, moves: Arr
     }
 }
 
+//TODO: à finir
+//https://explorer.lichess.ovh/player?variant=standard&fen=rnbqkbnr%2Fpppppppp%2F8%2F8%2F8%2F8%2FPPPPPPPP%2FRNBQKBNR+w+KQkq+-+0+1&play=e2e4&speeds=rapid%2Cclassical&player=Hippo31&color=white&modes=casual%2Crated&source=analysis
+export async function fetchPlayerLichessDB(username: string, playerColor: string, moves: Array<String>, level: string, fen = ""): Promise<Move> {
+    playerColor = playerColor === 'w' ? 'white' : 'black';
+    if(fen === "") {
+        fen = "rnbqkbnr%2Fpppppppp%2F8%2F8%2F8%2F8%2FPPPPPPPP%2FRNBQKBNR+w+KQkq+-+0+1";
+    } else{
+        fen = fen.replaceAll('/', '%2F');
+        fen = fen.replaceAll(' ', '+');
+    }
+
+    const movesFormated = moves.join("%2C");
+    let req = `https://explorer.lichess.ovh/player?variant=standard&fen=${fen}&play=${movesFormated}&speeds=rapid%2Cclassical&player=${username}&color=${playerColor}&modes=casual%2Crated&source=analysis`;
+
+
+    const res = await fetch(req);
+    const data = await res.json();
+
+    const gamesTotal = data.white + data.draws + data.black;
+    let randMove = randomIntFromInterval(0, gamesTotal);
+    let moveIndex = -1;
+    let gamesArray: any[] = [];
+
+    data.moves.map((move: LichessMove, i: number, array: Array<any>) => (
+        gamesArray.push(array.slice(0,i+1).reduce((acc: number, curr: LichessMove) => acc + curr.white + curr.draws + curr.black, 0))
+    ));
+
+    moveIndex = gamesArray.length - gamesArray.filter(value => value > randMove).length;
+    //console.log("Coup choisi : %s (%s)", data.moves[moveIndex]?.san,  data.moves[moveIndex]?.uci);
+
+    if(moveIndex < 0) return {
+        type: -1,
+        notation: '',
+    }
+
+    return {
+        notation: data.moves[moveIndex].uci,
+        type: 1,
+    }
+}
+
 /* export function getLichessWinrate(moves: Array<String>, level: string, fen = ""): Promise<Winrate> {
     return new Promise((resolve, reject) => {
         if(!ratings.has(level)) level = 'Master';

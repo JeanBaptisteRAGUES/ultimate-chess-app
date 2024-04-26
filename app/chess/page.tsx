@@ -61,13 +61,6 @@ const ChessPage = () => {
       ['30+20', {startingTime: 1800, increment: 20}],
       ['90+30', {startingTime: 5400, increment: 30}],
     ]);
-    const pieceValues = new Map([
-      ['p', 1],
-      ['n', 3],
-      ['b', 3],
-      ['r', 5],
-      ['q', 9],
-    ]);
     const [whiteMaterialAdvantage, setWhiteMaterialAdvantage] = useState({
       pawn: 0,
       knight: 0,

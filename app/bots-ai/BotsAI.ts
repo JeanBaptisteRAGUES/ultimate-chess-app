@@ -493,9 +493,35 @@ class BotsAI {
             ['Master', 5],
             ['Maximum', 0]
           ]).get(this.#botLevel) || 10;
+        const forceExchangeChance = new Map([
+            ['Beginner', 100],
+            ['Casual', 50],
+            ['Intermediate', 25],
+            ['Advanced', 10],
+            ['Master', 5],
+            ['Maximum', 0]
+          ]).get(this.#botLevel) || 10;
         let hasForgotten = false;
+        let hasForcedExchange = false;
 
+        const stockfishBestMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), this.#defaultBotParams.depth, this.#defaultBotParams.skillValue, 3, false);
+        console.log(`Sans erreurs humaines, les 3 meilleurs coups de Stockfish sont: ${stockfishBestMoves[0]?.bestMove}, ${stockfishBestMoves[1]?.bestMove}, ${stockfishBestMoves[2]?.bestMove}`);
         //console.log(newGame.ascii());
+        game.moves().forEach((possibleMove) => {
+            if(!hasForcedExchange && this.#toolbox.isCapture(game.fen(), possibleMove)){
+                const moveLan = this.#toolbox.convertMoveSanToLan(game.fen(), possibleMove);
+                const rand = Math.fround(Math.random()*100);
+                const captureValue = this.#toolbox.getExchangeValue(game.fen(), moveLan);
+                const captureChance = Math.min(captureValue*forceExchangeChance, 90)
+                console.log(`Move: ${possibleMove} (value: ${captureValue}, capture chances: ${captureChance}, rand: ${rand})`);
+                if(rand <= captureChance){
+                    move.notation = moveLan;
+                    move.type = 5
+                    hasForcedExchange = true; 
+                }
+            }
+        });
+        if(hasForcedExchange) return move;
 
         game.board().forEach((rank) => {
             rank.forEach((boardCase) => {
@@ -545,7 +571,8 @@ class BotsAI {
         return move;
     }
 
-    // TODO: Vérifier si le coup humain est valide
+    // TODO: Suivant le niveau, capturer automatiquement avec un certain % les pièces en prise quand valeur attaquant < valeau attaqué
+    // TODO: Afficher quel aurait était le coup choisi par stockfish de base avant toutes les erreurs 'humaines' pour comparer
     async #makeHumanMove(game: Chess): Promise<Move> {
         //console.log('Bot AI: Human behaviour');
         let move: Move = {
