@@ -59,13 +59,19 @@ class Engine {
             this.stockfish.postMessage('uci');
             this.stockfish.onmessage = function(event: any) {
                 if(event.data === 'uciok'){
+                    console.log('uciok');
                     resolve('uciok');
                 }
             }
         })
     }
 
+    stop() {
+        this.stockfish.postMessage('stop');
+    }
+
     quit() {
+        console.log('Quit Stockfish 16');
         this.stockfish.postMessage('quit');
     }
 
@@ -78,6 +84,7 @@ class Engine {
             this.stockfish.postMessage(`go depth ${depth}`);
 
             this.stockfish.onmessage = function(event: any) {
+                //console.log(event.data);
                 if((event.data.match(bestMoveRegex)) !== null){
                     const newBestMove = event.data.match(bestMoveRegex)[1];
                     if(newBestMove !== null){
@@ -105,8 +112,8 @@ class Engine {
             this.stockfish.postMessage(`go depth ${depth}`);
 
             this.stockfish.onmessage = function(event: any) {
+                //console.log(event.data);
                 if(event.data.includes(`info depth ${depth} seldepth`)){
-                    //console.log(event.data);
                     let evaluationStr: string | null = getEvalFromData(event.data, coeff);
                     let bestMove: string | null = getBestMoveFromData(event.data);
                     //console.log(bestMove + ': ' + evaluationStr);

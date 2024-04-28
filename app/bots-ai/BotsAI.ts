@@ -97,7 +97,7 @@ function getSafeMovesOnly(movesList: string[], game: Chess) {
 function makeRandomMove(filterLevel: number, safeMoves: boolean, game: Chess): Move {
     //if(checkGameOver()) return;
     console.log('Make Random Move');
-    
+
     const possibleMoves = game.moves();
     let possiblesMovesFiltered = filterMoves(possibleMoves, filterLevel);
 
@@ -111,58 +111,6 @@ function makeRandomMove(filterLevel: number, safeMoves: boolean, game: Chess): M
         notation: finalMovesList[randomIndex],
         type: 4
     }
-  }
-
-function isLastMoveDangerous(game: Chess, playerColor: Color) {
-    const history = JSON.parse(JSON.stringify(game.history({verbose: true})));
-    const lastMove = history.pop();
-    const gameTest = new Chess();
-
-    if(lastMove === null || lastMove === undefined) return false;
-
-    //console.log(lastMove);
-
-    // Si le dernier coup est une capture, il faut obligatoirement réagir
-    if(lastMove.san.match(/[x]/gm)) return true;
-
-    const previousFen = lastMove.before;
-    //const currentFen = lastMove.after;
-
-    gameTest.load(previousFen);
-    gameTest.remove(lastMove.from);
-    gameTest.put({type: lastMove.piece, color: lastMove.color}, lastMove.to);
-    const pieceMoves = gameTest.moves({square: lastMove.to});
-    //gameTest.load(currentFen);
-
-    let danger = false;
-
-    pieceMoves.forEach(pieceMove => {
-        const attackedCase = getMoveDestination(pieceMove);
-        //console.log(attackedCase);
-        // @ts-expect-error
-        const squareInfos = game.get(attackedCase);
-        //console.log(squareInfos);
-        if(squareInfos && squareInfos?.type !== 'p' && squareInfos?.color !== playerColor) {
-        danger = true;
-        }
-    });
-
-    //console.log(`Is last move \x1B[34m(${lastMove.san})\x1B[0m dangerous: \x1B[31m` + danger);
-
-    return danger;
-}
-
-async function isNearCheckmate(maxMateValue: number, botColor: Color, game: Chess, engine: Engine, toolbox: GameToolBox) {
-    console.log('Test if Near Checkmate');
-    const positionEval: EvalResultSimplified = await engine.evalPositionFromFen(game.fen(), 8);
-    console.log(positionEval);
-    if(!positionEval.eval.includes('#')) return false;
-
-    const mateValue = toolbox.getMateValue(positionEval.eval, botColor, '#');
-    console.log(botColor);
-    console.log(mateValue);
-    console.log(maxMateValue);
-    return mateValue > 0 && mateValue <= maxMateValue;
 }
 
 function initDefaultBotParams(level: string): DefaultBotParams {
@@ -191,7 +139,7 @@ function initDefaultBotParams(level: string): DefaultBotParams {
             filterLevel = 0;
             securityLvl = 0;
             skillValue = 0;
-            depth = 10;
+            depth = 12;
             playForcedMate = 0;
             break;
         case 'Casual':
@@ -201,7 +149,7 @@ function initDefaultBotParams(level: string): DefaultBotParams {
             filterLevel = 1;
             securityLvl = 2;
             skillValue = 2;
-            depth = 10;
+            depth = 12;
             playForcedMate = 1;
             break;
         case 'Intermediate':
@@ -230,8 +178,8 @@ function initDefaultBotParams(level: string): DefaultBotParams {
             randMoveInterval = 20;
             filterLevel = 4;
             securityLvl = 2;
-            skillValue = 15;
-            depth = 16;
+            skillValue = 16;
+            depth = 12;
             playForcedMate = 4;
             break;
         case 'Maximum':
@@ -259,37 +207,6 @@ function initDefaultBotParams(level: string): DefaultBotParams {
         playForcedMate,
     }
 }
-
-async function makeForcedStockfishMove(botParams: DefaultBotParams, botColor: Color, game: Chess, engine: Engine, toolbox: GameToolBox): Promise<Move> {
-    //console.log('Search Forced Stockfish Move');
-    const playerColor = game.turn() === 'w' ? 'b' : 'w';
-    let stockfishMove: Move = {
-        notation: '',
-        type: -1
-    }  
-
-    const isNearCheckmateRes = await isNearCheckmate(botParams.playForcedMate, botColor, game, engine, toolbox) 
-    if(isNearCheckmateRes){
-        console.log(`${botColor} is forced to Checkmate`);
-        const stockfishRes = await engine.findBestMove(game.fen(), 12, 20);
-        stockfishMove.notation = stockfishRes;
-        stockfishMove.type = 3;
-        console.log(stockfishRes);
-        return stockfishMove;
-    }
-    
-    if(botParams.securityLvl > 0 && isLastMoveDangerous(game, playerColor)){
-        console.log(`${botColor} is forced to play a move from Stockfish`);
-        const stockfishRes = await engine.findBestMove(game.fen(), botParams.skillValue, botParams.depth);
-        stockfishMove.notation = stockfishRes;
-        stockfishMove.type = 3;
-        return stockfishMove;
-    }
-
-    console.log(`${botColor} is not forced to play a move from Stockfish`);
-
-    return stockfishMove;
-} 
 
 function isRandomMovePlayable (botParams: DefaultBotParams, level: string, lastRandomMove: number): Boolean {
     let rand = Math.random()*100;
@@ -365,6 +282,227 @@ class BotsAI {
         this.#defaultBotParams = initDefaultBotParams(level);
     }
 
+    #isLastMoveDangerous(game: Chess): {danger: boolean, dangerCases: {dangerCase: string, dangerValue: number}[] } {
+        const history = JSON.parse(JSON.stringify(game.history({verbose: true})));
+        const lastMove = history.pop();
+        const gameTest = new Chess();
+    
+        if(lastMove === null || lastMove === undefined) return {
+            danger: false,
+            dangerCases: []
+        };
+    
+        console.log(lastMove);
+    
+        
+        const previousFen = lastMove.before;
+        //const currentFen = lastMove.after;
+        
+        gameTest.load(previousFen);
+        gameTest.remove(lastMove.from);
+        gameTest.put({type: lastMove.piece, color: lastMove.color}, lastMove.to);
+        const pieceMoves = gameTest.moves({square: lastMove.to});
+        //gameTest.load(currentFen);
+        
+        let danger = false;
+        const dangerCases: {dangerCase: string, dangerValue: number}[] = [];
+    
+        // Si le dernier coup est une capture, il faut obligatoirement réagir
+        if(lastMove.san.match(/[x]/gm)) danger = true;
+    
+        pieceMoves.forEach(pieceMove => {
+            const attackedCase = this.#toolbox.getMoveDestination(this.#toolbox.convertMoveSanToLan(gameTest.fen(), pieceMove));
+            const squareInfos = gameTest.get(attackedCase);
+    
+            console.log(squareInfos);
+            if(squareInfos && squareInfos?.type !== 'p' && squareInfos?.color === this.#botColor) {
+                dangerCases.push({
+                    dangerCase: attackedCase,
+                    dangerValue: this.#toolbox.getExchangeValue(gameTest.fen(), this.#toolbox.convertMoveSanToLan(gameTest.fen(), pieceMove))
+                })
+                danger = true;
+            }
+        });
+    
+        console.log(`Is last move \x1B[34m(${lastMove.san})\x1B[0m dangerous: \x1B[31m` + danger);
+    
+        return {
+            danger: danger,
+            dangerCases: dangerCases
+        };
+    }
+    
+    async #isNearCheckmate(maxMateValue: number, game: Chess) {
+        console.log('Test if Near Checkmate');
+        const newEngine = new Engine();
+        await newEngine.init();
+        const positionEval: EvalResultSimplified = await newEngine.evalPositionFromFen(game.fen(), 8);
+        console.log(positionEval);
+        if(!positionEval.eval.includes('#')) return false;
+    
+        const mateValue = this.#toolbox.getMateValue(positionEval.eval, this.#botColor, '#');
+        console.log(this.#botColor);
+        console.log(mateValue);
+        console.log(maxMateValue);
+        newEngine.quit();
+        return mateValue > 0 && mateValue <= maxMateValue;
+    }
+
+    async #makeForcedCheckmate(game: Chess): Promise<Move> {
+        const botColor = game.turn() === 'w' ? 'b' : 'w';
+        let stockfishMove: Move = {
+            notation: '',
+            type: -1
+        } 
+    
+        console.log(`${botColor} is forced to Checkmate`);
+        const stockfishRes = await this.#engine.findBestMove(game.fen(), 20, 20);
+        stockfishMove.notation = stockfishRes;
+        stockfishMove.type = 3;
+        //console.log(stockfishRes);
+        return stockfishMove;
+    }
+
+    #makeForcedExchange(game: Chess): Move {
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+
+        const forceExchangeChance = new Map([
+            ['Beginner', 100],
+            ['Casual', 50],
+            ['Intermediate', 25],
+            ['Advanced', 10],
+            ['Master', 5],
+            ['Maximum', 0]
+          ]).get(this.#botLevel) || 10;
+        let hasForcedExchange = false;
+
+        game.moves().forEach((possibleMove) => {
+            if(!hasForcedExchange && this.#toolbox.isCapture(game.fen(), possibleMove)){
+                const moveLan = this.#toolbox.convertMoveSanToLan(game.fen(), possibleMove);
+                const rand = Math.fround(Math.random()*100);
+                const captureValue = this.#toolbox.getExchangeValue(game.fen(), moveLan);
+                const captureChance = Math.min(captureValue*forceExchangeChance, 90)
+                console.log(`Move: ${possibleMove} (value: ${captureValue}, capture chances: ${captureChance}, rand: ${rand})`);
+                if(rand <= captureChance){
+                    move.notation = moveLan;
+                    move.type = 5
+                    hasForcedExchange = true; 
+                }
+            }
+        });
+
+        return move;
+    }
+
+    async #makeHumanThreatReaction(game: Chess, dangerCases: {dangerCase: string, dangerValue: number}[] ): Promise<Move> {
+        let stockfishMove: Move = {
+            notation: '',
+            type: -1
+        } 
+
+        const badReactionChanceBase = new Map([
+            ['Beginner', 10],
+            ['Casual', 5],
+            ['Intermediate', 2],
+            ['Advanced', 1],
+            ['Master', 0.5],
+            ['Maximum', 0]
+          ]).get(this.#botLevel) || 10;
+
+        console.log("Attacked cases: ");
+        console.log(dangerCases);
+        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, 20, 50, false);
+
+        stockfishMoves = stockfishMoves.map((evalRes) => {
+            const moveOrigin = this.#toolbox.getMoveOrigin(evalRes.bestMove);
+
+            const {dangerCase, dangerValue} = dangerCases.find((dangerCase) => dangerCase.dangerCase === moveOrigin) || {dangerCase: '', dangerValue: 0};
+            if(dangerValue !== 0) {
+                //TODO: Il ne faudrait autoriser que les déplacements sur des cases safe
+                const badReactionChance = badReactionChanceBase*Math.abs(dangerValue)
+                const rand = Math.random()*100;
+                const badReactionBonus = rand <= badReactionChance ? 5 : 0;
+                console.log(`badReactionChanceBase: ${badReactionChanceBase}, badReactionChance: ${badReactionChance}, rand: ${rand}, badReactionBonus: ${badReactionBonus}`);
+                console.log(`${evalRes.bestMove} includes ${moveOrigin}`);
+                console.log(`Danger Case: ${dangerCase}, Danger Value: ${dangerValue}`);
+                evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + badReactionBonus).toString();
+                return evalRes;
+            }
+
+            evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox)).toString();
+            return evalRes;
+        });
+
+        stockfishMoves.sort(compareEval);
+
+        console.log(stockfishMoves);
+
+        stockfishMove.notation = stockfishMoves[0].bestMove;
+        stockfishMove.type = 2;
+
+        //if(dangerCases.includes(this.#toolbox.getMoveOrigin(stockfishMove.notation))) stockfishMove.type = 5;
+
+        return stockfishMove
+    }
+
+    async #makeTunelVisionMove(game: Chess): Promise<Move> {
+        const newGame = new Chess(game.fen());
+        const opponentColor = this.#botColor === 'b' ? 'w' : 'b';
+        const forgotPieceChance = new Map([
+            ['Beginner', 30],
+            ['Casual', 20],
+            ['Intermediate', 15],
+            ['Advanced', 10],
+            ['Master', 5],
+            ['Maximum', 0]
+          ]).get(this.#botLevel) || 10;
+        let hasForgotten = false;
+
+        game.board().forEach((rank) => {
+            rank.forEach((boardCase) => {
+                if(boardCase?.color !== this.#botColor && (boardCase?.type === 'b' || boardCase?.type === 'q')){
+                    const rand = Math.ceil(Math.random()*100);
+                    //console.log("Random move result: " + rand);
+                    const pieceInactivity = this.#toolbox.getPieceInactivity(game.history({verbose: true}), boardCase.square);
+                    const inactivityBonusMult = 0.1 + Math.min(0.2*pieceInactivity, 1.5);
+                    const forgotPieceChanceFinal = Math.ceil(forgotPieceChance*inactivityBonusMult);
+                    //console.log(`Inactivité de la pièce en ${boardCase.square}: ${pieceInactivity} (mult: ${inactivityBonusMult})`);
+
+                    if(boardCase?.type === 'b' && rand <= forgotPieceChanceFinal) {
+                        console.log('Oublie le fou en ' + boardCase.square);
+                        hasForgotten = true;
+                        newGame.put({ type: 'p', color: opponentColor }, boardCase.square)
+                    }
+                    
+                    if(boardCase?.type === 'q' && rand <= forgotPieceChance) {
+                        console.log('Oublie les déplacements en diagonale de la dame en ' + boardCase.square);
+                        hasForgotten = true;
+                        newGame.put({ type: 'r', color: opponentColor }, boardCase.square)
+                    }
+
+                    if(boardCase?.type === 'q' && rand <= forgotPieceChanceFinal) {
+                        console.log('Oublie la dame en ' + boardCase.square);
+                        hasForgotten = true;
+                        newGame.put({ type: 'p', color: opponentColor }, boardCase.square)
+                    }
+
+                }
+            })
+        });
+
+        //console.log(newGame.ascii());
+
+        const stockfishMove = await makeStockfishMove(this.#defaultBotParams, newGame, this.#engine);
+        
+        if(hasForgotten) stockfishMove.type = 5;
+        if(!this.#toolbox.isMoveValid(game.fen(), stockfishMove.notation)) stockfishMove.type = -1;
+
+        return stockfishMove;
+    }
+
     async #defaultMoveLogic(game: Chess, useDatabase: Boolean, useRandom: Boolean): Promise<Move> {
         let move: Move = {
             notation: '',
@@ -384,11 +522,17 @@ class BotsAI {
             console.log('No more moves in the Lichess Database for ' + this.#botColor);
         }
 
-        const forcedStockfishMove = await makeForcedStockfishMove(this.#defaultBotParams, this.#botColor, game, this.#engine, this.#toolbox);
+        /* const forcedStockfishMove = await makeForcedStockfishMove(this.#defaultBotParams, this.#botColor, game, this.#engine, this.#toolbox);
         if(forcedStockfishMove.type >= 0) {
             this.#lastRandomMove = this.#lastRandomMove-1;
             return forcedStockfishMove;
-        } 
+        }  */
+
+        const isNearCheckmateRes = await this.#isNearCheckmate(this.#defaultBotParams.playForcedMate, game) 
+        if(isNearCheckmateRes) {
+            const checkmateMove = await this.#makeForcedCheckmate(game);
+            return checkmateMove;
+        }
 
         if(useRandom && isRandomMovePlayable(this.#defaultBotParams, this.#botLevel, this.#lastRandomMove)) {
             this.#lastRandomMove = this.#defaultBotParams.randMoveInterval;
@@ -452,6 +596,7 @@ class BotsAI {
         return move;
     }
 
+    // TODO: isLastMoveDangerous ? Si oui -> plus le bot est faible, plus il aura envie de bouger la pièce
     async #humanMoveLogic(game: Chess, useDatabase: Boolean, useRandom: Boolean): Promise<Move> {
         let move: Move = {
             notation: '',
@@ -466,106 +611,60 @@ class BotsAI {
             const lichessMove = await makeLichessMove(movesList, this.#botLevel, startingFen);
             if(lichessMove.type >= 0){
                 console.log(`${this.#botColor} make Lichess move`);
-                this.#lastRandomMove = this.#lastRandomMove-1;
                 return lichessMove;
             } 
             console.log('No more moves in the Lichess Database for ' + this.#botColor);
+        }
+
+        //TODO: Cause un gros problème
+        const isNearCheckmateRes = await this.#isNearCheckmate(this.#defaultBotParams.playForcedMate, game) 
+        if(isNearCheckmateRes) {
+            const checkmateMove = await this.#makeForcedCheckmate(game);
+            return checkmateMove;
+        }
+
+
+        //this.#engine.stop();
+        //const stockfishBestMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), this.#defaultBotParams.depth, this.#defaultBotParams.skillValue, 3, false);
+        const stockfishBestMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, 20, 3, false);
+        console.log(`Sans erreurs humaines, les 3 meilleurs coups de Stockfish sont: ${stockfishBestMoves[0]?.bestMove}, ${stockfishBestMoves[1]?.bestMove}, ${stockfishBestMoves[2]?.bestMove}`);
+        //console.log(newGame.ascii());
+        
+        const forcedExchangeMove = this.#makeForcedExchange(game);
+
+        if(forcedExchangeMove.type >= 0){
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return forcedExchangeMove;
+        }
+        
+        const {danger, dangerCases} = this.#isLastMoveDangerous(game);
+
+        console.log("Le dernier coup est dangereux: " + danger);
+    
+        if(danger) {
+            const reactingThreatMove = await this.#makeHumanThreatReaction(game, dangerCases);
+            if(reactingThreatMove.type >= 0 ){
+                return reactingThreatMove;
+            }
         }
 
         /* const forcedStockfishMove = await makeForcedStockfishMove(this.#defaultBotParams, this.#botColor, game, this.#engine, this.#toolbox);
         if(forcedStockfishMove.type >= 0) {
             this.#lastRandomMove = this.#lastRandomMove-1;
             return forcedStockfishMove;
-        } 
+        }  */
 
         if(useRandom && isRandomMovePlayable(this.#defaultBotParams, this.#botLevel, this.#lastRandomMove)) {
             this.#lastRandomMove = this.#defaultBotParams.randMoveInterval;
             return makeRandomMove(this.#defaultBotParams.filterLevel, this.#defaultBotParams.securityLvl > 1, game);
-        } */
+        }
 
-        const newGame = new Chess(game.fen());
-        const opponentColor = this.#botColor === 'b' ? 'w' : 'b';
-        const forgotPieceChance = new Map([
-            ['Beginner', 30],
-            ['Casual', 20],
-            ['Intermediate', 15],
-            ['Advanced', 10],
-            ['Master', 5],
-            ['Maximum', 0]
-          ]).get(this.#botLevel) || 10;
-        const forceExchangeChance = new Map([
-            ['Beginner', 100],
-            ['Casual', 50],
-            ['Intermediate', 25],
-            ['Advanced', 10],
-            ['Master', 5],
-            ['Maximum', 0]
-          ]).get(this.#botLevel) || 10;
-        let hasForgotten = false;
-        let hasForcedExchange = false;
+        const tunelVisionMove = await this.#makeTunelVisionMove(game);
 
-        const stockfishBestMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), this.#defaultBotParams.depth, this.#defaultBotParams.skillValue, 3, false);
-        console.log(`Sans erreurs humaines, les 3 meilleurs coups de Stockfish sont: ${stockfishBestMoves[0]?.bestMove}, ${stockfishBestMoves[1]?.bestMove}, ${stockfishBestMoves[2]?.bestMove}`);
-        //console.log(newGame.ascii());
-        game.moves().forEach((possibleMove) => {
-            if(!hasForcedExchange && this.#toolbox.isCapture(game.fen(), possibleMove)){
-                const moveLan = this.#toolbox.convertMoveSanToLan(game.fen(), possibleMove);
-                const rand = Math.fround(Math.random()*100);
-                const captureValue = this.#toolbox.getExchangeValue(game.fen(), moveLan);
-                const captureChance = Math.min(captureValue*forceExchangeChance, 90)
-                console.log(`Move: ${possibleMove} (value: ${captureValue}, capture chances: ${captureChance}, rand: ${rand})`);
-                if(rand <= captureChance){
-                    move.notation = moveLan;
-                    move.type = 5
-                    hasForcedExchange = true; 
-                }
-            }
-        });
-        if(hasForcedExchange) return move;
-
-        game.board().forEach((rank) => {
-            rank.forEach((boardCase) => {
-                if(boardCase?.color !== this.#botColor && (boardCase?.type === 'b' || boardCase?.type === 'q')){
-                    const rand = Math.ceil(Math.random()*100);
-                    console.log("Random move result: " + rand);
-                    const pieceInactivity = this.#toolbox.getPieceInactivity(game.history({verbose: true}), boardCase.square);
-                    const inactivityBonusMult = 0.1 + Math.min(0.2*pieceInactivity, 1.5);
-                    const forgotPieceChanceFinal = Math.ceil(forgotPieceChance*inactivityBonusMult);
-                    //console.log(`Inactivité de la pièce en ${boardCase.square}: ${pieceInactivity} (mult: ${inactivityBonusMult})`);
-
-                    if(boardCase?.type === 'b' && rand <= forgotPieceChanceFinal) {
-                        console.log('Oublie le fou en ' + boardCase.square);
-                        hasForgotten = true;
-                        newGame.put({ type: 'p', color: opponentColor }, boardCase.square)
-                    }
-                    
-                    if(boardCase?.type === 'q' && rand <= forgotPieceChance) {
-                        console.log('Oublie les déplacements en diagonale de la dame en ' + boardCase.square);
-                        hasForgotten = true;
-                        newGame.put({ type: 'r', color: opponentColor }, boardCase.square)
-                    }
-
-                    if(boardCase?.type === 'q' && rand <= forgotPieceChanceFinal) {
-                        console.log('Oublie la dame en ' + boardCase.square);
-                        hasForgotten = true;
-                        newGame.put({ type: 'p', color: opponentColor }, boardCase.square)
-                    }
-
-                }
-            })
-        });
-
-        //console.log(newGame.ascii());
-
-        const stockfishMove = await makeStockfishMove(this.#defaultBotParams, newGame, this.#engine);
-        
-        if(hasForgotten) stockfishMove.type = 5;
-        if(!this.#toolbox.isMoveValid(game.fen(), stockfishMove.notation)) stockfishMove.type = -1;
-
-        if(stockfishMove.type >= 0) {
-            if(stockfishMove.type === 5) console.log(`Human move (${stockfishMove.type}): ${this.#toolbox.convertMoveLanToSan(game.fen(), stockfishMove.notation)}`);
+        if(tunelVisionMove.type >= 0) {
+            if(tunelVisionMove.type === 5) console.log(`Human move (${tunelVisionMove.type}): ${this.#toolbox.convertMoveLanToSan(game.fen(), tunelVisionMove.notation)}`);
             this.#lastRandomMove = this.#lastRandomMove-1;
-            return stockfishMove;
+            return tunelVisionMove;
         } 
 
         return move;
@@ -580,7 +679,7 @@ class BotsAI {
             type: -1,
         };
 
-        const humanMove = await this.#humanMoveLogic(game, true, false);
+        const humanMove = await this.#humanMoveLogic(game, false, false);
         if(humanMove.type >= 0) {
             this.#lastRandomMove = this.#lastRandomMove-1;
             return humanMove;
