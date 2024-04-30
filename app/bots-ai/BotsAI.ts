@@ -123,7 +123,6 @@ function initDefaultBotParams(level: string): DefaultBotParams {
     // Empeche d'avoir un deuxième coup aléatoire avant le Xème coup
     let randMoveInterval = 5;
 
-    //TODO: à implémenter
     let playForcedMate = 1; // Empèche de louper les mats en x quand x < ou = à playForcedMate
 
     //TODO: à implémenter quand le reste sera fait: plus il y a de pièces attaquées, plus la charge mentale augmente, plus 
@@ -276,7 +275,7 @@ class BotsAI {
         this.#toolbox = new GameToolBox();
         this.#botLevel = level;
         this.#behaviour = behaviour;
-        this.#lastRandomMove = Math.floor(Math.random()*5 - 2);
+        this.#lastRandomMove = Math.floor(Math.random()*5 - Math.random()*5);
         this.#botColor = botColor;
         this.#engine.init();
         this.#defaultBotParams = initDefaultBotParams(level);
@@ -549,7 +548,8 @@ class BotsAI {
     }
 
     async #makeDefaultMove(game: Chess): Promise<Move> {
-        //console.log('Bot AI: Default behaviour');
+        console.log('Bot AI: Default behaviour');
+        console.log('Last Random Move: ' + this.#lastRandomMove);
         let move: Move = {
             notation: '',
             type: -1,
@@ -679,7 +679,7 @@ class BotsAI {
             type: -1,
         };
 
-        const humanMove = await this.#humanMoveLogic(game, false, false);
+        const humanMove = await this.#humanMoveLogic(game, true, true);
         if(humanMove.type >= 0) {
             this.#lastRandomMove = this.#lastRandomMove-1;
             return humanMove;
@@ -3073,7 +3073,6 @@ class BotsAI {
         return move;
     }
 
-    // TODO: Choisir le behaviour directement puis l'interface utilisateur
     async makeMove(game: Chess): Promise<Move> {
         let move: Move = {
             notation: '',

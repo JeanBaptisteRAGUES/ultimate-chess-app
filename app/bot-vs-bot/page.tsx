@@ -157,14 +157,10 @@ const BotVsBotPage = () => {
     }
   
     function onDrop(sourceSquare: Square, targetSquare: Square, piece: Piece) {
+      if(gameStarted) return false;
+      
       const promotion = getPromotion(sourceSquare, piece);
       gameMove(sourceSquare + targetSquare + promotion, 0);
-  
-      if(gameStarted){
-        const newTimeout = setTimeout(playComputerMove, 300);
-        setCurrentTimeout(newTimeout);
-      }
-      
       return true;
     }
 

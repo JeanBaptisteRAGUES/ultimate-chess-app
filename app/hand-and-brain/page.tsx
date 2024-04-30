@@ -229,21 +229,24 @@ const HandAndBrainPage = () => {
     }
   
     function onDrop(sourceSquare: Square, targetSquare: Square, piece: Piece) {
+      const promotion = getPromotion(sourceSquare, piece);
+      
+      if(gameStarted){
+        console.log(playerRole);
         if(playerRole === 'Brain') return false; 
         if(game.get(sourceSquare).type !== selectedPiece) return false;
-        console.log(playerRole);
-        const promotion = getPromotion(sourceSquare, piece);
         gameMove(sourceSquare + targetSquare + promotion, 0);
         setAllyStatus(2);
-    
         let delay = getTimeControlDelay();
         if(opponentRating === 'Maximum') delay = 0;
-        if(gameStarted){
-            const newTimeout = setTimeout(playComputerMove, delay);
-            setCurrentTimeout(newTimeout);
-        }
         
+        const newTimeout = setTimeout(playComputerMove, delay);
+        setCurrentTimeout(newTimeout);
         return true;
+      }
+      
+      gameMove(sourceSquare + targetSquare + promotion, 0);
+      return true;
     }
 
     const moveColor = (moveType: number, move: string, i: number) => {
