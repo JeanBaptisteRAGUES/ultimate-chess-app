@@ -282,6 +282,7 @@ class BotsAI {
     }
 
     #isLastMoveDangerous(game: Chess): {danger: boolean, dangerCases: {dangerCase: string, dangerValue: number}[] } {
+        //console.log("Is last move dangerous ?");
         const history = JSON.parse(JSON.stringify(game.history({verbose: true})));
         const lastMove = history.pop();
         const gameTest = new Chess();
@@ -291,17 +292,13 @@ class BotsAI {
             dangerCases: []
         };
     
-        console.log(lastMove);
-    
         
         const previousFen = lastMove.before;
-        //const currentFen = lastMove.after;
         
         gameTest.load(previousFen);
         gameTest.remove(lastMove.from);
         gameTest.put({type: lastMove.piece, color: lastMove.color}, lastMove.to);
-        const pieceMoves = gameTest.moves({square: lastMove.to});
-        //gameTest.load(currentFen);
+        const pieceMoves = gameTest.moves({square: lastMove.to, verbose: true});
         
         let danger = false;
         const dangerCases: {dangerCase: string, dangerValue: number}[] = [];
@@ -310,14 +307,14 @@ class BotsAI {
         if(lastMove.san.match(/[x]/gm)) danger = true;
     
         pieceMoves.forEach(pieceMove => {
-            const attackedCase = this.#toolbox.getMoveDestination(this.#toolbox.convertMoveSanToLan(gameTest.fen(), pieceMove));
+            const attackedCase = pieceMove.to;
             const squareInfos = gameTest.get(attackedCase);
     
             console.log(squareInfos);
             if(squareInfos && squareInfos?.type !== 'p' && squareInfos?.color === this.#botColor) {
                 dangerCases.push({
                     dangerCase: attackedCase,
-                    dangerValue: this.#toolbox.getExchangeValue(gameTest.fen(), this.#toolbox.convertMoveSanToLan(gameTest.fen(), pieceMove))
+                    dangerValue: this.#toolbox.getExchangeValue(gameTest.fen(), pieceMove.lan)
                 })
                 danger = true;
             }
@@ -332,17 +329,17 @@ class BotsAI {
     }
     
     async #isNearCheckmate(maxMateValue: number, game: Chess) {
-        console.log('Test if Near Checkmate');
+        //console.log('Test if Near Checkmate');
         const newEngine = new Engine();
         await newEngine.init();
         const positionEval: EvalResultSimplified = await newEngine.evalPositionFromFen(game.fen(), 8);
-        console.log(positionEval);
+        //console.log(positionEval);
         if(!positionEval.eval.includes('#')) return false;
     
         const mateValue = this.#toolbox.getMateValue(positionEval.eval, this.#botColor, '#');
-        console.log(this.#botColor);
+        /* console.log(this.#botColor);
         console.log(mateValue);
-        console.log(maxMateValue);
+        console.log(maxMateValue); */
         newEngine.quit();
         return mateValue > 0 && mateValue <= maxMateValue;
     }
