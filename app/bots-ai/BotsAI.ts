@@ -530,6 +530,17 @@ class BotsAI {
             return checkmateMove;
         }
 
+        const {danger, dangerCases} = this.#isLastMoveDangerous(game);
+
+        console.log("Le dernier coup est dangereux: " + danger);
+    
+        if(danger) {
+            const reactingThreatMove = await makeStockfishMove(this.#defaultBotParams, game, this.#engine);
+            if(reactingThreatMove.type >= 0 ){
+                return reactingThreatMove;
+            }
+        }
+
         if(useRandom && isRandomMovePlayable(this.#defaultBotParams, this.#botLevel, this.#lastRandomMove)) {
             this.#lastRandomMove = this.#defaultBotParams.randMoveInterval;
             return makeRandomMove(this.#defaultBotParams.filterLevel, this.#defaultBotParams.securityLvl > 1, game);
