@@ -217,8 +217,8 @@ function isRandomMovePlayable (botParams: DefaultBotParams, level: string, lastR
 }
 
 async function makeStockfishMove(botParams: DefaultBotParams, game: Chess, engine: Engine): Promise<Move> {
-    console.log('Make Stockfish Move');
-    console.log(botParams);
+    //console.log('Make Stockfish Move');
+    //console.log(botParams);
     let stockfishMove: Move = {
         notation: '',
         type: -1
@@ -275,7 +275,7 @@ class BotsAI {
         this.#toolbox = new GameToolBox();
         this.#botLevel = level;
         this.#behaviour = behaviour;
-        this.#lastRandomMove = Math.floor(Math.random()*5 - Math.random()*5);
+        this.#lastRandomMove = botColor === 'w' ? (-1)*Math.floor(Math.random()*3) - 1 : Math.floor(Math.random()*3) + 1;
         this.#botColor = botColor;
         this.#engine.init();
         this.#defaultBotParams = initDefaultBotParams(level);
@@ -310,7 +310,7 @@ class BotsAI {
             const attackedCase = pieceMove.to;
             const squareInfos = gameTest.get(attackedCase);
     
-            console.log(squareInfos);
+            //console.log(squareInfos);
             if(squareInfos && squareInfos?.type !== 'p' && squareInfos?.color === this.#botColor) {
                 dangerCases.push({
                     dangerCase: attackedCase,
@@ -381,7 +381,7 @@ class BotsAI {
                 const rand = Math.fround(Math.random()*100);
                 const captureValue = this.#toolbox.getExchangeValue(game.fen(), moveLan);
                 const captureChance = Math.min(captureValue*forceExchangeChance, 90)
-                console.log(`Move: ${possibleMove} (value: ${captureValue}, capture chances: ${captureChance}, rand: ${rand})`);
+                //console.log(`Move: ${possibleMove} (value: ${captureValue}, capture chances: ${captureChance}, rand: ${rand})`);
                 if(rand <= captureChance){
                     move.notation = moveLan;
                     move.type = 5
@@ -398,6 +398,7 @@ class BotsAI {
             notation: '',
             type: -1
         } 
+        let humanReaction = false;
 
         const badReactionChanceBase = new Map([
             ['Beginner', 10],
@@ -408,8 +409,8 @@ class BotsAI {
             ['Maximum', 0]
           ]).get(this.#botLevel) || 10;
 
-        console.log("Attacked cases: ");
-        console.log(dangerCases);
+        //console.log("Attacked cases: ");
+        //console.log(dangerCases);
         let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, 20, 50, false);
 
         stockfishMoves = stockfishMoves.map((evalRes) => {
@@ -420,10 +421,15 @@ class BotsAI {
                 //TODO: Il ne faudrait autoriser que les déplacements sur des cases safe
                 const badReactionChance = badReactionChanceBase*Math.abs(dangerValue)
                 const rand = Math.random()*100;
-                const badReactionBonus = rand <= badReactionChance ? 5 : 0;
-                console.log(`badReactionChanceBase: ${badReactionChanceBase}, badReactionChance: ${badReactionChance}, rand: ${rand}, badReactionBonus: ${badReactionBonus}`);
-                console.log(`${evalRes.bestMove} includes ${moveOrigin}`);
-                console.log(`Danger Case: ${dangerCase}, Danger Value: ${dangerValue}`);
+                let badReactionBonus = 0;
+
+                if(rand <= badReactionChance){
+                    badReactionBonus = 5;
+                    humanReaction = true;
+                }
+                //console.log(`badReactionChanceBase: ${badReactionChanceBase}, badReactionChance: ${badReactionChance}, rand: ${rand}, badReactionBonus: ${badReactionBonus}`);
+                //console.log(`${evalRes.bestMove} includes ${moveOrigin}`);
+                //console.log(`Danger Case: ${dangerCase}, Danger Value: ${dangerValue}`);
                 evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + badReactionBonus).toString();
                 return evalRes;
             }
@@ -434,12 +440,13 @@ class BotsAI {
 
         stockfishMoves.sort(compareEval);
 
-        console.log(stockfishMoves);
+        //console.log(stockfishMoves);
 
         stockfishMove.notation = stockfishMoves[0].bestMove;
-        stockfishMove.type = 2;
+        stockfishMove.type = 3;
 
         //if(dangerCases.includes(this.#toolbox.getMoveOrigin(stockfishMove.notation))) stockfishMove.type = 5;
+        if(humanReaction) stockfishMove.type = 5;
 
         return stockfishMove
     }
@@ -512,10 +519,10 @@ class BotsAI {
 
             const lichessMove = await makeLichessMove(movesList, this.#botLevel, startingFen);
             if(lichessMove.type >= 0){
-                console.log(`${this.#botColor} make Lichess move`);
+                //console.log(`${this.#botColor} make Lichess move`);
                 return correctCastleMove(lichessMove, game.fen(), this.#toolbox);
             } 
-            console.log('No more moves in the Lichess Database for ' + this.#botColor);
+            //console.log('No more moves in the Lichess Database for ' + this.#botColor);
         }
 
         /* const forcedStockfishMove = await makeForcedStockfishMove(this.#defaultBotParams, this.#botColor, game, this.#engine, this.#toolbox);
@@ -532,11 +539,12 @@ class BotsAI {
 
         const {danger, dangerCases} = this.#isLastMoveDangerous(game);
 
-        console.log("Le dernier coup est dangereux: " + danger);
+        //console.log("Le dernier coup est dangereux: " + danger);
     
         if(danger) {
             const reactingThreatMove = await makeStockfishMove(this.#defaultBotParams, game, this.#engine);
             if(reactingThreatMove.type >= 0 ){
+                reactingThreatMove.type = 3;
                 return reactingThreatMove;
             }
         }
@@ -557,7 +565,7 @@ class BotsAI {
 
     async #makeDefaultMove(game: Chess): Promise<Move> {
         console.log('Bot AI: Default behaviour');
-        console.log('Last Random Move: ' + this.#lastRandomMove);
+        //console.log('Last Random Move: ' + this.#lastRandomMove);
         let move: Move = {
             notation: '',
             type: -1,
@@ -618,10 +626,10 @@ class BotsAI {
 
             const lichessMove = await makeLichessMove(movesList, this.#botLevel, startingFen);
             if(lichessMove.type >= 0){
-                console.log(`${this.#botColor} make Lichess move`);
+                //console.log(`${this.#botColor} make Lichess move`);
                 return lichessMove;
             } 
-            console.log('No more moves in the Lichess Database for ' + this.#botColor);
+            //console.log('No more moves in the Lichess Database for ' + this.#botColor);
         }
 
         //TODO: Cause un gros problème
@@ -647,7 +655,7 @@ class BotsAI {
         
         const {danger, dangerCases} = this.#isLastMoveDangerous(game);
 
-        console.log("Le dernier coup est dangereux: " + danger);
+        //console.log("Le dernier coup est dangereux: " + danger);
     
         if(danger) {
             const reactingThreatMove = await this.#makeHumanThreatReaction(game, dangerCases);
@@ -655,12 +663,6 @@ class BotsAI {
                 return reactingThreatMove;
             }
         }
-
-        /* const forcedStockfishMove = await makeForcedStockfishMove(this.#defaultBotParams, this.#botColor, game, this.#engine, this.#toolbox);
-        if(forcedStockfishMove.type >= 0) {
-            this.#lastRandomMove = this.#lastRandomMove-1;
-            return forcedStockfishMove;
-        }  */
 
         if(useRandom && isRandomMovePlayable(this.#defaultBotParams, this.#botLevel, this.#lastRandomMove)) {
             this.#lastRandomMove = this.#defaultBotParams.randMoveInterval;
@@ -678,10 +680,9 @@ class BotsAI {
         return move;
     }
 
-    // TODO: Suivant le niveau, capturer automatiquement avec un certain % les pièces en prise quand valeur attaquant < valeau attaqué
-    // TODO: Afficher quel aurait était le coup choisi par stockfish de base avant toutes les erreurs 'humaines' pour comparer
     async #makeHumanMove(game: Chess): Promise<Move> {
-        //console.log('Bot AI: Human behaviour');
+        console.log('Bot AI: Human behaviour');
+        //console.log('Last Random Move: ' + this.#lastRandomMove);
         let move: Move = {
             notation: '',
             type: -1,

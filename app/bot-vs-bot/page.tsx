@@ -127,7 +127,7 @@ const BotVsBotPage = () => {
     }
 
     async function playComputerMove() {
-      console.log('Play computer move');
+      //console.log('Play computer move');
       if(!gameActive.current || game.pgn().includes('#')) return;
  
       const move: Move | undefined = game.fen().includes(' w ') ? await bot1_AI.current?.makeMove(game) : await bot2_AI.current?.makeMove(game);

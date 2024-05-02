@@ -195,7 +195,7 @@ const ChessPage = () => {
     }
 
     async function playComputerMove() {
-      console.log('Play computer move');
+      //console.log('Play computer move');
       if(game.pgn().includes('#')) return;
       const move: Move | undefined = await botAI.current?.makeMove(game);
 

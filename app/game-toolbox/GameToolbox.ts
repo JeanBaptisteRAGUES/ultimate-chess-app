@@ -326,7 +326,7 @@ class GameToolBox {
      * @returns string -> 'f1c4'
      */
     convertMoveSanToLan(fen: string, sanNotation: string): string {
-        console.log(`Convert San to Lan: ${sanNotation} (${fen})`);
+        //console.log(`Convert San to Lan: ${sanNotation} (${fen})`);
         this.game.load(fen);
         this.game.move(sanNotation);
 

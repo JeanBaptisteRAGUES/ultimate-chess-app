@@ -59,7 +59,7 @@ class Engine {
             this.stockfish.postMessage('uci');
             this.stockfish.onmessage = function(event: any) {
                 if(event.data === 'uciok'){
-                    console.log('uciok');
+                    //console.log('uciok');
                     resolve('uciok');
                 }
             }
@@ -100,7 +100,7 @@ class Engine {
     
 
     findBestMoves(fen: string, depth: number, skillValue: number, multiPv: number, useCoeff: boolean): Promise<EvalResultSimplified[]> {
-        console.log('Find Best Moves');
+        //console.log('Find Best Moves');
         let coeff = fen.includes(' w ') ? 1 : -1;
         if(!useCoeff) coeff = 1;
 
