@@ -1125,7 +1125,7 @@ class BotsAI {
     }
 
     /**
-     * Aime sacrifier sa dame le plus rapidement possible !
+     * Aime sacrifier sa dame le plus rapidement possible !!!
      */
     async #makeBotezGambitMove(game: Chess): Promise<Move> {
         //console.log('Bot AI: Botez Gambit');
@@ -1491,7 +1491,7 @@ class BotsAI {
                 return move;
 
             case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.e5 Ne4 6.d4 Qh4 7.Be3 Bg4 8.Be2 Bxe2 9.Qxe2':
-                move.notation = 'e1c1';
+                move.notation = 'e8c8';
                 move.type = 2;
                 return move;
 
