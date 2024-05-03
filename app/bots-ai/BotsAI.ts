@@ -1125,7 +1125,7 @@ class BotsAI {
     }
 
     /**
-     * Aime sacrifier sa dame le plus rapidement possible !!
+     * Aime sacrifier sa dame le plus rapidement possible !!!
      */
     async #makeBotezGambitMove(game: Chess): Promise<Move> {
         //console.log('Bot AI: Botez Gambit');
@@ -1450,6 +1450,11 @@ class BotsAI {
                 move.type = 2;
                 return move;
 
+            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.e5 Ne4 6.d3':
+                move.notation = 'f8c5';
+                move.type = 2;
+                return move;
+
             case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.e5 Ne4 6.d4':
                 move.notation = 'd8h4';
                 move.type = 2;
@@ -1640,6 +1645,11 @@ class BotsAI {
                 move.type = 2;
                 return move;
 
+            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.d3 Bc5 6.Nc3':
+                move.notation = 'f6g4';
+                move.type = 2;
+                return move;
+
             case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3':
                 move.notation = 'f8c5';
                 move.type = 2;
@@ -1647,6 +1657,46 @@ class BotsAI {
             
             case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Bc4':
                 move.notation = 'f6g4';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Bc4 Ng4 7.Qf3':
+                move.notation = 'g4e5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Bc4 Ng4 7.Qf3 Ne5 8.Qe2':
+                move.notation = 'd8e4';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Bc4 Ng4 7.Qf3 Ne5 8.Qe2 Qh4 9.g3':
+                move.notation = 'h4h3';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Bc4 Ng4 7.Qf3 Ne5 8.Qe2 Qh4 9.g3 Qh3 10.d3':
+                move.notation = 'c8g4';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Bc4 Ng4 7.Qf3 Ne5 8.Qe2 Qh4 9.g3 Qh3 10.f4':
+                move.notation = 'c8g4';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Bc4 Ng4 7.Qf3 Ne5 8.Qe2 Qh4 9.O-O':
+                move.notation = 'c8g4';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Bc4 Ng4 7.Qf3 Ne5 8.Qe2 Qh4 9.O-O Bg4 10.Qe1':
+                move.notation = 'e5f3';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Bc4 Ng4 7.Qf3 Ne5 8.Qe2 Qh4 9.O-O Bg4 10.Qe1 Nf3+ 11.gxf3 Bxf3 12.Ne2':
+                move.notation = 'h4g4';
                 move.type = 2;
                 return move;
 
@@ -1685,27 +1735,167 @@ class BotsAI {
                 move.type = 2;
                 return move;
 
-            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Be2 Qd4 7.O-O':
-                move.notation = 'h7h5';
-                move.type = 2;
-                return move;
-
-             case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Be2 Qd4 7.O-O h5 8.d3':
+            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Be2 h5 7.d3':
                 move.notation = 'f6g4';
                 move.type = 2;
                 return move;
 
-            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Be2 Qd4 7.O-O h5 8.d3 Ng4 9.Bxg4':
+            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Be2 h5 7.d3 Ng4 8.O-O':
+                move.notation = 'd8f6';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Be2 h5 7.d3 Ng4 8.O-O Qf6 9.Bf3':
+                move.notation = 'c8e6';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Be2 h5 7.d3 Ng4 8.O-O Qf6 9.Bf3 Be6 10.Na4':
+                move.notation = 'c5f2';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Be2 h5 7.d3 Ng4 8.O-O Qf6 9.Bf3 Be6 10.Na4 Bxf2+ 11.Rxf2':
+                move.notation = 'g4f2';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Be2 h5 7.d3 Ng4 8.O-O Qf6 9.Bf3 Be6 10.Na4 Bxf2+ 11.Rxf2 Nxf2 12.Kxf2':
+                move.notation = 'f6d4';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Be2 h5 7.d3 Ng4 8.O-O Qf6 9.Bf3 Be6 10.Na4 Bxf2+ 11.Rxf2 Nxf2 12.Kxf2 Qd4+ 13.Be3':
+                move.notation = 'd4a4';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Be2 h5 7.h3':
+                move.notation = 'd8d4';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Be2 h5 7.h3 Qd4 8.O-O':
+                move.notation = 'f6g4';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Be2 h5 7.h3 Qd4 8.O-O Ng4 9.Bxg4':
                 move.notation = 'h5g4';
                 move.type = 2;
                 return move;
 
-             case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Be2 Qd4 7.O-O h5 8.d3 Ng4 9.Bxg4 hxg4 10.Be3':
+            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Be2 h5 7.h3 Qd4 8.O-O Ng4 9.Bxg4 hxg4 10.Ne2':
+                move.notation = 'd4f6';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Be2 h5 7.h3 Qd4 8.O-O Ng4 9.Bxg4 hxg4 10.Ne2 Qf6 11.d4':
+                move.notation = 'g4h3';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Be2 h5 7.h3 Qd4 8.O-O Ng4 9.Bxg4 hxg4 10.Ne2 Qf6 11.d4 gxh3 12.dxc5':
+                move.notation = 'h3g2';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Be2 h5 7.h3 Qd4 8.O-O Ng4 9.Bxg4 hxg4 10.Ne2 Qf6 11.d4 gxh3 12.dxc5 hxg2 13.Kxg2':
+                move.notation = 'c8h3';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Be2 h5 7.h3 Qd4 8.O-O Ng4 9.Bxg4 hxg4 10.Ne2 Qf6 11.d4 gxh3 12.dxc5 hxg2 13.Kxg2 Bh3+ 14.Kg1':
+                move.notation = 'a8d8';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Be2 h5 7.h3 Qd4 8.O-O Ng4 9.Bxg4 hxg4 10.hxg4':
                 move.notation = 'd4e5';
                 move.type = 2;
                 return move;
 
-             case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.h3':
+            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Be2 h5 7.h3 Qd4 8.O-O Ng4 9.Bxg4 hxg4 10.hxg4 Qe5 11.g3':
+                move.notation = 'e5g3';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Be2 h5 7.h3 Qd4 8.O-O Ng4 9.hxg4':
+                move.notation = 'h5g4';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Be2 h5 7.h3 Qd4 8.O-O Ng4 9.hxg4 hxg4 10.d3':
+                move.notation = 'd4e5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Be2 h5 7.h3 Qd4 8.O-O Ng4 9.hxg4 hxg4 10.d3 Qe5 11.g3':
+                move.notation = 'e5g3';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Be2 h5 7.h3 Qd4 8.O-O Ng4 9.hxg4 hxg4 10.Bxg4':
+                move.notation = 'd4e5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Be2 h5 7.h3 Qd4 8.O-O Ng4 9.hxg4 hxg4 10.Bxg4 Qe5 11.g3':
+                move.notation = 'e5g3';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Be2 h5 7.h3 Qd4 8.O-O Ng4 9.hxg4 hxg4 10.Bxg4 Qe5 11.Bh3':
+                move.notation = 'h8h3';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Be2 h5 7.O-O':
+                move.notation = 'f6g4';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Be2 h5 7.O-O Ng4 8.h3':
+                move.notation = 'd8f6';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Be2 h5 7.O-O Ng4 8.h3 Qf6 9.Bf3':
+                move.notation = 'f6e5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Be2 h5 7.O-O Ng4 8.h3 Qf6 9.Qe1':
+                move.notation = 'f6e5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Be2 h5 7.O-O Ng4 8.h3 Qf6 9.hxg4':
+                move.notation = 'h5g4';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Be2 h5 7.O-O Ng4 8.h3 Qf6 9.hxg4 hxg4 10.Bxg4':
+                move.notation = 'f6g4';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Be2 h5 7.O-O Ng4 8.h3 Qf6 9.hxg4 hxg4 10.Bxg4 Qh4 11.Bh3':
+                move.notation = 'c8h3';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Be2 h5 7.O-O Ng4 8.h3 Qf6 9.hxg4 hxg4 10.Bxg4 Qh4 11.Bh3 Bxh3 12.gxh3':
+                move.notation = 'h4g3';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.Be2 h5 7.O-O Ng4 8.h3 Qf6 9.hxg4 hxg4 10.Bxg4 Qh4 11.Bh3 Bxh3 12.Qf3':
+                move.notation = 'h3g4';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.Nc3 Bc5 6.h3':
                 move.notation = 'b7b5';
                 move.type = 2;
                 return move;
