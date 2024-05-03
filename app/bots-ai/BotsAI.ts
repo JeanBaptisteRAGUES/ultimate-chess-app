@@ -1166,7 +1166,7 @@ class BotsAI {
 
             // e4 e5 Nf3
             case '1.e4 e5 2.Nf3':
-                if(rand <= 70){
+                if(rand <= 75){
                     move.notation = 'g8f6';
                     move.type = 2;
                     return move;
