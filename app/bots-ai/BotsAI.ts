@@ -1175,7 +1175,150 @@ class BotsAI {
                 move.type = 2;
                 return move;
 
-            // Three Knights (Petrov's Defense)
+            // Petrov's Defense (Modern Attack)
+            case '1.e4 e5 2.Nf3 Nf6 3.d4':
+                move.notation = 'f6e4';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.d4 Nxe4 4.dxe5':
+                move.notation = 'd7d5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.d4 Nxe4 4.Nxe5':
+                move.notation = 'd7d5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.d4 Nxe4 4.Bd3':
+                move.notation = 'd7d5';
+                move.type = 2;
+                return move;
+
+            // Petrov's Defense (d3?! Variation)
+            case '1.e4 e5 2.Nf3 Nf6 3.d3':
+                move.notation = 'c7c6';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.d3 c6 4.Nxe5':
+                move.notation = 'd8a5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.d3 c6 4.Bg5':
+                move.notation = 'f8e7';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.d3 c6 4.Bg5 Be7 5.Nxe5':
+                move.notation = 'd8a5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.d3 c6 4.Be2':
+                move.notation = 'f8e7';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.d3 c6 4.Be2 Be7 5.Nxe5':
+                move.notation = 'd8a5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.d3 c6 4.Nc3':
+                move.notation = 'd7d5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.d3 c6 4.Nc3 d5 5.exd5':
+                move.notation = 'c6d5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.d3 c6 4.Nc3 d5 5.exd5 cxd5 6.Nxe5':
+                move.notation = 'd5d4';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.d3 c6 4.Nc3 d5 5.exd5 cxd5 6.Nxe5 d4 7.Ne4':
+                move.notation = 'd8a5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.d3 c6 4.Nc3 d5 5.exd5 cxd5 6.Nxe5 d4 7.Ne2':
+                move.notation = 'd8a5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.d3 c6 4.Nc3 d5 5.exd5 cxd5 6.Nxe5 d4 7.Nb1':
+                move.notation = 'd8a5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.d3 c6 4.Nc3 d5 5.exd5 cxd5 6.Nxe5 d4 7.Nb5':
+                move.notation = 'd8a5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.d3 c6 4.Nc3 d5 5.exd5 cxd5 6.Nxe5 d4 7.Na4':
+                move.notation = 'd8a5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.d3 c6 4.Nc3 d5 5.Nxe5':
+                move.notation = 'd5d4';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.d3 c6 4.Nc3 d5 5.Nxe5 d4 6.Ne2':
+                move.notation = 'd8a5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.d3 c6 4.Nc3 d5 5.Nxe5 d4 6.Nb1':
+                move.notation = 'd8a5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.d3 c6 4.Nc3 d5 5.Nxe5 d4 6.Na4':
+                move.notation = 'd8a5';
+                move.type = 2;
+                return move;
+
+            // Petrov's Defense (Italian Variation)
+            case '1.e4 e5 2.Nf3 Nf6 3.Bc4':
+                move.notation = 'f6e4';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Bc4 Nxe4 4.Nxe5':
+                move.notation = 'd7d5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Bc4 Nxe4 4.Nxe5 d5 5.Bb3':
+                move.notation = 'd8g5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Bc4 Nxe4 4.Nxe5 d5 5.Qf3':
+                move.notation = 'c8e6';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Bc4 Nxe4 4.Nxe5 d5 5.Qf3 Be6 6.Bb3':
+                move.notation = 'd8g5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Bc4 Nxe4 4.Nxe5 d5 5.Qf3 Be6 6.Bb3 Qg5 7.Nd3':
+                move.notation = 'b8c6';
+                move.type = 2;
+                return move;
+
+            // Petrov's Defense (Three Knights)
             case '1.e4 e5 2.Nf3 Nf6 3.Nc3':
                 move.notation = 'b8c6';
                 move.type = 2;
