@@ -144,7 +144,8 @@ export async function getHandMoveFromLichessDB(selectedPiece: string, moves: Arr
 
 //TODO: à finir
 //https://explorer.lichess.ovh/player?variant=standard&fen=rnbqkbnr%2Fpppppppp%2F8%2F8%2F8%2F8%2FPPPPPPPP%2FRNBQKBNR+w+KQkq+-+0+1&play=e2e4&speeds=rapid%2Cclassical&player=Hippo31&color=white&modes=casual%2Crated&source=analysis
-export async function fetchPlayerLichessDB(username: string, playerColor: string, moves: Array<String>, level: string, fen = ""): Promise<Move> {
+async function fetchPlayerLichessDB(username: string, playerColor: string, moves: Array<String>, level: string, fen = ""): Promise<Move> {
+    console.log('fetchPlayerLichessDB');
     playerColor = playerColor === 'w' ? 'white' : 'black';
     if(fen === "") {
         fen = "rnbqkbnr%2Fpppppppp%2F8%2F8%2F8%2F8%2FPPPPPPPP%2FRNBQKBNR+w+KQkq+-+0+1";
@@ -157,8 +158,11 @@ export async function fetchPlayerLichessDB(username: string, playerColor: string
     let req = `https://explorer.lichess.ovh/player?variant=standard&fen=${fen}&play=${movesFormated}&speeds=rapid%2Cclassical&player=${username}&color=${playerColor}&modes=casual%2Crated&source=analysis`;
 
 
-    const res = await fetch(req);
+    const res = await fetch(req, {signal: AbortSignal.timeout(30000)});
     const data = await res.json();
+
+    console.log('Résultat requête: ');
+    console.log(data);
 
     const gamesTotal = data.white + data.draws + data.black;
     let randMove = randomIntFromInterval(0, gamesTotal);
@@ -177,9 +181,92 @@ export async function fetchPlayerLichessDB(username: string, playerColor: string
         notation: '',
     }
 
+    console.log('Coup choisi: ' + data.moves[moveIndex].uci);
+
     return {
         notation: data.moves[moveIndex].uci,
         type: 1,
+    }
+}
+
+export async function safeFetchPlayerLichessDB(username: string, playerColor: string, moves: Array<String>, level: string, fen = ""): Promise<Move> {
+    try{
+       const lichessPlayerMove = await fetchPlayerLichessDB(username, playerColor, moves, level, fen);
+       return lichessPlayerMove;
+    } catch (error) {
+        console.log(error);
+        return {
+            type: -1,
+            notation: '',
+        };
+    }
+} 
+
+//https://www.chess.com/callback/explorer/move
+
+/*
+{
+    "_token":"d15a875d9871ec05540c4a8.dnF3yJfo2gxhPkG5R9gDMscPTvzXHpL9ENF4kzT6dyM.BxMfv66Po0ARW3jtDrk3avNWAq6EU_mVYrQo4XezJUkGIyac9d3rZ1NNIg",
+    "ply":1,
+    "gameSource":"other",
+    "nextFen":"rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1",
+    "moveList":[
+        {
+            "activeColor":"b",
+            "encodedMove":"mC",
+            "nextFen":"rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1",
+            "sanMove":"e4"
+        }
+    ],
+    "sanMove":"e4",
+    "gameType":"all",
+    "color":"white",
+    "username":"Hikaru"
+}
+*/
+
+// TODO: Error -> POST https://www.chess.com/callback/explorer/move net::ERR_BLOCKED_BY_RESPONSE.NotSameOriginAfterDefaultedToSameOriginByCoep 200 (OK)
+export async function fetchChessDotComDB() {
+    let reqURL = "https://www.chess.com/callback/explorer/move";
+    let reqBody = {
+        "_token":"d15a875d9871ec05540c4a8.dnF3yJfo2gxhPkG5R9gDMscPTvzXHpL9ENF4kzT6dyM.BxMfv66Po0ARW3jtDrk3avNWAq6EU_mVYrQo4XezJUkGIyac9d3rZ1NNIg",
+        "ply":1,
+        "gameSource":"other",
+        "nextFen":"rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1",
+        "moveList":[
+            {
+                "activeColor":"b",
+                "encodedMove":"mC",
+                "nextFen":"rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1",
+                "sanMove":"e4"
+            }
+        ],
+        "sanMove":"e4",
+        "gameType":"all",
+        "color":"white",
+        "username":"Hikaru"
+    }
+
+    try {
+        const res = await fetch(reqURL, {
+            method: 'POST',
+            mode: "no-cors", // no-cors, *cors, same-origin
+            cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+            credentials: "omit", // include, *same-origin, omit
+            headers: {
+                "Content-Type": "application/json",
+                // 'Content-Type': 'application/x-www-form-urlencoded',
+                "Cross-Origin-Ressource-Policy": "cross-origin"
+            },
+            body: JSON.stringify(reqBody),
+            signal: AbortSignal.timeout(5000)
+        });
+        const data = await res.json();
+
+        console.log('Résultat requête Chess.com: ');
+        console.log(data);
+    } catch (error) {
+        console.log('Erreur lors de la requête aux serveurs de Chess.com: ' + error);
     }
 }
 

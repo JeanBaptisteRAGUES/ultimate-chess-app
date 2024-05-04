@@ -56,7 +56,7 @@ const SelectBot = () => {
             </div>
         </div>
 
-    const behaviourComponent = 
+    const gimmickBotsComponent = 
         <div className='flex flex-row justify-around items-center flex-wrap w-full mt-2 px-2 gap-2' >
             <div onClick={() => setBehaviour('default')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: behaviour === 'default' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Default</span>
@@ -69,9 +69,6 @@ const SelectBot = () => {
             </div>
             <div onClick={() => setBehaviour('pawn-pusher')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: behaviour === 'pawn-pusher' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Pawn Pusher</span>
-            </div>
-            <div onClick={() => setBehaviour('fianchetto-sniper')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: behaviour === 'fianchetto-sniper' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
-                <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Fianchetto Sniper</span>
             </div>
             <div onClick={() => setBehaviour('shy')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center  cursor-pointer' style={{color: behaviour === 'shy' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
                 <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Shy</span>
@@ -91,9 +88,6 @@ const SelectBot = () => {
             <div onClick={() => setBehaviour('queen-player')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: behaviour === 'queen-player' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
                 <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Queen Player</span>
             </div>
-            <div onClick={() => setBehaviour('botez-gambit')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: behaviour === 'botez-gambit' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
-                <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Botez Gambit</span>
-            </div>
             <div onClick={() => setBehaviour('castle-destroyer')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: behaviour === 'castle-destroyer' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Castle Destroyer</span>
             </div>
@@ -105,6 +99,16 @@ const SelectBot = () => {
             </div>
             <div onClick={() => setBehaviour('random-player')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: behaviour === 'random-player' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Random Player</span>
+            </div>
+        </div>
+
+    const openingBotsComponent = 
+        <div className='flex flex-row justify-around items-center flex-wrap w-full mt-2 px-2 gap-2' >
+            <div onClick={() => setBehaviour('fianchetto-sniper')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: behaviour === 'fianchetto-sniper' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Fianchetto Sniper</span>
+            </div>
+            <div onClick={() => setBehaviour('botez-gambit')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: behaviour === 'botez-gambit' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
+                <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Botez Gambit</span>
             </div>
             <div onClick={() => setBehaviour('copycat')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: behaviour === 'copycat' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Copycat</span>
@@ -180,8 +184,20 @@ const SelectBot = () => {
         <div className="flex flex-col justify-start items-center bg-cyan-900 h-[95vh] w-full overflow-auto" >
             <div className=' w-full md:ml-10 flex justify-center md:justify-start items-center text-2xl font-semibold text-white mt-5 mb-2' >Difficulté:</div>
             {difficultyComponent}
-            <div className=' w-full mt-20 md:ml-10 flex justify-center md:justify-start items-center text-2xl font-semibold text-white' >Gimmick:</div>
-            {behaviourComponent}
+            <div className=' w-full mt-20 md:ml-10 flex flex-col justify-center md:justify-start items-center font-semibold text-white'>
+                <div className=' w-full flex justify-center md:justify-start items-center text-2xl' >Gimmick:</div>
+                <div className=' w-full flex justify-center md:justify-start items-center text-base' >
+                    Bots qui jouent d'une façon particulière tout au long de la particulière
+                </div>
+            </div >
+            {gimmickBotsComponent}
+            <div className=' w-full mt-20 md:ml-10 flex flex-col justify-center md:justify-start items-center font-semibold text-white'>
+                <div className=' w-full flex justify-center md:justify-start items-center text-2xl' >Ouverture:</div>
+                <div className=' w-full flex justify-center md:justify-start items-center text-base' >
+                    Bots qui jouent des ouvertures spécifiques mais qui jouent ensuite normalement
+                </div>
+            </div >
+            {openingBotsComponent}
             <div className=' w-full mt-20 md:ml-10 flex justify-center md:justify-start items-center text-2xl font-semibold text-white' >Cadence:</div>
             {timeControlComponent}
             <Link

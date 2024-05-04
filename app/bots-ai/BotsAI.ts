@@ -237,9 +237,9 @@ async function makeLichessMove(movesList: string[], databaseRating: string, fen:
 
     lichessMove = await fetchLichessDatabase(movesList, databaseRating, fen);
 
-    if(databaseRating !== 'Maximum' && lichessMove?.san !== "" && lichessMove?.san !== undefined){
+    if(databaseRating !== 'Maximum' && lichessMove?.uci !== "" && lichessMove?.uci !== undefined){
         return {
-            notation: lichessMove.san,
+            notation: lichessMove.uci,
             type: 1
         }
     }

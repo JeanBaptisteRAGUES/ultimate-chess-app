@@ -15,6 +15,7 @@ import { PiVirtualReality } from "react-icons/pi";
 import { FaCirclePlay } from "react-icons/fa6";
 import { FaFontAwesomeFlag } from "react-icons/fa";
 import { FaRotate } from "react-icons/fa6";
+import { fetchChessDotComDB, safeFetchPlayerLichessDB } from "../libs/fetchLichess";
 
 
 const ChessPage = () => {
@@ -338,6 +339,13 @@ const ChessPage = () => {
       )
     }
 
+    async function fetchPlayerDB() {
+      //console.log('Fetch Lichess DB of Hippo31');
+      //await safeFetchPlayerLichessDB('Hippo31', 'w', ['e2e4'], 'Intermediate');
+      console.log('Fetch Chess.com DB (Hikaru): ');
+      await fetchChessDotComDB();
+    }
+
     const analysisMenu =
       <div className=" flex flex-col justify-center items-center gap-5">
         <Link
@@ -467,6 +475,11 @@ const ChessPage = () => {
           }
       </div>
 
+    const testButton =
+    <button onClick={() => fetchPlayerDB()}>
+      Hippo31 Lichess DB
+    </button>
+
     const startGameButton = !gameStarted ? 
       <div 
         onClick={() => {
@@ -503,6 +516,7 @@ const ChessPage = () => {
         {virtualModeButton}
         {startGameButton}
         {switchButton}
+        {testButton}
       </div>
 
     const gameComponent = 
