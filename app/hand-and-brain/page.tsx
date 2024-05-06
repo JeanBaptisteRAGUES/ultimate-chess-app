@@ -81,12 +81,13 @@ const HandAndBrainPage = () => {
       points: 0,
     });
 
+    // TODO: Rendre les time control dynamiques
     useEffect(() => {
         engine.current = new Engine();
         engine.current.init();
         const opponentColor = playerColor === 'w' ? 'b' : 'w';
-        allyAI.current = new BotsAI('default', allyRating, playerColor);
-        opponentAI.current = new BotsAI(opponentBehaviour, opponentRating, opponentColor);
+        allyAI.current = new BotsAI('default', allyRating, playerColor, '10+0');
+        opponentAI.current = new BotsAI(opponentBehaviour, opponentRating, opponentColor, '10+0');
         console.log("Player Role: " + playerRole);
         console.log("Ally Rating: " + allyRating);
         console.log("Ally Role: " + allyRole);
@@ -101,7 +102,7 @@ const HandAndBrainPage = () => {
     useEffect(() => {
       console.log('New Level : ' + opponentRating);
       const opponentColor = playerColor === 'w' ? 'b' : 'w';
-      opponentAI.current = new BotsAI(opponentBehaviour, opponentRating, opponentColor);
+      opponentAI.current = new BotsAI(opponentBehaviour, opponentRating, opponentColor, '10+0');
       if(playerColor === 'b' && !gameActive) setAllyStatus(2);
     }, [playerColor]);
 

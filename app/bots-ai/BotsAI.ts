@@ -113,7 +113,18 @@ function makeRandomMove(filterLevel: number, safeMoves: boolean, game: Chess): M
     }
 }
 
-function initDefaultBotParams(level: string): DefaultBotParams {
+function initDefaultBotParams(level: string, timeControl: string): DefaultBotParams {
+    const baseDetph = new Map([
+        ['1+0', 8],
+        ['3+0', 10],
+        ['3+2', 10],
+        ['10+0', 12],
+        ['15+10', 12],
+        ['30+20', 12],
+        ['90+30', 16],
+        ['infinite', 16],
+      ]).get(timeControl) || 12;
+
     let randMoveChance = 0;
     let skillValue = 0;
     let depth = 5;
@@ -138,7 +149,7 @@ function initDefaultBotParams(level: string): DefaultBotParams {
             filterLevel = 0;
             securityLvl = 0;
             skillValue = 0;
-            depth = 12;
+            depth = baseDetph;
             playForcedMate = 0;
             break;
         case 'Casual':
@@ -148,7 +159,7 @@ function initDefaultBotParams(level: string): DefaultBotParams {
             filterLevel = 1;
             securityLvl = 2;
             skillValue = 2;
-            depth = 12;
+            depth = baseDetph;
             playForcedMate = 1;
             break;
         case 'Intermediate':
@@ -158,7 +169,7 @@ function initDefaultBotParams(level: string): DefaultBotParams {
             filterLevel = 2;
             securityLvl = 2; 
             skillValue = 5; 
-            depth = 12;
+            depth = baseDetph;
             playForcedMate = 2;
             break;
         case 'Advanced':
@@ -168,7 +179,7 @@ function initDefaultBotParams(level: string): DefaultBotParams {
             filterLevel = 3;
             securityLvl = 2;
             skillValue = 10;
-            depth = 12;
+            depth = baseDetph;
             playForcedMate = 3;
             break;
         case 'Master':
@@ -178,7 +189,7 @@ function initDefaultBotParams(level: string): DefaultBotParams {
             filterLevel = 4;
             securityLvl = 2;
             skillValue = 16;
-            depth = 12;
+            depth = baseDetph;
             playForcedMate = 4;
             break;
         case 'Maximum':
@@ -187,7 +198,7 @@ function initDefaultBotParams(level: string): DefaultBotParams {
             filterLevel = 0;
             securityLvl = 0;
             skillValue = 20;
-            depth = 20;
+            depth = baseDetph + 4;
             break;
         default:
             randMoveChance = 10;
@@ -270,7 +281,7 @@ class BotsAI {
     #lastRandomMove: number;
     #botColor: Color;
 
-    constructor(behaviour: Behaviour, level: string, botColor: Color) {
+    constructor(behaviour: Behaviour, level: string, botColor: Color, timeControl: string) {
         this.#engine = new Engine();
         this.#toolbox = new GameToolBox();
         this.#botLevel = level;
@@ -278,7 +289,7 @@ class BotsAI {
         this.#lastRandomMove = botColor === 'w' ? (-1)*Math.floor(Math.random()*3) - 1 : Math.floor(Math.random()*3) + 1;
         this.#botColor = botColor;
         this.#engine.init();
-        this.#defaultBotParams = initDefaultBotParams(level);
+        this.#defaultBotParams = initDefaultBotParams(level, timeControl);
     }
 
     #isLastMoveDangerous(game: Chess): {danger: boolean, dangerCases: {dangerCase: string, dangerValue: number}[] } {
@@ -4137,12 +4148,12 @@ class BotsAI {
                 break;
 
             case 'chessable-master':
-                initDefaultBotParams('Casual');
+                initDefaultBotParams('Casual', '3+0');
                 move = await this.#makeChessableMasterMove(game);
                 break;
 
             case 'auto-didacte':
-                initDefaultBotParams('Advanced');
+                initDefaultBotParams('Advanced', '3+0');
                 move = await this.#makeAutoDidacteMove(game);
                 break;
 

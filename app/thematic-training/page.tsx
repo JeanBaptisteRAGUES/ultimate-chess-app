@@ -64,7 +64,7 @@ const ThematicTrainingPage = () => {
         engine.current = new Engine();
         engine.current.init();
         const botColor = playerColor === 'w' ? 'b' : 'w';
-        botAI.current = new BotsAI('default', difficulty, botColor);
+        botAI.current = new BotsAI('default', difficulty, botColor, timeControl);
         console.log('Starting Fen: ' + startingFen);
         console.log('Game Fen: ' + game.fen());
         console.log('Current Fen:' + currentFen);
@@ -82,7 +82,7 @@ const ThematicTrainingPage = () => {
     useEffect(() => {
       console.log('New Level : ' + difficulty);
       const botColor = playerColor === 'w' ? 'b' : 'w';
-      botAI.current = new BotsAI('default', difficulty, botColor);
+      botAI.current = new BotsAI('default', difficulty, botColor, timeControl);
     }, [playerColor]);
 
     // TODO: Problème lors de la promotion d'un pion (promeut automatiquement en cavalier)

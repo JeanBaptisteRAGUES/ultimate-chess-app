@@ -14,6 +14,13 @@ import GameToolBox from "../game-toolbox/GameToolbox";
 import { ImSwitch } from "react-icons/im"; // TODO: Bouton pour stopper le match
 import { FaCirclePlay, FaRotate } from "react-icons/fa6";
 
+const timeControlDelays = new Map([
+  ['1+0', 300],
+  ['3+0', 3000],
+  ['10+0', 15000],
+  ['90+30', 120000],
+]);
+
 
 const BotVsBotPage = () => {
     const searchParams = useSearchParams();
@@ -22,7 +29,8 @@ const BotVsBotPage = () => {
     const bot2_Behaviour: Behaviour = searchParams.get('bot2_Behaviour') as Behaviour || 'default';
     const bot1_Level = searchParams.get('bot1_Level') || 'Master';
     const bot2_Level = searchParams.get('bot2_Level') || 'Master';
-    const moveDelay = eval(searchParams.get('timeControl') || '300');
+    const timeControl = searchParams.get('timeControl') || '3+0';
+    const moveDelay = timeControlDelays.get(timeControl);
 
     const toolbox = new GameToolBox();
     const gameActive = useRef(true);
@@ -68,8 +76,8 @@ const BotVsBotPage = () => {
     useEffect(() => {
         engine.current = new Engine();
         engine.current.init();
-        bot1_AI.current = new BotsAI(bot1_Behaviour, bot1_Level, 'w');
-        bot2_AI.current = new BotsAI(bot2_Behaviour, bot2_Level, 'b');
+        bot1_AI.current = new BotsAI(bot1_Behaviour, bot1_Level, 'w', timeControl);
+        bot2_AI.current = new BotsAI(bot2_Behaviour, bot2_Level, 'b', timeControl);
     }, []);
 
     const gameMove = (moveNotation: string, moveType: number) => {

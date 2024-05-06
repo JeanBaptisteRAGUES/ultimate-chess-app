@@ -23,7 +23,7 @@ import { FaChessPawn } from 'react-icons/fa';
 // TODO: Liste des bots
 
 const SelectBotVsBotPage = () => {
-    const [timeControl, setTimeControl] = useState('300');
+    const [timeControl, setTimeControl] = useState('3+0');
     const [bot1_Level, setBot1_Level] = useState('Master');
     const [bot1_Behaviour, setBot1_Behaviour] = useState<Behaviour>('default');
     const [bot2_Level, setBot2_Level] = useState('Master');
@@ -31,19 +31,19 @@ const SelectBotVsBotPage = () => {
 
     const timeControlComponent =
         <div className='flex mt-10 flex-row justify-around items-center flex-wrap w-full' >
-            <div onClick={() => setTimeControl('300')} className=' h-[150px] md:h-[110px] w-[150px] md:w-[110px] flex flex-col justify-center items-center cursor-pointer' style={{color: timeControl === '300' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => setTimeControl('1+0')} className=' h-[150px] md:h-[110px] w-[150px] md:w-[110px] flex flex-col justify-center items-center cursor-pointer' style={{color: timeControl === '1+0' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <GiBulletBill size={100} />
                 <span className=' w-full h-[10px] flex justify-center items-center' >Bullet</span>
             </div>
-            <div onClick={() => setTimeControl('3000')} className=' h-[150px] md:h-[110px] w-[150px] md:w-[110px] flex flex-col justify-center items-center cursor-pointer' style={{color: timeControl === '3000' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => setTimeControl('3+0')} className=' h-[150px] md:h-[110px] w-[150px] md:w-[110px] flex flex-col justify-center items-center cursor-pointer' style={{color: timeControl === '3+0' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <SiStackblitz size={100} />
                 <span className=' w-full h-[10px] flex justify-center items-center' >Blitz</span>
             </div>
-            <div onClick={() => setTimeControl('15000')} className=' h-[150px] md:h-[110px] w-[150px] md:w-[110px] flex flex-col justify-center items-center cursor-pointer' style={{color: timeControl === '15000' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => setTimeControl('10+0')} className=' h-[150px] md:h-[110px] w-[150px] md:w-[110px] flex flex-col justify-center items-center cursor-pointer' style={{color: timeControl === '10+0' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <LuAlarmClock size={100} />
                 <span className=' w-full h-[10px] flex justify-center items-center' >Rapid</span>
             </div>
-            <div onClick={() => setTimeControl('120000')} className=' h-[150px] md:h-[110px] w-[150px] md:w-[110px] flex flex-col justify-center items-center cursor-pointer' style={{color: timeControl === '120000' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => setTimeControl('90+30')} className=' h-[150px] md:h-[110px] w-[150px] md:w-[110px] flex flex-col justify-center items-center cursor-pointer' style={{color: timeControl === '90+30' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <IoHourglassOutline size={100} />
                 <span className=' w-full h-[10px] flex justify-center items-center' >Classical</span>
             </div>

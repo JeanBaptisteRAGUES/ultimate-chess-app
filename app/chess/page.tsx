@@ -84,7 +84,7 @@ const ChessPage = () => {
         engine.current = new Engine();
         engine.current.init();
         const botColor = playerColor === 'w' ? 'b' : 'w';
-        botAI.current = new BotsAI(botBehaviour, databaseRating, botColor);
+        botAI.current = new BotsAI(botBehaviour, databaseRating, botColor, timeControl);
         console.log("Difficulty: " + databaseRating);
         console.log("Bot Behaviour: " + botBehaviour);
     }, []);
@@ -92,7 +92,7 @@ const ChessPage = () => {
     useEffect(() => {
       console.log('New Level : ' + databaseRating);
       const botColor = playerColor === 'w' ? 'b' : 'w';
-      botAI.current = new BotsAI(botBehaviour, databaseRating, botColor);
+      botAI.current = new BotsAI(botBehaviour, databaseRating, botColor, timeControl);
     }, [playerColor]);
 
     const gameMove = (moveNotation: string, moveType: number) => {
