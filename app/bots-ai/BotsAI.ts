@@ -1125,7 +1125,7 @@ class BotsAI {
     }
 
     /**
-     * Aime sacrifier sa dame le plus rapidement possible !!!
+     * Aime sacrifier sa dame le plus rapidement possible !
      */
     async #makeBotezGambitMove(game: Chess): Promise<Move> {
         //console.log('Bot AI: Botez Gambit');
@@ -2103,8 +2103,13 @@ class BotsAI {
 
             // Italian
             case '1.e4 e5 2.Nf3 Nc6 3.Bc4':
-                if(rand <= 40){
+                if(rand <= 30){
                     move.notation = 'f7f5';
+                    move.type = 2;
+                    return move;
+                }
+                if(rand > 90){
+                    move.notation = 'c6d4';
                     move.type = 2;
                     return move;
                 }
@@ -2120,6 +2125,36 @@ class BotsAI {
                     return move;
                 }
                 move.notation = 'f6e4';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.Bc4 Nf6 4.Ng5 Bc5 5.Nxf7':
+                move.notation = 'c5f2';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.Bc4 Nf6 4.Ng5 Bc5 5.Bxf7+':
+                move.notation = 'e8e7';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.Bc4 Nf6 4.Ng5 Bc5 5.Bxf7+ Ke7 6.Bb3':
+                move.notation = 'h8f8';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.Bc4 Nf6 4.Ng5 Bc5 5.Bxf7+ Ke7 6.Bc4':
+                move.notation = 'h8f8';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.Bc4 Nf6 4.Ng5 Bc5 5.Bxf7+ Ke7 6.Bd5':
+                move.notation = 'h8f8';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.Bc4 Nf6 4.Ng5 Bc5 5.Bxf7+ Ke7 6.O-O':
+                move.notation = 'h7h6';
                 move.type = 2;
                 return move;
 
@@ -2277,11 +2312,52 @@ class BotsAI {
                 move.type = 2;
                 return move;
 
+            // Trompowsky
+            case '1.d4 Nf6 2.Bg5':
+                move.notation = 'f6e4';
+                move.type = 2;
+                return move;
+
+            case '1.d4 Nf6 2.Bg5 Ne4 3.Bf4':
+                move.notation = 'c7c5';
+                move.type = 2;
+                return move;
+
+            case '1.d4 Nf6 2.Bg5 Ne4 3.Bf4 c5 4.f3':
+                move.notation = 'e4f6';
+                move.type = 2;
+                return move;
+
+            case '1.d4 Nf6 2.Bg5 Ne4 3.Bf4 c5 4.f3 Nf6 5.d5':
+                move.notation = 'f6h5';
+                move.type = 2;
+                return move;
+
+            case '1.d4 Nf6 2.Bg5 Ne4 3.Bf4 c5 4.f3 Nf6 5.dxc5':
+                move.notation = 'b7b6';
+                move.type = 2;
+                return move;
+
+            case '1.d4 Nf6 2.Bg5 Ne4 3.Bh4':
+                move.notation = 'c7c5';
+                move.type = 2;
+                return move;
+
+            case '1.d4 Nf6 2.Bg5 Ne4 3.Bh4 c5 4.f3':
+                move.notation = 'g7g5';
+                move.type = 2;
+                return move;
+
+            case '1.d4 Nf6 2.Bg5 Ne4 3.h4':
+                move.notation = 'c7c5';
+                move.type = 2;
+                return move;
+
             // d4 Nf3
             case '1.d4 Nf6 2.Nf3':
                 move.notation = 'c7c5';
                 move.type = 2;
-                return move; 
+                return move;
                 
             // When White
             // Start
@@ -2360,12 +2436,25 @@ class BotsAI {
 
             // French Defense
             case '1.e4 e6':
-                if(rand >= 50){
-                    move.notation = 'g1f3';
+                if(rand <= 40){
+                    move.notation = 'b2b3';
                     move.type = 2;
                     return move;
                 }
-                move.notation = 'b2b3';
+                if(rand >= 70){
+                    move.notation = 'c2c4';
+                    move.type = 2;
+                    return move;
+                }
+                move.notation = 'g1f3';
+                move.type = 2;
+                return move;
+            case '1.e4 e6 2.c4 d5':
+                move.notation = 'c4d5';
+                move.type = 2;
+                return move;
+            case '1.e4 e6 2.c4 d5 3.cxd5 exd5':
+                move.notation = 'd1b3';
                 move.type = 2;
                 return move;
             case '1.e4 e6 2.b3 d5':
@@ -2486,7 +2575,30 @@ class BotsAI {
 
             // Scandinavian Defense
             case '1.e4 d5':
+                if(rand <= 40) {
+                    move.notation = 'd2d4';
+                    move.type = 2;
+                    return move;
+                }
                 move.notation = 'g1f3';
+                move.type = 2;
+                return move;
+            case '1.e4 d5 2.d4 dxe4':
+                if(rand <= 60) {
+                    move.notation = 'f2f3';
+                    move.type = 2;
+                    return move;
+                }
+                move.notation = 'b1c3';
+                move.type = 2;
+                return move;
+            case '1.e4 d5 2.d4 dxe4 3.f3 exf3':
+                if(rand <= 60) {
+                    move.notation = 'g1f3';
+                    move.type = 2;
+                    return move;
+                }
+                move.notation = 'd1f3';
                 move.type = 2;
                 return move;
             case '1.e4 d5 2.Nf3 dxe4':
