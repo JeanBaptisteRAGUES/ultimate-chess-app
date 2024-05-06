@@ -1125,7 +1125,7 @@ class BotsAI {
     }
 
     /**
-     * Aime sacrifier sa dame le plus rapidement possible !
+     * Aime sacrifier sa dame le plus rapidement possible !!!
      */
     async #makeBotezGambitMove(game: Chess): Promise<Move> {
         //console.log('Bot AI: Botez Gambit');
@@ -2358,7 +2358,48 @@ class BotsAI {
                 move.notation = 'c7c5';
                 move.type = 2;
                 return move;
-                
+
+            // 1.Nf3
+            case '1.Nf3':
+                move.notation = 'g7g5';
+                move.type = 2;
+                return move;
+
+            case '1.Nf3 g5 2.g3':
+                move.notation = 'g5g4';
+                move.type = 2;
+                return move;
+
+            case '1.Nf3 g5 2.d4':
+                move.notation = 'g5g4';
+                move.type = 2;
+                return move;
+
+            case '1.Nf3 g5 2.c4':
+                move.notation = 'g5g4';
+                move.type = 2;
+                return move;
+
+            case '1.Nf3 g5 2.Nxg5':
+                move.notation = 'e7e5';
+                move.type = 2;
+                return move;
+
+            case '1.Nf3 g5 2.Nxg5 e5 3.Nf3':
+                move.notation = 'e5e4';
+                move.type = 2;
+                return move;
+
+            case '1.Nf3 g5 2.Nxg5 e5 3.Nf3 e4 4.Nd4':
+                move.notation = 'd7d5';
+                move.type = 2;
+                return move;
+
+            case '1.Nf3 g5 2.Nxg5 e5 3.Nf3 e4 4.Nd4 d5 5.d3':
+                move.notation = 'f8g7';
+                move.type = 2;
+                return move;
+
             // When White
             // Start
             case '':
