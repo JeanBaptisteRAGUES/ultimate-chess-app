@@ -78,22 +78,28 @@ class Engine {
     
     findBestMove(fen: string, depth: number, skillValue: number): Promise<string> {
         return new Promise((resolve, reject) => {
-            this.stockfish.postMessage(`position fen ${fen}`);
-            this.stockfish.postMessage(`setoption name Skill Level value ${skillValue}`);
-            this.stockfish.postMessage(`setoption name MultiPv value 1`);
-            this.stockfish.postMessage(`go depth ${depth}`);
+            try {
+                this.stockfish.postMessage(`position fen ${fen}`);
+                this.stockfish.postMessage(`setoption name Skill Level value ${skillValue}`);
+                this.stockfish.postMessage(`setoption name MultiPv value 1`);
+                this.stockfish.postMessage(`go depth ${depth}`);
 
-            this.stockfish.onmessage = function(event: any) {
-                //console.log(event.data);
-                if((event.data.match(bestMoveRegex)) !== null){
-                    const newBestMove = event.data.match(bestMoveRegex)[1];
-                    if(newBestMove !== null){
-                        resolve(newBestMove);
-                    } else{
-                        reject(null);
+                this.stockfish.onmessage = function(event: any) {
+                    //console.log(event.data);
+                    if((event.data.match(bestMoveRegex)) !== null){
+                        const newBestMove = event.data.match(bestMoveRegex)[1];
+                        if(newBestMove !== null){
+                            resolve(newBestMove);
+                        } else{
+                            reject(null);
+                        }
                     }
                 }
+            } catch (error) {
+                console.log('findBestMove error: ' + error);
+                resolve('????');
             }
+            
         })
     }
 
@@ -103,42 +109,47 @@ class Engine {
         //console.log('Find Best Moves');
         let coeff = fen.includes(' w ') ? 1 : -1;
         if(!useCoeff) coeff = 1;
+        let bestMoves: EvalResultSimplified[] = [];
 
         return new Promise((resolve, reject) => {
-            let bestMoves: EvalResultSimplified[] = [];
-            this.stockfish.postMessage(`position fen ${fen}`);
-            this.stockfish.postMessage(`setoption name Skill Level value ${skillValue}`);
-            this.stockfish.postMessage(`setoption name MultiPv value ${multiPv}`);
-            this.stockfish.postMessage(`go depth ${depth}`);
+            try {
+                this.stockfish.postMessage(`position fen ${fen}`);
+                this.stockfish.postMessage(`setoption name Skill Level value ${skillValue}`);
+                this.stockfish.postMessage(`setoption name MultiPv value ${multiPv}`);
+                this.stockfish.postMessage(`go depth ${depth}`);
 
-            this.stockfish.onmessage = function(event: any) {
-                //console.log(event.data);
-                if(event.data.includes(`info depth ${depth} seldepth`)){
-                    let evaluationStr: string | null = getEvalFromData(event.data, coeff);
-                    let bestMove: string | null = getBestMoveFromData(event.data);
-                    //console.log(bestMove + ': ' + evaluationStr);
-
-                    if(!evaluationStr || !bestMove || !event.data.match(firstEvalMoveRegex)){
-                        //console.log(event.data);
-                        reject("Erreur lors de l'évaluation");
-                        return;
-                    }
-
-                    if(!bestMoves.some((move) => move.bestMove === bestMove)){
+                this.stockfish.onmessage = function(event: any) {
+                    //console.log(event.data);
+                    if(event.data.includes(`info depth ${depth} seldepth`)){
+                        let evaluationStr: string | null = getEvalFromData(event.data, coeff);
+                        let bestMove: string | null = getBestMoveFromData(event.data);
                         //console.log(bestMove + ': ' + evaluationStr);
-                        bestMoves.push({
-                            eval: evaluationStr,
-                            bestMove: bestMove
-                        });
+
+                        if(!evaluationStr || !bestMove || !event.data.match(firstEvalMoveRegex)){
+                            //console.log(event.data);
+                            reject("Erreur lors de l'évaluation");
+                            return;
+                        }
+
+                        if(!bestMoves.some((move) => move.bestMove === bestMove)){
+                            //console.log(bestMove + ': ' + evaluationStr);
+                            bestMoves.push({
+                                eval: evaluationStr,
+                                bestMove: bestMove
+                            });
+                        }
+                    }
+                    if((event.data.match(bestMoveRegex)) !== null){
+                        if(event.data.match(bestMoveRegex)[1]){
+                            resolve(bestMoves);
+                        } else{
+                            reject(null);
+                        }
                     }
                 }
-                if((event.data.match(bestMoveRegex)) !== null){
-                    if(event.data.match(bestMoveRegex)[1]){
-                        resolve(bestMoves);
-                    } else{
-                        reject(null);
-                    }
-                }
+            } catch (error) {
+                console.log('findBestMoves error: ' + error);
+                resolve(bestMoves);
             }
         })
     }
@@ -149,26 +160,34 @@ class Engine {
         let coeff = fen.includes(' w ') ? 1 : -1;
 
         return new Promise((resolve, reject) => {
-            // On stope l'analyse au cas où la position aurait changé avant qu'une précédente analyse soit terminée
-            this.stockfish.postMessage('stop');
-            this.stockfish.postMessage(`position fen ${fen}`)
-            this.stockfish.postMessage(`go depth ${depth}`);
+            try {
+                // On stope l'analyse au cas où la position aurait changé avant qu'une précédente analyse soit terminée
+                this.stockfish.postMessage('stop');
+                this.stockfish.postMessage(`position fen ${fen}`)
+                this.stockfish.postMessage(`go depth ${depth}`);
 
-            this.stockfish.onmessage = function(event: any) {
-                if(event.data.includes(`info depth ${depth} `) && (evalRegex.exec(event.data)) !== null){
-                    let evaluationStr: string | null = getEvalFromData(event.data, coeff);
-                    let bestMove: string | null = getBestMoveFromData(event.data);
+                this.stockfish.onmessage = function(event: any) {
+                    if(event.data.includes(`info depth ${depth} `) && (evalRegex.exec(event.data)) !== null){
+                        let evaluationStr: string | null = getEvalFromData(event.data, coeff);
+                        let bestMove: string | null = getBestMoveFromData(event.data);
 
-                    if(!evaluationStr || !bestMove || !event.data.match(firstEvalMoveRegex)){
-                        reject("Erreur lors de l'évaluation");
-                        return;
+                        if(!evaluationStr || !bestMove || !event.data.match(firstEvalMoveRegex)){
+                            reject("Erreur lors de l'évaluation");
+                            return;
+                        }
+
+                        resolve({
+                            eval: evaluationStr,
+                            bestMove: bestMove
+                        });
                     }
-
-                    resolve({
-                        eval: evaluationStr,
-                        bestMove: bestMove
-                    });
                 }
+            } catch (error) {
+                console.log('evalPositionFromFen error: ' + error);
+                resolve({
+                    eval: '???',
+                    bestMove: '????'
+                });
             }
         })
     }
@@ -177,45 +196,53 @@ class Engine {
     // movesList: e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 ...
     evalPositionFromMovesList(movesListUci: string, depth: number, coeff: number, startingFen?: string) {
         return new Promise((resolve, reject) => {
-            // On stope l'analyse au cas où la position aurait changé avant qu'une précédente analyse soit terminée
-            this.stockfish.postMessage('stop');
-            if(startingFen){
-                this.stockfish.postMessage(`position fen ${startingFen} moves ${movesListUci}`);
-            }else{
-                this.stockfish.postMessage(`position startpos moves ${movesListUci}`);
-            }
-            this.stockfish.postMessage(`go depth ${depth}`);
-
-            this.stockfish.onmessage = function(event: any) {
-                // Mate
-                if(event.data === "info depth 0 score mate 0"){
-                    resolve({
-                        eval: `#${-coeff}`,
-                        pv: ''
-                    });
+            try {
+                // On stope l'analyse au cas où la position aurait changé avant qu'une précédente analyse soit terminée
+                this.stockfish.postMessage('stop');
+                if(startingFen){
+                    this.stockfish.postMessage(`position fen ${startingFen} moves ${movesListUci}`);
+                }else{
+                    this.stockfish.postMessage(`position startpos moves ${movesListUci}`);
                 }
+                this.stockfish.postMessage(`go depth ${depth}`);
 
-                // Draw
-                if(event.data === "info depth 0 score cp 0"){
-                    resolve({
-                        eval: '0',
-                        pv: ''
-                    });
-                }
-                if(event.data.includes(`info depth ${depth} `) && (evalRegex.exec(event.data)) !== null){
-                    let evaluationStr: string | null = getEvalFromData(event.data, coeff);
-                    let bestMove: string | null = getBestMoveFromData(event.data);
-
-                    if(!evaluationStr || !bestMove || !event.data.match(firstEvalMoveRegex)){
-                        reject("Erreur lors de l'évaluation");
-                        return; // inutile ?
+                this.stockfish.onmessage = function(event: any) {
+                    // Mate
+                    if(event.data === "info depth 0 score mate 0"){
+                        resolve({
+                            eval: `#${-coeff}`,
+                            pv: ''
+                        });
                     }
 
-                    resolve({
-                        eval: evaluationStr,
-                        pv: bestMove
-                    });
+                    // Draw
+                    if(event.data === "info depth 0 score cp 0"){
+                        resolve({
+                            eval: '0',
+                            pv: ''
+                        });
+                    }
+                    if(event.data.includes(`info depth ${depth} `) && (evalRegex.exec(event.data)) !== null){
+                        let evaluationStr: string | null = getEvalFromData(event.data, coeff);
+                        let bestMove: string | null = getBestMoveFromData(event.data);
+
+                        if(!evaluationStr || !bestMove || !event.data.match(firstEvalMoveRegex)){
+                            reject("Erreur lors de l'évaluation");
+                            return; // inutile ?
+                        }
+
+                        resolve({
+                            eval: evaluationStr,
+                            pv: bestMove
+                        });
+                    }
                 }
+            } catch (error) {
+                console.log('evalPositionFromMovesList error: ' + error);
+                resolve({
+                    eval: '???',
+                    bestMove: '????'
+                });
             }
         })
     }

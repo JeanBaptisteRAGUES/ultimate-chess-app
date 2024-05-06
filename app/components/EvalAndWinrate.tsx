@@ -41,7 +41,7 @@ const EvalAndWinrate: React.FC<EvalProps> = ({game, databaseRating, winner, star
             //TODO: voir si on peut pas directement retourner un résultat de type string
             setEngineEval(JSON.stringify(res.eval).replaceAll("\"", ''));
         }).catch((err: any) => {
-            console.log(err);
+            console.log("Erreur lors de l'évaluation de la position: " + err);
         });
         getLichessWinrate(movesList, databaseRating, startingFen).then((winrate) => {
             if(winrate.white) setWinrate(winrate);
