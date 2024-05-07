@@ -23,6 +23,7 @@ export type EvalResult = {
 export type EvalResultSimplified = {
     bestMove: string,
     eval: string,
+    wdl?: string[],
 }
 
 function getEvalFromData(data: string, coeff: number) {
@@ -73,6 +74,10 @@ class Engine {
     quit() {
         console.log('Quit Stockfish 16');
         this.stockfish.postMessage('quit');
+    }
+
+    showWinDrawLose() {
+        this.stockfish.postMessage('setoption name UCI_ShowWDL value true');
     }
 
     
@@ -168,8 +173,10 @@ class Engine {
 
                 this.stockfish.onmessage = function(event: any) {
                     if(event.data.includes(`info depth ${depth} `) && (evalRegex.exec(event.data)) !== null){
+                        const wdl = event.data.match(/wdl\s(?<wdl>\d*\s\d*\s\d*)\s/).groups.wdl.split(' ');
                         let evaluationStr: string | null = getEvalFromData(event.data, coeff);
                         let bestMove: string | null = getBestMoveFromData(event.data);
+                        //console.log(wdl);
 
                         if(!evaluationStr || !bestMove || !event.data.match(firstEvalMoveRegex)){
                             reject("Erreur lors de l'évaluation");
@@ -178,7 +185,8 @@ class Engine {
 
                         resolve({
                             eval: evaluationStr,
-                            bestMove: bestMove
+                            bestMove: bestMove,
+                            wdl: wdl,
                         });
                     }
                 }
@@ -186,7 +194,8 @@ class Engine {
                 console.log('evalPositionFromFen error: ' + error);
                 resolve({
                     eval: '???',
-                    bestMove: '????'
+                    bestMove: '????',
+                    wdl: ['??', '??', '??'],
                 });
             }
         })

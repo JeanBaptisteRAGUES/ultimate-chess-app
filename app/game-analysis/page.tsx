@@ -40,6 +40,7 @@ const GameAnalysisPage = () => {
     const [showChartHistory, setShowChartHistory] = useState(false);
     const [currentFen, setCurrentFen] = useState(startingFen);
     const [currentMovesList, setCurrentMovesList] = useState<string[]>([]);
+    const [evalMovesList, setEvalMovesList] = useState<string[]>([]);
     const [currentIndex, setCurrentIndex] = useState(-1);
     //const [formatedResults, setFormatedResults] = useState<JSX.Element[]>([])
     const [formatedResults, setFormatedResults] = useState<EvalResultFormated[]>([]);
@@ -266,6 +267,9 @@ const GameAnalysisPage = () => {
         // Build movesList
         let newMovesList: string[] = gameHistory.current.filter((move, i) => i <= moveIndex).map((move) => move.lan );
         setCurrentMovesList(newMovesList);
+        const newEvalMovesList: string[] = JSON.parse(JSON.stringify(newMovesList));
+        //newEvalMovesList.push(lastMove);
+        setEvalMovesList(newEvalMovesList);
 
         setCurrentFen(newGame.fen());
         setCurrentIndex(moveIndex);
@@ -334,6 +338,9 @@ const GameAnalysisPage = () => {
         // Build movesList
         let newMovesList: string[] = gameHistory.current.filter((move, i) => i <= moveIndex).map((move) => move.lan );
         setCurrentMovesList(newMovesList);
+        const newEvalMovesList: string[] = JSON.parse(JSON.stringify(newMovesList));
+        newEvalMovesList.pop();
+        setEvalMovesList(newEvalMovesList);
 
 
         setCurrentFen(newGame.fen());
@@ -359,6 +366,9 @@ const GameAnalysisPage = () => {
         // Build movesList
         let newMovesList: string[] = gameHistory.current.filter((move, i) => i <= moveIndex).map((move) => move.lan );
         setCurrentMovesList(newMovesList);
+        const newEvalMovesList: string[] = JSON.parse(JSON.stringify(newMovesList));
+        newEvalMovesList.push(lastMove);
+        setEvalMovesList(newEvalMovesList);
 
         setCurrentFen(newGame.fen());
         setCurrentIndex(moveIndex+1);
@@ -582,7 +592,7 @@ const GameAnalysisPage = () => {
                 winner={''} 
                 startingFen={startingFen}
                 currentFen={currentFen} 
-                movesList={currentMovesList}
+                movesList={evalMovesList}
                 showEval={true} 
             />
             {boardComponent}

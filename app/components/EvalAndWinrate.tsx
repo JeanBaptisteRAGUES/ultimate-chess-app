@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { MutableRefObject, useEffect, useRef, useState } from 'react';
-import Engine from '../engine/Engine';
+import Engine, { EvalResultSimplified } from '../engine/Engine';
 import { Winrate, fetchLichessDatabase, getLichessWinrate } from '../libs/fetchLichess';
 import GameToolBox from '../game-toolbox/GameToolbox';
 import { Chess } from 'chess.js';
@@ -17,6 +17,7 @@ interface EvalProps {
 
 const EvalAndWinrate: React.FC<EvalProps> = ({game, databaseRating, winner, startingFen, currentFen, movesList, showEval}) => {
     const engine = useRef<Engine>();
+    const engineCreated = useRef<Boolean>(false);
     const toolbox = new GameToolBox();
     const [engineEval, setEngineEval] = useState('0.3');
     const [winrate, setWinrate] = useState<Winrate>({
@@ -26,26 +27,59 @@ const EvalAndWinrate: React.FC<EvalProps> = ({game, databaseRating, winner, star
       });
 
     useEffect(() => {
-        engine.current = new Engine();
-        engine.current.init();
+        console.log('Is engine already created ? ' + engineCreated.current);
+        if(!engineCreated.current){
+            console.log('Create Eval New Engine');
+            engineCreated.current = true;
+            engine.current = new Engine();
+            engine.current.init();
+            engine.current.showWinDrawLose();
+        }
     }, []);
+
+    function estimateWinrate(wdl: string[], fen: string): Winrate {
+        let sfWinrate: Winrate = {white: 0, draws: 0, black: 0};
+        let isWhiteTurn = fen.includes(' w ') ? 1 : -1;
+        let sfWhite = isWhiteTurn > 0 ? Math.round(eval(wdl[0])/10) || 0 : Math.round(eval(wdl[2])/10);
+        let sfDraw = Math.round(eval(wdl[1])/10) || 0;
+        let sfBlack = isWhiteTurn > 0 ? Math.round(eval(wdl[2])/10) || 0 : Math.round(eval(wdl[0])/10);
+        sfDraw = Math.round(sfDraw * 0.55);
+        if(sfWhite >= sfBlack) {
+            sfWhite = Math.round((100-sfDraw)/2 + sfWhite);
+            sfBlack = 100 - (sfWhite + sfDraw);
+        }else {
+            sfBlack = Math.round((100-sfDraw)/2 + sfBlack);
+            sfWhite = 100 - (sfBlack + sfDraw);
+        }
+        
+        sfWhite = Math.max(0, Math.min(100, sfWhite));
+        sfBlack = Math.max(0, Math.min(100, sfBlack));
+        sfWinrate = {white: sfWhite, draws: sfDraw, black: sfBlack};
+        return sfWinrate;
+    }
 
 
     useEffect(() => {
-        if(winner || !engine.current) return;
-        //const movesList = toolbox.convertHistorySanToLan(toolbox.convertPgnToHistory(game.pgn()), startingFen);
+        if(winner) return;
         
-        //let coeff = game.history().length %2 === 0 ? 1 : -1;
-        
-        engine.current.evalPositionFromFen(currentFen, 14).then((res: any) => {
-            //TODO: voir si on peut pas directement retourner un résultat de type string
-            setEngineEval(JSON.stringify(res.eval).replaceAll("\"", ''));
-        }).catch((err: any) => {
-            console.log("Erreur lors de l'évaluation de la position: " + err);
-        });
-        getLichessWinrate(movesList, databaseRating, startingFen).then((winrate) => {
-            if(winrate.white) setWinrate(winrate);
+        getLichessWinrate(movesList, databaseRating, startingFen).then((lichessWinrate) => {
+            let lichessWinrateOK = false;
+            if(lichessWinrate.white) {
+                lichessWinrateOK = true;
+                setWinrate(lichessWinrate);
+            } 
+            if(!engine.current) return;
+            engine.current.evalPositionFromFen(currentFen, 14).then((res: EvalResultSimplified) => {
+                setEngineEval(res.eval);
+                if(!res.wdl) return;
+                let winrateEstimation: Winrate = estimateWinrate(res.wdl || {}, currentFen);
+                if(!lichessWinrateOK && (winrateEstimation.white + winrateEstimation.black + winrateEstimation.draws > 0)) setWinrate(winrateEstimation);
+                //console.log(winrateEstimation);
+            }).catch((err: any) => {
+                console.log("Erreur lors de l'évaluation de la position: " + err);
+            });
         })
+        
     }, [currentFen]);
 
     return (
