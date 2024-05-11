@@ -126,6 +126,9 @@ const ChessPage = () => {
         gameActive.current = false;
         engine.current?.quit();
         botAI.current?.disable();
+        // TODO: Modifier si on veut directement relancer la partie depuis un bouton
+        delete engine.current;
+        delete botAI.current;
         if(game.isDraw() || game.isInsufficientMaterial() || game.isStalemate() || game.isInsufficientMaterial()) {
           setEngineEval('1/2 - 1/2');
           setWinner('d');
@@ -158,6 +161,9 @@ const ChessPage = () => {
       gameActive.current = false;
       engine.current?.quit();
       botAI.current?.disable();
+      // TODO: Modifier si on veut directement relancer la partie depuis un bouton
+      delete engine.current;
+      delete botAI.current;
       setShowGameoverWindow(true);
     }
 

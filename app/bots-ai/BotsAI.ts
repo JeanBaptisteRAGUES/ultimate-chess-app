@@ -339,18 +339,13 @@ class BotsAI {
         };
     }
     
-    // TODO: Vérifier si c'est ça qui augmente énormément la mémoire consommée
     async #isNearCheckmate(maxMateValue: number, game: Chess) {
-        //console.log('Test if Near Checkmate');
-        /* const newEngine = new Engine();
-        await newEngine.init();
-        const positionEval: EvalResultSimplified = await newEngine.evalPositionFromFen(game.fen(), 8);
+        const positionEval: EvalResultSimplified = await this.#engine.evalPositionFromFen(game.fen(), 10);
         if(!positionEval.eval.includes('#')) return false;
-    
+        
         const mateValue = this.#toolbox.getMateValue(positionEval.eval, this.#botColor, '#');
-        newEngine.quit();
-        return mateValue > 0 && mateValue <= maxMateValue; */
-        return false;
+        console.log(`Position eval: ${positionEval.eval}, checkmate distance: ${mateValue} (max: ${maxMateValue}) -> ${positionEval.bestMove}`);
+        return mateValue > 0 && mateValue <= maxMateValue;
     }
 
     async #makeForcedCheckmate(game: Chess): Promise<Move> {
