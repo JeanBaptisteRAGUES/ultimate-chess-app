@@ -242,24 +242,25 @@ async function makeStockfishMove(botParams: DefaultBotParams, game: Chess, engin
     return stockfishMove;
 }
 
-async function makeLichessMove(movesList: string[], databaseRating: string, fen: string): Promise<Move> {
+async function makeLichessMove(movesList: string[], databaseRating: string, fen: string, toolbox: GameToolBox): Promise<Move> {
     //console.log('Make Lichess Move');
-    let lichessMove = {san: "", uci: "", winrate: {white: 33, draws: 33, black: 33}};
-
-    lichessMove = await fetchLichessDatabase(movesList, databaseRating, fen);
-
-    if(databaseRating !== 'Maximum' && lichessMove?.uci !== "" && lichessMove?.uci !== undefined){
-        return {
-            notation: lichessMove.uci,
-            type: 1
-        }
-    }
-
-    //console.log("No more moves in the database !");
-    return {
+    let lichessMove: Move = {
         notation: '',
         type: -1
     }
+    let lichessResult = {san: "", uci: "", winrate: {white: 33, draws: 33, black: 33}};
+
+    lichessResult = await fetchLichessDatabase(movesList, databaseRating, fen);
+
+    lichessMove.notation = lichessResult.uci;
+
+    if(databaseRating !== 'Maximum' && lichessMove.notation !== "" && lichessMove.notation !== undefined){
+        lichessMove.type = 1;
+        return correctCastleMove(lichessMove, fen, toolbox);
+    }
+
+    //console.log("No more moves in the database !");
+    return lichessMove;
 }
 
 function compareEval(evalA: EvalResultSimplified, evalB: EvalResultSimplified) {
@@ -522,10 +523,9 @@ class BotsAI {
             const startingFen = game.history().length > 0 ? game.history({verbose: true})[0].before : DEFAULT_POSITION;
             const movesList = this.#toolbox.convertHistorySanToLan(game.history(), startingFen);
 
-            const lichessMove = await makeLichessMove(movesList, this.#botLevel, startingFen);
+            const lichessMove = await makeLichessMove(movesList, this.#botLevel, startingFen, this.#toolbox);
             if(lichessMove.type >= 0){
-                //console.log(`${this.#botColor} make Lichess move`);
-                return correctCastleMove(lichessMove, game.fen(), this.#toolbox);
+                return lichessMove;
             } 
             //console.log('No more moves in the Lichess Database for ' + this.#botColor);
         }
@@ -628,7 +628,7 @@ class BotsAI {
             const startingFen = game.history().length > 0 ? game.history({verbose: true})[0].before : DEFAULT_POSITION;
             const movesList = this.#toolbox.convertHistorySanToLan(game.history(), startingFen);
 
-            const lichessMove = await makeLichessMove(movesList, this.#botLevel, startingFen);
+            const lichessMove = await makeLichessMove(movesList, this.#botLevel, startingFen, this.#toolbox);
             if(lichessMove.type >= 0){
                 //console.log(`${this.#botColor} make Lichess move`);
                 return lichessMove;
@@ -3099,9 +3099,8 @@ class BotsAI {
         };
         const movesList = this.#toolbox.convertHistorySanToLan(this.#toolbox.convertPgnToHistory(game.pgn()));
 
-        const lichessMove = await makeLichessMove(movesList, 'Master', '');
+        const lichessMove = await makeLichessMove(movesList, 'Master', '', this.#toolbox);
         if(lichessMove.type >= 0){
-            this.#lastRandomMove = this.#lastRandomMove-1;
             return lichessMove;
         }
 
@@ -3126,9 +3125,8 @@ class BotsAI {
 
         const movesList = this.#toolbox.convertHistorySanToLan(this.#toolbox.convertPgnToHistory(game.pgn()));
 
-        const lichessMove = await makeLichessMove(movesList, 'Beginner', '');
+        const lichessMove = await makeLichessMove(movesList, 'Beginner', '', this.#toolbox);
         if(lichessMove.type >= 0){
-            this.#lastRandomMove = this.#lastRandomMove-1;
             return lichessMove;
         }
 
@@ -4217,7 +4215,7 @@ class BotsAI {
         const startingFen = game.history().length > 0 ? game.history({verbose: true})[0].before : DEFAULT_POSITION;
         const movesList = this.#toolbox.convertHistorySanToLan(game.history(), startingFen);
 
-        const lichessMove = await makeLichessMove(movesList, this.#botLevel, startingFen);
+        const lichessMove = await makeLichessMove(movesList, this.#botLevel, startingFen, this.#toolbox);
         if(lichessMove.type >= 0){
             console.log(`${this.#botColor} make Lichess move`);
             return game.get(this.#toolbox.getMoveOrigin(lichessMove.notation) || 'a1').type;
