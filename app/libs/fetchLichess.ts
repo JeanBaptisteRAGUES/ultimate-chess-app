@@ -57,43 +57,56 @@ function calculateWinrate(data: any) {
 }
 
 export async function fetchLichessDatabase(moves: Array<String>, level: string, fen = "") {
-    if(!ratings.has(level)) level = 'Master';
-    if(fen === "") {
-        fen = "rnbqkbnr%2Fpppppppp%2F8%2F8%2F8%2F8%2FPPPPPPPP%2FRNBQKBNR+w+KQkq+-+0+1";
-    } else{
-        fen = fen.replaceAll('/', '%2F');
-        fen = fen.replaceAll(' ', '+');
-    }
+    try {
+        if(!ratings.has(level)) level = 'Master';
+        if(fen === "") {
+            fen = "rnbqkbnr%2Fpppppppp%2F8%2F8%2F8%2F8%2FPPPPPPPP%2FRNBQKBNR+w+KQkq+-+0+1";
+        } else{
+            fen = fen.replaceAll('/', '%2F');
+            fen = fen.replaceAll(' ', '+');
+        }
 
-    const movesFormated = moves.join("%2C");
-    let req = "";
+        const movesFormated = moves.join("%2C");
+        let req = "";
 
-    if(level === 'Master') {
-        req = `https://explorer.lichess.ovh/masters?variant=standard&fen=${fen}&play=${movesFormated}&source=analysis`
-    }else {
-        const eloRange = ratings.get(level);
-        req = `https://explorer.lichess.ovh/lichess?variant=standard&fen=${fen}&play=${movesFormated}&since=2012-01&until=2022-12&speeds=rapid%2Cclassical&ratings=${eloRange}`;
-    }
+        if(level === 'Master') {
+            req = `https://explorer.lichess.ovh/masters?variant=standard&fen=${fen}&play=${movesFormated}&source=analysis`
+        }else {
+            const eloRange = ratings.get(level);
+            req = `https://explorer.lichess.ovh/lichess?variant=standard&fen=${fen}&play=${movesFormated}&since=2012-01&until=2022-12&speeds=rapid%2Cclassical&ratings=${eloRange}`;
+        }
 
-    const res = await fetch(req);
-    const data = await res.json();
+        const res = await fetch(req);
+        const data = await res.json();
 
-    const gamesTotal = data.white + data.draws + data.black;
-    let randMove = randomIntFromInterval(0, gamesTotal);
-    let moveIndex = -1;
-    let gamesArray: any[] = [];
+        const gamesTotal = data.white + data.draws + data.black;
+        let randMove = randomIntFromInterval(0, gamesTotal);
+        let moveIndex = -1;
+        let gamesArray: any[] = [];
 
-    data.moves.map((move: any, i: number, array: Array<any>) => (
-        gamesArray.push(array.slice(0,i+1).reduce((acc: number, curr: any) => acc + curr.white + curr.draws + curr.black, 0))
-    ));
+        data.moves.map((move: any, i: number, array: Array<any>) => (
+            gamesArray.push(array.slice(0,i+1).reduce((acc: number, curr: any) => acc + curr.white + curr.draws + curr.black, 0))
+        ));
 
-    moveIndex = gamesArray.length - gamesArray.filter(value => value > randMove).length;
-    //console.log("Coup choisi : %s (%s)", data.moves[moveIndex]?.san,  data.moves[moveIndex]?.uci);
+        moveIndex = gamesArray.length - gamesArray.filter(value => value > randMove).length;
+        //console.log("Coup choisi : %s (%s)", data.moves[moveIndex]?.san,  data.moves[moveIndex]?.uci);
 
-    return {
-        san: data.moves[moveIndex]?.san,
-        uci: data.moves[moveIndex]?.uci,
-        winrate: calculateWinrate(data)
+        return {
+            san: data.moves[moveIndex]?.san,
+            uci: data.moves[moveIndex]?.uci,
+            winrate: calculateWinrate(data)
+        }
+    } catch (error) {
+        console.log('fetchLichessDatabase error: ' + error);
+        return {
+            san: '',
+            uci: '',
+            winrate: {
+                white: 0,
+                draws: 0,
+                black: 0
+            }
+        }
     }
 }
 
@@ -275,28 +288,37 @@ export async function fetchChessDotComDB() {
 //const pgnRaw = '[Event "Live Chess"][Site "Chess.com"][Date "2024.01.11"][Round"-"][White "PhosgeneOxime2"][Black "will_thrash"][Result "1-0"][CurrentPosition "2r2k1b/1pqn1p1p/p2Qp1p1/8/4P3/1P2BP2/P5PP/3RR1K1 b - -"][Timezone "UTC"][ECO "B52"][ECOUrl "https://www.chess.com/openings/Sicilian-Defense-Canal-Main-Line-Sokolsky-Variation...7.Nxd4-Nf6-8.Nc3-g6"][UTCDate "2024.01.11"][UTCTime "00:15:15"][WhiteElo "1335"][BlackElo "1366"][TimeControl "600"][Termination "PhosgeneOxime2 won by resignation"][StartTime "00:15:15"][EndDate "2024.01.11"][EndTime "00:22:19"][Link "https://www.chess.com/game/live/98670943993"]1. e4 {[%clk 0:10:00]} 1... c5 {[%clk 0:10:00]} 2. Nf3 {[%clk 0:09:59]} 2... d6 {[%clk 0:09:59.3]} 3. Bb5+ {[%clk 0:09:57.3]} 3... Bd7 {[%clk 0:09:55.4]} 4. Bxd7+ {[%clk 0:09:56.8]} 4... Qxd7 {[%clk 0:09:54.8]} 5. c4 {[%clk 0:09:56.5]} 5... Nc6 {[%clk 0:09:52.5]} 6. d4 {[%clk 0:09:51.3]} 6... cxd4 {[%clk 0:09:50.3]} 7. Nxd4 {[%clk 0:09:50.7]} 7... Nf6 {[%clk 0:09:46]} 8. Nc3 {[%clk 0:09:46.3]} 8... g6 {[%clk 0:09:40.7]} 9. O-O {[%clk 0:09:25]} 9... Bg7 {[%clk 0:09:39.3]} 10. Nxc6 {[%clk 0:09:16.1]} 10... Qxc6 {[%clk 0:09:35.9]} 11. Re1 {[%clk 0:09:13.6]} 11... Qxc4 {[%clk 0:09:29.5]} 12. Be3 {[%clk 0:08:41.3]} 12... O-O {[%clk 0:09:17.5]} 13. f3 {[%clk 0:08:28.8]} 13... a6 {[%clk 0:09:09.6]} 14. Qd2 {[%clk 0:08:28]} 14... Rfd8 {[%clk 0:08:59.3]} 15. Rad1 {[%clk 0:08:19.9]} 15... Rac8 {[%clk 0:08:56.2]} 16. Bh6 {[%clk 0:07:48.9]} 16... Bh8 {[%clk 0:08:52.7]} 17. Bf4 {[%clk 0:07:29.1]} 17... Nd7 {[%clk 0:07:56.2]} 18. Nd5 {[%clk 0:07:21.9]} 18... e6 {[%clk 0:07:44.7]} 19. Ne7+ {[%clk 0:07:19.1]} 19... Kf8 {[%clk 0:07:33.6]} 20. Nxc8 {[%clk 0:07:17.5]} 20... Rxc8 {[%clk 0:07:33.3]} 21. b3 {[%clk 0:06:56]} 21... Qc5+ {[%clk 0:06:53]} 22. Be3 {[%clk 0:06:52.1]} 22... Qc7 {[%clk 0:06:44.9]} 23. Qxd6+ {[%clk 0:06:49.3]} 1-0 [Event "Live Chess"][Site "Chess.com"][Date "2024.01.07"][Round "-"][White "PhosgeneOxime2"][Black "Stout7483"][Result "1-0"][CurrentPosition "8/8/1p3ppp/1Pk5/n7/1K2P1PP/8/5B2 b - -"][Timezone "UTC"][ECO "B01"][ECOUrl "https://www.chess.com/openings/Scandinavian-Defense-Mieses-Kotrc-Variation-3.Nc3-Qd8-4.d4-c6"][UTCDate "2024.01.07"][UTCTime "20:39:10"][WhiteElo "1325"][BlackElo "1355"][TimeControl "600"][Termination "PhosgeneOxime2 won by resignation"][StartTime "20:39:10"][EndDate "2024.01.07"][EndTime "20:48:21"][Link "https://www.chess.com/game/live/98399075131"]1. e4 {[%clk 0:09:59.3]} 1... d5 {[%clk 0:09:59.3]} 2. exd5 {[%clk 0:09:57.2]} 2... Qxd5 {[%clk 0:09:58.4]} 3. Nc3 {[%clk 0:09:57.1]} 3... Qd8 {[%clk 0:09:57.4]} 4. d4 {[%clk 0:09:56.4]} 4... c6 {[%clk 0:09:56.8]} 5. Nf3 {[%clk 0:09:55.7]} 5... Bg4 {[%clk 0:09:54.8]} 6. h3 {[%clk 0:09:55.2]} 6... Bxf3 {[%clk 0:09:53.8]} 7. Qxf3 {[%clk 0:09:54.9]} 7... Nf6 {[%clk 0:09:52.1]} 8. Bg5 {[%clk 0:09:52.3]} 8... Nbd7 {[%clk 0:09:51.4]} 9. Bd3 {[%clk 0:09:35.8]} 9... h6 {[%clk 0:09:49.1]} 10. Bf4 {[%clk 0:09:33.1]} 10... e6 {[%clk 0:09:47.7]} 11. O-O {[%clk 0:09:19.3]} 11... Bb4 {[%clk 0:09:45.9]} 12. Bd2 {[%clk 0:09:15.2]} 12... O-O {[%clk 0:09:44.5]} 13. a3 {[%clk 0:09:13.4]} 13... Bd6 {[%clk 0:09:40.3]} 14. Rfe1 {[%clk 0:09:07.3]} 14... Nd5 {[%clk 0:09:38.9]} 15. Nxd5 {[%clk 0:08:59.7]} 15... cxd5 {[%clk 0:09:37.9]} 16. c4 {[%clk 0:08:49.5]} 16... dxc4 {[%clk 0:09:36.3]} 17. Bxc4 {[%clk 0:08:48.1]} 17... Nf6 {[%clk 0:09:35.2]} 18. b4 {[%clk 0:08:28]} 18... b6 {[%clk 0:09:33.3]} 19. Bc3 {[%clk 0:08:17.7]} 19... Be7 {[%clk 0:09:29.6]} 20. Bb3 {[%clk 0:08:14.6]} 20... Nh7 {[%clk 0:09:28.1]} 21. Bd2 {[%clk 0:07:53.4]} 21... Bf6 {[%clk 0:09:26.1]} 22. Be3 {[%clk 0:07:43.6]} 22... Bxd4 {[%clk 0:09:24.5]} 23. Rad1 {[%clk 0:07:41.2]} 23... e5 {[%clk 0:09:09.6]} 24. Bxd4 {[%clk 0:07:30.1]} 24... exd4 {[%clk 0:09:08.3]} 25. Rd2 {[%clk 0:07:16.8]} 25... Qf6 {[%clk 0:09:03.5]} 26. Qxf6 {[%clk 0:07:08.5]} 26... Nxf6 {[%clk 0:09:01.5]} 27. Rxd4 {[%clk 0:07:07.4]} 27... Rfd8 {[%clk 0:09:00.1]} 28. Red1 {[%clk 0:06:49.4]} 28... Rxd4 {[%clk 0:08:57.7]} 29. Rxd4 {[%clk 0:06:48.2]} 29... Re8 {[%clk 0:08:56.6]} 30. Kf1 {[%clk 0:06:26.5]} 30... Re7 {[%clk 0:08:55.3]} 31. g3 {[%clk 0:06:19.2]} 31... g6 {[%clk 0:08:53.1]} 32. b5 {[%clk 0:06:08]} 32... Kg7 {[%clk 0:08:51.6]} 33. a4 {[%clk 0:06:06.8]} 33... Ne4 {[%clk 0:08:20.9]} 34. Rd3 {[%clk 0:05:43.8]} 34... Nc5 {[%clk 0:08:19]} 35. Rf3 {[%clk 0:05:35.4]} 35... a6 {[%clk 0:08:14]} 36. Bc4 {[%clk 0:05:27.4]} 36... axb5 {[%clk 0:08:09]} 37. axb5 {[%clk 0:05:22.9]} 37... Ra7 {[%clk 0:08:03.5]} 38. Kg2 {[%clk 0:05:08.1]} 38... Na4 {[%clk 0:08:01.2]} 39. Rf4 {[%clk 0:04:59.2]} 39... Nb2 {[%clk 0:07:58.2]} 40. Bf1 {[%clk 0:04:40.7]} 40... Re7 {[%clk 0:07:47.2]} 41. Rf3 {[%clk 0:04:31.9]} 41... Na4 {[%clk 0:07:37.8]} 42. Re3 {[%clk 0:04:27]} 42... Rxe3 {[%clk 0:07:33.1]} 43. fxe3 {[%clk 0:04:26.9]} 43... Kf6 {[%clk 0:07:32.1]} 44. Kf3 {[%clk 0:04:26.1]} 44... Ke5 {[%clk 0:07:31.4]} 45. Ke2 {[%clk 0:04:20]} 45... f6 {[%clk 0:07:28.5]} 46. Kd2 {[%clk 0:04:19.1]} 46... Kd6 {[%clk 0:07:27.4]} 47. Kc2 {[%clk 0:04:16.4]} 47... Kc5 {[%clk 0:07:26.1]} 48. Kb3 {[%clk 0:04:13.6]} 1-0'
 
 export async function getLichessWinrate(moves: Array<String>, level: string, fen = ""): Promise<Winrate> {
-    if(!ratings.has(level)) level = 'Master';
-    if(fen === "") {
-        fen = "rnbqkbnr%2Fpppppppp%2F8%2F8%2F8%2F8%2FPPPPPPPP%2FRNBQKBNR+w+KQkq+-+0+1";
-    } else{
-        fen = fen.replaceAll('/', '%2F');
-        fen = fen.replaceAll(' ', '+');
+    try {
+        if(!ratings.has(level)) level = 'Master';
+        if(fen === "") {
+            fen = "rnbqkbnr%2Fpppppppp%2F8%2F8%2F8%2F8%2FPPPPPPPP%2FRNBQKBNR+w+KQkq+-+0+1";
+        } else{
+            fen = fen.replaceAll('/', '%2F');
+            fen = fen.replaceAll(' ', '+');
+        }
+
+        const movesFormated = moves.join("%2C");
+        let req = "";
+
+        if(level === 'Master') {
+            req = `https://explorer.lichess.ovh/masters?variant=standard&fen=${fen}&play=${movesFormated}&source=analysis`
+        }else {
+            const eloRange = ratings.get(level);
+            req = `https://explorer.lichess.ovh/lichess?variant=standard&fen=${fen}&play=${movesFormated}&since=2012-01&until=2022-12&speeds=rapid%2Cclassical&ratings=${eloRange}`;
+        } 
+        
+        const res = await fetch(req);
+        const data = await res.json();
+
+        return calculateWinrate(data as Winrate);
+    } catch (error) {
+        console.log('getLichessWinrate error: ' + error);
+        return {
+            white: 0,
+            draws: 0,
+            black: 0
+        }
     }
-
-    const movesFormated = moves.join("%2C");
-    let req = "";
-
-    if(level === 'Master') {
-        req = `https://explorer.lichess.ovh/masters?variant=standard&fen=${fen}&play=${movesFormated}&source=analysis`
-    }else {
-        const eloRange = ratings.get(level);
-        req = `https://explorer.lichess.ovh/lichess?variant=standard&fen=${fen}&play=${movesFormated}&since=2012-01&until=2022-12&speeds=rapid%2Cclassical&ratings=${eloRange}`;
-    } 
-    
-    const res = await fetch(req);
-    const data = await res.json();
-
-    return calculateWinrate(data as Winrate);
 }
 
 export async function fetchLichessCloudEval(fen: string) {

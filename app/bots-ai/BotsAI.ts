@@ -250,11 +250,13 @@ async function makeLichessMove(movesList: string[], databaseRating: string, fen:
     }
     let lichessResult = {san: "", uci: "", winrate: {white: 33, draws: 33, black: 33}};
 
+    if(databaseRating === 'Maximum' || movesList.length > 42) return lichessMove;
+
     lichessResult = await fetchLichessDatabase(movesList, databaseRating, fen);
 
     lichessMove.notation = lichessResult.uci;
 
-    if(databaseRating !== 'Maximum' && lichessMove.notation !== "" && lichessMove.notation !== undefined){
+    if(lichessMove.notation !== "" && lichessMove.notation !== undefined){
         lichessMove.type = 1;
         return correctCastleMove(lichessMove, fen, toolbox);
     }

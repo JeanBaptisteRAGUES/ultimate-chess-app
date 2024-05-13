@@ -64,7 +64,7 @@ const EvalAndWinrate: React.FC<EvalProps> = ({game, databaseRating, winner, star
         
         getLichessWinrate(movesList, databaseRating, startingFen).then((lichessWinrate) => {
             let lichessWinrateOK = false;
-            if(lichessWinrate.white) {
+            if(lichessWinrate.white && (lichessWinrate.white + lichessWinrate.draws + lichessWinrate.black) > 0) {
                 lichessWinrateOK = true;
                 setWinrate(lichessWinrate);
             } 
