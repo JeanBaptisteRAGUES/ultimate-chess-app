@@ -1,9 +1,10 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+import { Chess } from 'chess.js';
 import React, { useEffect, useRef, useState } from 'react'
 
 //TODO: gameActive == gameStarted ?
 interface ClockProps {
-    game: any,
+    game: Chess,
     turnColor: string,
     clockColor: string,
     timeControl: string,
@@ -59,7 +60,8 @@ const Clock: React.FC<ClockProps> = ({
         if(timeControl !== 'infinite'){
             //console.log("Add increment");
             //Le joueur à qui est assigné l'horloge vient de jouer donc ce n'est plus son tour
-            if(game.turn() !== clockColor){
+            if(game.turn() === clockColor || game.history().length < 1) return ;
+
             const newTimeControl = timeControlRef.current;
             newTimeControl.timeElapsed-= timeControlRef.current.increment;
             const date = new Date((newTimeControl.startingTime - newTimeControl.timeElapsed)*1000);
@@ -69,25 +71,24 @@ const Clock: React.FC<ClockProps> = ({
             if(+seconds < 10) seconds = '0' + seconds;
             setTimestamp(+hours > 0 ? `${hours}:${minutes}:${seconds}` : `${minutes}:${seconds}`);
             timeControlRef.current = newTimeControl;
-            }
         }
     }
 
     useEffect(() => {
-        //console.log('Test Add increment');
         addIncrement();
+        //console.log(`Add Increment (${clockColor === 'w' ? 'white' : 'black'}): ${timeControlRef.current.startingTime} - ${timeControlRef.current.timeElapsed} `);
     }, [turnColor, game]);
   
     useEffect(() => {
         //console.log('Set Time Control !');
         if(timeControl === "infinite") return ;
-        //console.log('Time Control : ' + timeControl);
         const newTimeControl = timeControlRef.current;
 
         //@ts-ignore
         newTimeControl.startingTime = timeControls.get(timeControl).startingTime;
         //@ts-ignore
         newTimeControl.increment = timeControls.get(timeControl)?.increment;
+        newTimeControl.timeElapsed = 0;
         const dateWhite = new Date((newTimeControl.startingTime - newTimeControl.timeElapsed)*1000);
         let secondsWhite = dateWhite.getSeconds().toString();
         let minutesWhite = dateWhite.getMinutes().toString();
@@ -95,7 +96,8 @@ const Clock: React.FC<ClockProps> = ({
         if(+secondsWhite < 10) secondsWhite = '0' + secondsWhite;
         setTimestamp(+hoursWhite > 0 ? `${hoursWhite}:${minutesWhite}:${secondsWhite}` : `${minutesWhite}:${secondsWhite}`);
         timeControlRef.current = newTimeControl;
-    }, [timeControl]);
+        //console.log(`Set Time Control (${clockColor === 'w' ? 'white' : 'black'}): ${timeControlRef.current.startingTime} - ${timeControlRef.current.timeElapsed} `);
+    }, [timeControl, gameStarted]);
   
     useEffect(() => {
         //console.log('Check game started');

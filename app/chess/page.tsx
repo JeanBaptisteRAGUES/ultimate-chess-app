@@ -24,12 +24,13 @@ const ChessPage = () => {
     const botBehaviour: Behaviour = searchParams.get('behaviour') as Behaviour || 'default';
     const timeControl = searchParams.get('timeControl') || 'infinite';
     const toolbox = new GameToolBox();
-    const gameActive = useRef(true);
+    const gameActive = useRef(false);
     const [game, setGame] = useState(new Chess());
     const virtualGame = useRef(new Chess());
     const engine = useRef<Engine>();
     const botAI = useRef<BotsAI>();
     const [playerColor, setPlayerColor] = useState<Color>('w');
+    //const [viewColor, setViewColor] = useState<Color>('w');
     const [gameStarted, setGameStarted] = useState(false);
     const [currentTimeout, setCurrentTimeout] = useState<NodeJS.Timeout>();
     //const [databaseRating, setDatabaseRating] = useState('Master');
@@ -122,18 +123,8 @@ const ChessPage = () => {
       game.reset();
       engine.current?.newGame();
       botAI.current?.reset();
-      gameActive.current = true;
+      gameActive.current = false;
       movesTypeRef.current = [];
-      /* whiteTimeControl.current = {
-        startingTime: 600,
-        increment: 0,
-        timeElapsed: 0,
-      };
-      blackTimeControl.current = {
-        startingTime: 600,
-        increment: 0,
-        timeElapsed: 0,
-      }; */
       setShowGameoverWindow(false);
       setWinner('');
       setGameStarted(false);
@@ -246,8 +237,8 @@ const ChessPage = () => {
     }
 
     async function playComputerMove() {
-      //console.log('Play computer move');
-      if(game.pgn().includes('#')) return;
+      console.log('Play computer move, game active ? ' + gameActive.current);
+      if(game.pgn().includes('#') || !gameActive.current) return;
       const move: Move | undefined = await botAI.current?.makeMove(game);
 
       if(move && move.type >= 0){
@@ -548,12 +539,15 @@ const ChessPage = () => {
       <div onClick={() => resign()} className=' h-[50px] w-[50px] flex flex-col justify-center items-center cursor-pointer hover:text-cyan-400'>
         <FaFontAwesomeFlag size={40} />
       </div>
+
+    const changeColor = () => {
+      if(gameActive.current) return;
+      playerColor === 'w' ? setPlayerColor('b') : setPlayerColor('w');
+    }
     
     const switchButton = 
       <div 
-        onClick={() => {
-          playerColor === 'w' ? setPlayerColor('b') : setPlayerColor('w')
-        }} 
+        onClick={() => changeColor()} 
         className=' h-[50px] w-[50px] flex flex-col justify-center items-center cursor-pointer hover:text-cyan-400'>
           <FaRotate size={40} />
     </div>
