@@ -34,8 +34,8 @@ const ChessPage = () => {
     const [currentTimeout, setCurrentTimeout] = useState<NodeJS.Timeout>();
     //const [databaseRating, setDatabaseRating] = useState('Master');
     //const [botBehaviour, setBotBehaviour] = useState<Behaviour>('default');
-    const [currentFen, setCurrentFen] = useState('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
-    const [virtualFen, setVirtualFen] = useState('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+    const [currentFen, setCurrentFen] = useState(DEFAULT_POSITION);
+    const [virtualFen, setVirtualFen] = useState(DEFAULT_POSITION);
     const [isVirtualMode, setIsVirtualMode] = useState(false);
     const [engineEval, setEngineEval] = useState('0.3');
     const [showEval, setShowEval] = useState(true);
@@ -117,6 +117,46 @@ const ChessPage = () => {
       setVirtualFen(currentFen);
       setIsVirtualMode(!isVirtualMode);
     }
+
+    function resetGame() {
+      game.reset();
+      engine.current?.newGame();
+      botAI.current?.reset();
+      gameActive.current = true;
+      movesTypeRef.current = [];
+      /* whiteTimeControl.current = {
+        startingTime: 600,
+        increment: 0,
+        timeElapsed: 0,
+      };
+      blackTimeControl.current = {
+        startingTime: 600,
+        increment: 0,
+        timeElapsed: 0,
+      }; */
+      setShowGameoverWindow(false);
+      setWinner('');
+      setGameStarted(false);
+      setIsVirtualMode(false);
+      setCurrentFen(DEFAULT_POSITION);
+      setVirtualFen(DEFAULT_POSITION);
+      setWhiteMaterialAdvantage({
+        pawn: 0,
+        knight: 0,
+        bishop: 0,
+        rook: 0,
+        queen: 0,
+        points: 0,
+      });
+      setBlackMaterialAdvantage({
+        pawn: 0,
+        knight: 0,
+        bishop: 0,
+        rook: 0,
+        queen: 0,
+        points: 0,
+      });
+    }
   
     function checkGameOver() {
       if(!gameActive.current) return false;
@@ -124,11 +164,13 @@ const ChessPage = () => {
         console.log('Game Over !');
         console.log(game.pgn());
         gameActive.current = false;
-        engine.current?.quit();
-        botAI.current?.disable();
+        /* engine.current?.quit();
+        botAI.current?.disable(); */
+        engine.current?.stop();
+        botAI.current?.pause();
         // TODO: Modifier si on veut directement relancer la partie depuis un bouton
-        delete engine.current;
-        delete botAI.current;
+        /* delete engine.current;
+        delete botAI.current; */
         if(game.isDraw() || game.isInsufficientMaterial() || game.isStalemate() || game.isInsufficientMaterial()) {
           setEngineEval('1/2 - 1/2');
           setWinner('d');
@@ -159,11 +201,13 @@ const ChessPage = () => {
       console.log('Game Over !');
       console.log(game.pgn());
       gameActive.current = false;
-      engine.current?.quit();
-      botAI.current?.disable();
+      /* engine.current?.quit();
+      botAI.current?.disable(); */
+      engine.current?.stop();
+      botAI.current?.pause();
       // TODO: Modifier si on veut directement relancer la partie depuis un bouton
-      delete engine.current;
-      delete botAI.current;
+      /* delete engine.current;
+      delete botAI.current; */
       setShowGameoverWindow(true);
     }
 
@@ -345,6 +389,12 @@ const ChessPage = () => {
       )
     }
 
+    function clearEngines(){
+      console.log('Clear engines');
+      engine.current?.quit();
+      botAI.current?.disable();
+    }
+
     async function fetchPlayerDB() {
       //console.log('Fetch Lichess DB of Hippo31');
       //await safeFetchPlayerLichessDB('Hippo31', 'w', ['e2e4'], 'Intermediate');
@@ -356,6 +406,7 @@ const ChessPage = () => {
       <div className=" flex flex-col justify-center items-center gap-5">
         <Link
           className=" m-4 p-1 bg-fuchsia-600 text-white border rounded cursor-pointer"
+          onClick={() => clearEngines()}
           href = {{
             pathname: '/game-analysis',
             query: {
@@ -366,18 +417,12 @@ const ChessPage = () => {
         >
           Analyse rapide
         </Link>
-        <Link
+        <div
           className=" m-4 p-1 bg-fuchsia-600 text-white border rounded cursor-pointer"
-          href = {{
-            pathname: '/game-analysis',
-            query: {
-              pgn: game.pgn(),
-              depth: 16
-            }
-          }}
+          onClick={() => resetGame()}
         >
-          Analyse approfondie
-        </Link>
+          Nouvelle partie
+        </div>
       </div>
 
     const gameOverWindow = showGameoverWindow ? 
@@ -481,10 +526,10 @@ const ChessPage = () => {
           }
       </div>
 
-    const testButton =
+    /* const testButton =
     <button onClick={() => fetchPlayerDB()}>
       Hippo31 Lichess DB
-    </button>
+    </button> */
 
     const startGameButton = !gameStarted ? 
       <div 
@@ -522,22 +567,11 @@ const ChessPage = () => {
         {virtualModeButton}
         {startGameButton}
         {switchButton}
-        {testButton}
       </div>
 
     const gameComponent = 
       <div className="flex flex-col justify-start items-center h-full">
-        {/* {evalComponent} */}
         {titleComponent}
-        {/* <EvalAndWinrate 
-          game={game} 
-          databaseRating={databaseRating} 
-          winner={winner} 
-          startingFen={DEFAULT_POSITION}
-          currentFen={currentFen} 
-          movesList={toolbox.convertHistorySanToLan(toolbox.convertPgnToHistory(game.pgn()), DEFAULT_POSITION)}
-          showEval={showEval} 
-        /> */}
         {boardComponent}
         {buttonsComponent}
       </div>

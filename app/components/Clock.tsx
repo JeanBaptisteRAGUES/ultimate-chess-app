@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useRef, useState } from 'react'
 
 //TODO: gameActive == gameStarted ?
@@ -36,10 +37,7 @@ const Clock: React.FC<ClockProps> = ({
     const updateTimers = () => {
         if(!gameStarted) return;
         if(!gameActive.current) return;
-        //console.log('Update Timers !');
-        //console.log("game.turn() : " + game.turn());
-        //console.log("turnColor : " + turnColor);
-        //console.log(gameActive.current);
+        
         //TODO: Faire une version plus précise en ms si ça marche
         if(game.turn() === clockColor){
             const newTimeControl = timeControlRef.current;
@@ -57,7 +55,7 @@ const Clock: React.FC<ClockProps> = ({
     }
   
     //TODO: ne marche pas
-    const addIncrement = (gameTurn: string) => {
+    const addIncrement = () => {
         if(timeControl !== 'infinite'){
             //console.log("Add increment");
             //Le joueur à qui est assigné l'horloge vient de jouer donc ce n'est plus son tour
@@ -77,7 +75,7 @@ const Clock: React.FC<ClockProps> = ({
 
     useEffect(() => {
         //console.log('Test Add increment');
-        addIncrement(turnColor)
+        addIncrement();
     }, [turnColor, game]);
   
     useEffect(() => {

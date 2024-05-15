@@ -67,6 +67,19 @@ class Engine {
         })
     }
 
+    newGame() {
+        return new Promise((resolve, reject) => {    
+            this.stockfish.postMessage('ucinewgame');
+            this.stockfish.postMessage('isready');
+            this.stockfish.onmessage = function(event: any) {
+                if(event.data === 'readyok'){
+                    //console.log('uciok');
+                    resolve('readyok');
+                }
+            }
+        })
+    }
+
     stop() {
         this.stockfish.postMessage('stop');
     }

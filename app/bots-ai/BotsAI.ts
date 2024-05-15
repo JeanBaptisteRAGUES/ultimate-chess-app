@@ -4230,6 +4230,15 @@ class BotsAI {
         return game.get(this.#toolbox.getMoveOrigin(move.notation) || 'a1').type;
     }
 
+    reset() {
+        this.#engine.newGame();
+        this.#lastRandomMove = this.#botColor === 'w' ? (-1)*Math.floor(Math.random()*3) - 1 : Math.floor(Math.random()*3) + 1;
+    }
+
+    pause() {
+        this.#engine.stop();
+    }
+
     disable() {
         this.#engine.quit();
     }
