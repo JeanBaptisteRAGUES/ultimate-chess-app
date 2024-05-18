@@ -89,6 +89,20 @@ const SelectThematicTrainingPage = () => {
             playerColor: 'w',
             avantage: 'low'
         },
+        {
+            title: 'French Guillotine',
+            startingFen: 'r1bqr3/ppp1kpQ1/2n1p3/6P1/3P4/2P5/PP3PP1/1K1R3R b - - 0 3',
+            nextMove: 'Qd7',
+            playerColor: 'w',
+            avantage: 'high'
+        },
+        {
+            title: 'Pirc Fianchetto Destroyer',
+            startingFen: 'r1bq1rk1/ppp1ppbp/2np1np1/8/3PP3/2N1BP2/PPPQ2PP/2KR1BNR b - - 4 7',
+            nextMove: 'e5',
+            playerColor: 'w',
+            avantage: 'low'
+        },
     ];
 
     const defensePositions = [

@@ -26,12 +26,13 @@ type DefaultBotParams = {
     randMoveInterval: number, 
     filterLevel: number,
     securityLvl: number,
-    skillValue: number,
+    skillValueMin: number,
+    skillValueMax: number,
     depth: number,
     playForcedMate: number,
 }
 
-function createIntervalsArray(from: number, to: number, intervalsNumber: number) {
+function createEloIntervals(from: number, to: number, intervalsNumber: number) {
     const intervalsArray = [];
 
     if(intervalsNumber < 1) return [];
@@ -43,13 +44,25 @@ function createIntervalsArray(from: number, to: number, intervalsNumber: number)
     return intervalsArray;
 }
 
-function selectArrayInterval(intervalsArray: number[], elo: number) {
-    if(intervalsArray.length < 1) return -1
+function createSkillValueIntervals(from: number, to: number) {
+    const intervalsArray = [];
+
+    if(to <= from) return [];
+
+    for(let i = 0; i <= (to - from); i++) {
+        intervalsArray.push(from + i);
+    }
+
+    return intervalsArray;
+}
+
+function selectSkillValue(eloIntervals: number[], skillMin: number, skillMax: number, elo: number) {
+    if(eloIntervals.length < 1) return skillMin;
     
-    let selectedInterval = intervalsArray[0];
+    let selectedSkillValue = skillMin;
     let maxDiff = 0;
     
-    intervalsArray.forEach(interval => {
+    eloIntervals.forEach((interval, i) => {
         let rand = Math.random();
         let chances = Math.min(interval, elo)/Math.max(interval, elo);
         //console.log('Interval: ' + interval);
@@ -57,30 +70,33 @@ function selectArrayInterval(intervalsArray: number[], elo: number) {
         //console.log('Chances: ' + chances);
         //console.log('diff: ' + (chances - rand));
         if(rand <= chances && maxDiff < (chances - rand)){
-            selectedInterval = interval;
+            selectedSkillValue = skillMin + i;
+            //console.log('selectedSkillValue: ' + selectedSkillValue);
             maxDiff = chances - rand;
         }
     })
     
-    return selectedInterval;
+    return selectedSkillValue;
 }
 
-function testProba(from: number, to: number, iNumber: number, elo: number, testsNumber: number) {
-    const iArray = createIntervalsArray(from, to, iNumber);
+function testProba(fromElo: number, toElo: number, fromSkillValue: number, toSkillValue: number, elo: number, testsNumber: number) {
+    const iArray = createEloIntervals(fromElo, toElo, toSkillValue - fromSkillValue);
     const results: number[] = [];
-    const intervalsProba = new Array(iNumber);
-    let selectedInterval = 0;
+    const intervalsProba = new Array(toSkillValue - fromSkillValue);
+    const skillValuesArray = createSkillValueIntervals(fromSkillValue, toSkillValue);
+    let selectedSkillValue = fromSkillValue;
     
     console.log(iArray);
+    console.log(skillValuesArray);
     
     for(let i = 0; i < testsNumber; ++i){
-        selectedInterval = selectArrayInterval(iArray, elo);
-        results.push(selectedInterval);
+        selectedSkillValue = selectSkillValue(iArray, fromSkillValue, toSkillValue, elo);
+        results.push(selectedSkillValue);
     }
     
     console.log(results);
     
-    iArray.forEach((interval, i) => {
+    skillValuesArray.forEach((interval, i) => {
         let occurencesNumber = 0;
         results.forEach(res => {
             if(res === interval) {
@@ -90,10 +106,14 @@ function testProba(from: number, to: number, iNumber: number, elo: number, tests
         intervalsProba[i] = occurencesNumber; 
     })
     
-    console.log(intervalsProba);
+    //console.log(intervalsProba);
+    console.log(skillValuesArray);
     
     return intervalsProba.map(value => Math.round(value*100/testsNumber));
 }
+
+//const proba = testProba(1600, 2000, 5, 10, 1994, 10000);
+//console.log(proba);
 
 function getMoveDestination(move: string) {
     //Qd4 -> d4, Ngf3 -> f3, exd4 -> d4, Bb5+ -> b5, Re8# -> e8, e4 -> e4
@@ -190,7 +210,8 @@ function initDefaultBotParams(level: string, timeControl: string): DefaultBotPar
       ]).get(timeControl) || 12;
 
     let randMoveChance = 0;
-    let skillValue = 0;
+    let skillValueMin = 0;
+    let skillValueMax = 20;
     let depth = 5;
     let filterLevel = 0; // Empèche de jouer certaines pièces lors d'un coup aléatoire
     let securityLvl = 0; // 0: Pas de sécurité, 1: Réagit dernier coup adversaire, 2: Coup aléatoire -> case non défendue
@@ -212,17 +233,19 @@ function initDefaultBotParams(level: string, timeControl: string): DefaultBotPar
             randMoveInterval = 3; 
             filterLevel = 0;
             securityLvl = 0;
-            skillValue = 0;
+            skillValueMin = 0;
+            skillValueMax = 2;
             depth = baseDetph;
             playForcedMate = 0;
             break;
         case 'Casual':
             // ~1400 bot chess.com
-            randMoveChance = 20;
+            randMoveChance = 15;
             randMoveInterval = 5;
             filterLevel = 1;
             securityLvl = 2;
-            skillValue = 2;
+            skillValueMin = 0;
+            skillValueMax = 4;
             depth = baseDetph;
             playForcedMate = 1;
             break;
@@ -232,7 +255,8 @@ function initDefaultBotParams(level: string, timeControl: string): DefaultBotPar
             randMoveInterval = 10;
             filterLevel = 2;
             securityLvl = 2; 
-            skillValue = 5; 
+            skillValueMin = 2;
+            skillValueMax = 8; 
             depth = baseDetph;
             playForcedMate = 2;
             break;
@@ -242,7 +266,8 @@ function initDefaultBotParams(level: string, timeControl: string): DefaultBotPar
             randMoveInterval = 15;
             filterLevel = 3;
             securityLvl = 2;
-            skillValue = 10;
+            skillValueMin = 6;
+            skillValueMax = 14;
             depth = baseDetph;
             playForcedMate = 3;
             break;
@@ -252,7 +277,8 @@ function initDefaultBotParams(level: string, timeControl: string): DefaultBotPar
             randMoveInterval = 20;
             filterLevel = 4;
             securityLvl = 2;
-            skillValue = 16;
+            skillValueMin = 12;
+            skillValueMax = 20;
             depth = baseDetph;
             playForcedMate = 4;
             break;
@@ -261,12 +287,14 @@ function initDefaultBotParams(level: string, timeControl: string): DefaultBotPar
             randMoveInterval = 0;
             filterLevel = 0;
             securityLvl = 0;
-            skillValue = 20;
+            skillValueMin = 20;
+            skillValueMax = 20;
             depth = baseDetph + 4;
             break;
         default:
             randMoveChance = 10;
-            skillValue = 5;
+            skillValueMin = 8;
+            skillValueMax = 12;
             depth = 12;
         break;
     }
@@ -276,7 +304,8 @@ function initDefaultBotParams(level: string, timeControl: string): DefaultBotPar
         randMoveInterval,
         filterLevel,
         securityLvl,
-        skillValue,
+        skillValueMin,
+        skillValueMax,
         depth,
         playForcedMate,
     }
@@ -358,7 +387,7 @@ class BotsAI {
     #engine: Engine;
     #toolbox: GameToolBox;
     #defaultBotParams: DefaultBotParams;
-    #behaviour: Behaviour; // default / pawn pusher / botez gambit etc.. TODO: Faire un type
+    #behaviour: Behaviour; 
     #botLevel: string;
     #lastRandomMove: number;
     #botColor: Color;
@@ -615,12 +644,6 @@ class BotsAI {
             } 
             //console.log('No more moves in the Lichess Database for ' + this.#botColor);
         }
-
-        /* const forcedStockfishMove = await makeForcedStockfishMove(this.#defaultBotParams, this.#botColor, game, this.#engine, this.#toolbox);
-        if(forcedStockfishMove.type >= 0) {
-            this.#lastRandomMove = this.#lastRandomMove-1;
-            return forcedStockfishMove;
-        }  */
 
         const isNearCheckmateRes = await this.#isNearCheckmate(this.#defaultBotParams.playForcedMate, game) 
         if(isNearCheckmateRes) {
