@@ -31,6 +31,69 @@ type DefaultBotParams = {
     playForcedMate: number,
 }
 
+function createIntervalsArray(from: number, to: number, intervalsNumber: number) {
+    const intervalsArray = [];
+
+    if(intervalsNumber < 1) return [];
+
+    for(let i = 0; i <= intervalsNumber; i++) {
+        intervalsArray.push(Math.round(from + (i/intervalsNumber)*(to - from)));
+    }
+
+    return intervalsArray;
+}
+
+function selectArrayInterval(intervalsArray: number[], elo: number) {
+    if(intervalsArray.length < 1) return -1
+    
+    let selectedInterval = intervalsArray[0];
+    let maxDiff = 0;
+    
+    intervalsArray.forEach(interval => {
+        let rand = Math.random();
+        let chances = Math.min(interval, elo)/Math.max(interval, elo);
+        //console.log('Interval: ' + interval);
+        //console.log('Rand: ' + rand);
+        //console.log('Chances: ' + chances);
+        //console.log('diff: ' + (chances - rand));
+        if(rand <= chances && maxDiff < (chances - rand)){
+            selectedInterval = interval;
+            maxDiff = chances - rand;
+        }
+    })
+    
+    return selectedInterval;
+}
+
+function testProba(from: number, to: number, iNumber: number, elo: number, testsNumber: number) {
+    const iArray = createIntervalsArray(from, to, iNumber);
+    const results: number[] = [];
+    const intervalsProba = new Array(iNumber);
+    let selectedInterval = 0;
+    
+    console.log(iArray);
+    
+    for(let i = 0; i < testsNumber; ++i){
+        selectedInterval = selectArrayInterval(iArray, elo);
+        results.push(selectedInterval);
+    }
+    
+    console.log(results);
+    
+    iArray.forEach((interval, i) => {
+        let occurencesNumber = 0;
+        results.forEach(res => {
+            if(res === interval) {
+                occurencesNumber++;
+            }
+        })
+        intervalsProba[i] = occurencesNumber; 
+    })
+    
+    console.log(intervalsProba);
+    
+    return intervalsProba.map(value => Math.round(value*100/testsNumber));
+}
 
 function getMoveDestination(move: string) {
     //Qd4 -> d4, Ngf3 -> f3, exd4 -> d4, Bb5+ -> b5, Re8# -> e8, e4 -> e4
@@ -113,6 +176,7 @@ function makeRandomMove(filterLevel: number, safeMoves: boolean, game: Chess): M
     }
 }
 
+//TODO: Prendre en entrée le classement Élo et déterminer ENSUITE le 'level'
 function initDefaultBotParams(level: string, timeControl: string): DefaultBotParams {
     const baseDetph = new Map([
         ['1+0', 8],
@@ -242,6 +306,21 @@ async function makeStockfishMove(botParams: DefaultBotParams, game: Chess, engin
     return stockfishMove;
 }
 
+async function makeLimitedStrengthMove(botParams: DefaultBotParams, game: Chess, engine: Engine): Promise<Move> {
+    //console.log('makeLimitedStrengthMove');
+    //console.log(botParams);
+    let stockfishMove: Move = {
+        notation: '',
+        type: -1
+    }
+
+    const stockfishRes = await engine.findLimitedStrengthMove(game.fen(), 8);
+    stockfishMove.notation = stockfishRes;
+    stockfishMove.type = 2;
+
+    return stockfishMove;
+}
+
 async function makeLichessMove(movesList: string[], databaseRating: string, fen: string, toolbox: GameToolBox): Promise<Move> {
     //console.log('Make Lichess Move');
     let lichessMove: Move = {
@@ -284,6 +363,7 @@ class BotsAI {
     #lastRandomMove: number;
     #botColor: Color;
 
+    //TODO: Prendre en entrée le classement Élo et déterminer ENSUITE le 'level'
     constructor(behaviour: Behaviour, level: string, botColor: Color, timeControl: string) {
         this.#engine = new Engine();
         this.#toolbox = new GameToolBox();
@@ -293,6 +373,10 @@ class BotsAI {
         this.#botColor = botColor;
         this.#engine.init();
         this.#defaultBotParams = initDefaultBotParams(level, timeControl);
+
+        if(behaviour === 'stockfish-only') {
+            this.#engine.setStrength(1400);
+        }
     }
 
     #isLastMoveDangerous(game: Chess): {danger: boolean, dangerCases: {dangerCase: string, dangerValue: number}[] } {
@@ -602,6 +686,21 @@ class BotsAI {
         return move;
     }
 
+    async #stockfishOnlyLogic(game: Chess, useDatabase: Boolean, useRandom: Boolean): Promise<Move> {
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+
+        const stockfishMove = await makeLimitedStrengthMove(this.#defaultBotParams, game, this.#engine);
+        if(stockfishMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return stockfishMove;
+        } 
+
+        return move;
+    }
+
     async #makeStockfishOnlyMove(game: Chess): Promise<Move> {
         //console.log('Bot AI: Stockfish Only behaviour');
         let move: Move = {
@@ -609,7 +708,7 @@ class BotsAI {
             type: -1,
         };
 
-        const defaultMove = await this.#defaultMoveLogic(game, false, false);
+        const defaultMove = await this.#stockfishOnlyLogic(game, false, false);
         if(defaultMove.type >= 0) {
             this.#lastRandomMove = this.#lastRandomMove-1;
             return defaultMove;

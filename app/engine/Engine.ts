@@ -67,6 +67,15 @@ class Engine {
         })
     }
 
+    /**
+     * Détermine la force à laquelle va jouer Stockfish (1320 - 3190)
+     * @param strength 
+     */
+    setStrength(strength: number) {
+        this.stockfish.postMessage('setoption name UCI_LimitStrength value true');
+        this.stockfish.postMessage(`setoption name UCI_Elo value ${strength}`);
+    }
+
     newGame() {
         return new Promise((resolve, reject) => {    
             this.stockfish.postMessage('ucinewgame');
@@ -91,6 +100,37 @@ class Engine {
 
     showWinDrawLose() {
         this.stockfish.postMessage('setoption name UCI_ShowWDL value true');
+    }
+
+    /**
+     * Ne demande pas une valeur pour le skill car le bot doit déjà avoir été programmé avec UCI_Elos
+     * @param fen 
+     * @param depth 
+     * @returns 
+     */
+    findLimitedStrengthMove(fen: string, depth: number): Promise<string> {
+        return new Promise((resolve, reject) => {
+            try {
+                this.stockfish.postMessage(`position fen ${fen}`);
+                this.stockfish.postMessage(`go depth ${depth}`);
+
+                this.stockfish.onmessage = function(event: any) {
+                    //console.log(event.data);
+                    if((event.data.match(bestMoveRegex)) !== null){
+                        const newBestMove = event.data.match(bestMoveRegex)[1];
+                        if(newBestMove !== null){
+                            resolve(newBestMove);
+                        } else{
+                            reject(null);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.log('findBestMove error: ' + error);
+                resolve('????');
+            }
+            
+        })
     }
 
     
