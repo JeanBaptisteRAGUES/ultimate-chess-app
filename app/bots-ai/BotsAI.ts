@@ -925,7 +925,12 @@ class BotsAI {
         if(gimmickMove.type >= 0) {
             this.#lastRandomMove = this.#lastRandomMove-1;
             return gimmickMove;
-        } 
+        }
+        
+        const humanMove = await this.#humanMoveLogic(game, true, true);
+        if(humanMove.type >= 0) {
+            return humanMove;
+        }
 
         const defaultMove = await this.#defaultMoveLogic(game, false, true);
         if(defaultMove.type >= 0) {
@@ -1005,6 +1010,11 @@ class BotsAI {
             return gimmickMove;
         }
 
+        const humanMove = await this.#humanMoveLogic(game, true, true);
+        if(humanMove.type >= 0) {
+            return humanMove;
+        }
+
         const defaultMove = await this.#defaultMoveLogic(game, true, true);
         if(defaultMove.type >= 0) {
             this.#lastRandomMove = this.#lastRandomMove-1;
@@ -1064,6 +1074,11 @@ class BotsAI {
         if(gimmickMove.type >= 0) {
             this.#lastRandomMove = this.#lastRandomMove-1;
             return gimmickMove;
+        }
+
+        const humanMove = await this.#humanMoveLogic(game, true, true);
+        if(humanMove.type >= 0) {
+            return humanMove;
         }
 
         const defaultMove = await this.#defaultMoveLogic(game, true, true);
@@ -1223,6 +1238,11 @@ class BotsAI {
             return gimmickMove;
         }
 
+        const humanMove = await this.#humanMoveLogic(game, true, true);
+        if(humanMove.type >= 0) {
+            return humanMove;
+        }
+
         const defaultMove = await this.#defaultMoveLogic(game, false, true);
         if(defaultMove.type >= 0) {
             this.#lastRandomMove = this.#lastRandomMove-1;
@@ -1337,6 +1357,11 @@ class BotsAI {
         if(gimmickMove.type >= 0) {
             this.#lastRandomMove = this.#lastRandomMove-1;
             return gimmickMove;
+        }
+
+        const humanMove = await this.#humanMoveLogic(game, true, true);
+        if(humanMove.type >= 0) {
+            return humanMove;
         }
 
         const defaultMove = await this.#defaultMoveLogic(game, false, true);
@@ -2937,6 +2962,11 @@ class BotsAI {
             return gimmickMove;
         } 
 
+        const humanMove = await this.#humanMoveLogic(game, true, true);
+        if(humanMove.type >= 0) {
+            return humanMove;
+        }
+
         const defaultMove = await this.#defaultMoveLogic(game, true, true);
         if(defaultMove.type >= 0) {
             this.#lastRandomMove = this.#lastRandomMove-1;
@@ -3005,6 +3035,11 @@ class BotsAI {
         if(gimmickMove.type >= 0) {
             this.#lastRandomMove = this.#lastRandomMove-1;
             return gimmickMove;
+        }
+
+        const humanMove = await this.#humanMoveLogic(game, true, true);
+        if(humanMove.type >= 0) {
+            return humanMove;
         }
 
         const defaultMove = await this.#defaultMoveLogic(game, true, true);
@@ -3077,6 +3112,11 @@ class BotsAI {
         if(gimmickMove.type >= 0) {
             this.#lastRandomMove = this.#lastRandomMove-1;
             return gimmickMove;
+        }
+
+        const humanMove = await this.#humanMoveLogic(game, true, true);
+        if(humanMove.type >= 0) {
+            return humanMove;
         }
 
         const defaultMove = await this.#defaultMoveLogic(game, true, true);
@@ -3288,6 +3328,11 @@ class BotsAI {
             return gimmickMove;
         }
 
+        const humanMove = await this.#humanMoveLogic(game, true, true);
+        if(humanMove.type >= 0) {
+            return humanMove;
+        }
+
         const defaultMove = await this.#defaultMoveLogic(game, false, true);
         if(defaultMove.type >= 0) {
             this.#lastRandomMove = this.#lastRandomMove-1;
@@ -3311,6 +3356,11 @@ class BotsAI {
         const lichessMove = await makeLichessMove(movesList, 'Master', '', this.#toolbox);
         if(lichessMove.type >= 0){
             return lichessMove;
+        }
+
+        const humanMove = await this.#humanMoveLogic(game, false, true);
+        if(humanMove.type >= 0) {
+            return humanMove;
         }
 
         const defaultMove = await this.#defaultMoveLogic(game, false, true);
@@ -3337,6 +3387,11 @@ class BotsAI {
         const lichessMove = await makeLichessMove(movesList, 'Beginner', '', this.#toolbox);
         if(lichessMove.type >= 0){
             return lichessMove;
+        }
+
+        const humanMove = await this.#humanMoveLogic(game, false, true);
+        if(humanMove.type >= 0) {
+            return humanMove;
         }
 
         const defaultMove = await this.#defaultMoveLogic(game, false, true);
@@ -3463,6 +3518,11 @@ class BotsAI {
         if(gimmickMove.type >= 0) {
             this.#lastRandomMove = this.#lastRandomMove-1;
             return gimmickMove;
+        }
+
+        const humanMove = await this.#humanMoveLogic(game, true, true);
+        if(humanMove.type >= 0) {
+            return humanMove;
         }
 
         const defaultMove = await this.#defaultMoveLogic(game, false, true);
@@ -3596,6 +3656,11 @@ class BotsAI {
         if(gimmickMove.type >= 0) {
             this.#lastRandomMove = this.#lastRandomMove-1;
             return gimmickMove;
+        }
+
+        const humanMove = await this.#humanMoveLogic(game, true, true);
+        if(humanMove.type >= 0) {
+            return humanMove;
         }
 
         const defaultMove = await this.#defaultMoveLogic(game, true, true);
@@ -3985,6 +4050,11 @@ class BotsAI {
             return gimmickMove;
         }
 
+        const humanMove = await this.#humanMoveLogic(game, true, true);
+        if(humanMove.type >= 0) {
+            return humanMove;
+        }
+
         const defaultMove = await this.#defaultMoveLogic(game, true, true);
         if(defaultMove.type >= 0) {
             this.#lastRandomMove = this.#lastRandomMove-1;
@@ -4194,6 +4264,11 @@ class BotsAI {
             return gimmickMove;
         }
 
+        const humanMove = await this.#humanMoveLogic(game, true, true);
+        if(humanMove.type >= 0) {
+            return humanMove;
+        }
+
         const defaultMove = await this.#defaultMoveLogic(game, true, true);
         if(defaultMove.type >= 0) {
             this.#lastRandomMove = this.#lastRandomMove-1;
@@ -4280,6 +4355,11 @@ class BotsAI {
         if(gimmickMove.type >= 0) {
             this.#lastRandomMove = this.#lastRandomMove-1;
             return gimmickMove;
+        }
+
+        const humanMove = await this.#humanMoveLogic(game, true, true);
+        if(humanMove.type >= 0) {
+            return humanMove;
         }
 
         const defaultMove = await this.#defaultMoveLogic(game, true, true);
