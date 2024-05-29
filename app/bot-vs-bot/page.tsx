@@ -27,8 +27,8 @@ const BotVsBotPage = () => {
     //const databaseRating = searchParams.get('difficulty') || 'Master';
     const bot1_Behaviour: Behaviour = searchParams.get('bot1_Behaviour') as Behaviour || 'default';
     const bot2_Behaviour: Behaviour = searchParams.get('bot2_Behaviour') as Behaviour || 'default';
-    const bot1_Level = searchParams.get('bot1_Level') || 'Master';
-    const bot2_Level = searchParams.get('bot2_Level') || 'Master';
+    const bot1_Elo: number = eval(searchParams.get('bot1_Elo') || '2600');
+    const bot2_Elo: number = eval(searchParams.get('bot2_Elo') || '2600');
     const timeControl = searchParams.get('timeControl') || '3+0';
     const moveDelay = timeControlDelays.get(timeControl);
 
@@ -76,8 +76,8 @@ const BotVsBotPage = () => {
     useEffect(() => {
         engine.current = new Engine();
         engine.current.init();
-        bot1_AI.current = new BotsAI(bot1_Behaviour, bot1_Level, 'w', timeControl);
-        bot2_AI.current = new BotsAI(bot2_Behaviour, bot2_Level, 'b', timeControl);
+        bot1_AI.current = new BotsAI(bot1_Behaviour, bot1_Elo, 'w', timeControl);
+        bot2_AI.current = new BotsAI(bot2_Behaviour, bot2_Elo, 'b', timeControl);
     }, []);
 
     const gameMove = (moveNotation: string, moveType: number) => {
@@ -316,7 +316,7 @@ const BotVsBotPage = () => {
       null
 
     const titleComponent = <h4 className=" text-lg text-white" >
-      {`${bot1_Behaviour}(${bot1_Level}) VS ${bot2_Behaviour}(${bot2_Level})`}
+      {`${bot1_Behaviour}(${bot1_Elo}) VS ${bot2_Behaviour}(${bot2_Elo})`}
     </h4>
 
     const pgnComponentDesktop =
@@ -335,9 +335,9 @@ const BotVsBotPage = () => {
           <div className=" relative flex justify-start p-2 w-full h-10 font-medium bg-slate-100 rounded-t-md">
             <div className=" h-full flex justify-start items-center flex-grow-[4]" >
               {playerColor === 'w' ?  
-                  `${bot2_Behaviour} (${bot2_Level}) ${showMaterialAdvantage('b')}` 
+                  `${bot2_Behaviour} (${bot2_Elo}) ${showMaterialAdvantage('b')}` 
                 : 
-                  `${bot1_Behaviour} (${bot1_Level}) ${showMaterialAdvantage('w')}`
+                  `${bot1_Behaviour} (${bot1_Elo}) ${showMaterialAdvantage('w')}`
               }
             </div>
           </div>
@@ -350,9 +350,9 @@ const BotVsBotPage = () => {
           <div className=" relative flex justify-start p-2 w-full h-10 font-medium bg-slate-100 rounded-b-md">
             <div className=" h-full flex justify-start items-center flex-grow-[4]" >
               {playerColor === 'b' ?  
-                  `${bot2_Behaviour} (${bot2_Level}) ${showMaterialAdvantage('b')}` 
+                  `${bot2_Behaviour} (${bot2_Elo}) ${showMaterialAdvantage('b')}` 
                 : 
-                  `${bot1_Behaviour} (${bot1_Level}) ${showMaterialAdvantage('w')}`
+                  `${bot1_Behaviour} (${bot1_Elo}) ${showMaterialAdvantage('w')}`
               }
             </div>
           </div>

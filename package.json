@@ -11,6 +11,8 @@
   "dependencies": {
     "chart.js": "^4.4.1",
     "chess.js": "^1.0.0-beta.7",
+    "dual-range-bar": "^1.0.3",
+    "multi-range-slider-react": "^2.0.7",
     "next": "14.0.4",
     "react": "^18",
     "react-chartjs-2": "^5.2.0",

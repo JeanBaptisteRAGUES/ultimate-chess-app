@@ -19,9 +19,9 @@ import GameToolBox from "../game-toolbox/GameToolbox";
 const HandAndBrainPage = () => {
     const searchParams = useSearchParams();
     const playerRole = searchParams.get('playerRole') || 'Brain';
-    const allyRating = searchParams.get('allyRating') || 'Master';
+    const allyElo: number= eval(searchParams.get('allyElo') || '2600');
     const allyRole = playerRole === 'Brain' ? 'Hand' : 'Brain';
-    const opponentRating = searchParams.get('opponentRating') || 'Master';
+    const opponentElo: number = eval(searchParams.get('opponentElo') || '2600');
     const opponentBehaviour: Behaviour = searchParams.get('opponentBehaviour') as Behaviour || 'default';
     const gameActive = useRef(true);
     const [game, setGame] = useState(new Chess());
@@ -86,12 +86,12 @@ const HandAndBrainPage = () => {
         engine.current = new Engine();
         engine.current.init();
         const opponentColor = playerColor === 'w' ? 'b' : 'w';
-        allyAI.current = new BotsAI('default', allyRating, playerColor, '10+0');
-        opponentAI.current = new BotsAI(opponentBehaviour, opponentRating, opponentColor, '10+0');
+        allyAI.current = new BotsAI('default', allyElo, playerColor, '10+0');
+        opponentAI.current = new BotsAI(opponentBehaviour, opponentElo, opponentColor, '10+0');
         console.log("Player Role: " + playerRole);
-        console.log("Ally Rating: " + allyRating);
+        console.log("Ally Elo: " + allyElo);
         console.log("Ally Role: " + allyRole);
-        console.log("Opponent Rating: " + opponentRating);
+        console.log("Opponent Elo: " + opponentElo);
         console.log("Opponent Behaviour: " + opponentBehaviour);
         /* if(allyRole === 'Brain' && game.turn() === playerColor) {
             setAllyStatus(1);
@@ -100,9 +100,10 @@ const HandAndBrainPage = () => {
     }, []);
 
     useEffect(() => {
-      console.log('New Level : ' + opponentRating);
       const opponentColor = playerColor === 'w' ? 'b' : 'w';
-      opponentAI.current = new BotsAI(opponentBehaviour, opponentRating, opponentColor, '10+0');
+      //opponentAI.current = new BotsAI(opponentBehaviour, opponentRating, opponentColor, '10+0');
+      opponentAI.current?.changeColor(opponentColor);
+      allyAI.current?.changeColor(playerColor);
       if(playerColor === 'b' && !gameActive) setAllyStatus(2);
     }, [playerColor]);
 
@@ -239,7 +240,7 @@ const HandAndBrainPage = () => {
         gameMove(sourceSquare + targetSquare + promotion, 0);
         setAllyStatus(2);
         let delay = getTimeControlDelay();
-        if(opponentRating === 'Maximum') delay = 0;
+        if(opponentElo === 3200) delay = 0;
         
         const newTimeout = setTimeout(playComputerMove, delay);
         setCurrentTimeout(newTimeout);
@@ -392,7 +393,7 @@ const HandAndBrainPage = () => {
       null
 
     const titleComponent = <h4 className=" text-lg text-white" >
-      {"Niveau de l adversaire: " + opponentRating}
+      {"Niveau de l adversaire: " + opponentElo}
     </h4>
 
     const allyStatusComponent = allyStatus === 0 ?
@@ -411,7 +412,7 @@ const HandAndBrainPage = () => {
         if(move && move.type >= 0){
             gameMove(move.notation, move.type);
             let delay = getTimeControlDelay();
-            if(opponentRating === 'Maximum') delay = 0;
+            if(opponentElo === 3200) delay = 0;
             setAllyStatus(2);
             if(gameStarted){
                 const newTimeout = setTimeout(playComputerMove, delay);
@@ -541,7 +542,7 @@ const selectPieceComponentSmartphone =
       <div className=" flex flex-col justify-center items-center h-[300px] md:h-[500px] w-[95vw] md:w-[500px] my-10" >
           <div className=" relative flex justify-start p-2 w-full h-10 font-medium bg-slate-100 rounded-t-md">
             <div className=" h-full flex justify-start items-center flex-grow-[4]" >
-              {opponentBehaviour} ({opponentRating}) {playerColor === 'w' ? (
+              {opponentBehaviour} ({opponentElo}) {playerColor === 'w' ? (
                 showMaterialAdvantage('b')
               ) : (
                 showMaterialAdvantage('w')
@@ -574,7 +575,7 @@ const selectPieceComponentSmartphone =
                       <GiBrain size={25} /> Joueur 
                     </div>
                     <div className=" h-full w-fit flex justify-start items-center">
-                      <FaHandFist size={25} /> Stockfish 16 ({allyRating}) {playerColor === 'w' ? (
+                      <FaHandFist size={25} /> Stockfish 16 ({allyElo}) {playerColor === 'w' ? (
                         showMaterialAdvantage('w')
                       ) : (
                         showMaterialAdvantage('b')
@@ -584,7 +585,7 @@ const selectPieceComponentSmartphone =
                 :
                 <div className=" h-full flex justify-start items-center flex-grow-[4] gap-5" >
                   <div className=" h-full w-fit flex justify-start items-center">
-                    <GiBrain size={25} />Ordinateur ({allyRating})
+                    <GiBrain size={25} />Ordinateur ({allyElo})
                   </div>
                   <div className=" h-full w-fit flex justify-start items-center">
                     <FaHandFist size={25} />Joueur {playerColor === 'w' ? (

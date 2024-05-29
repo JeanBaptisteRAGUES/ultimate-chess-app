@@ -24,33 +24,33 @@ import { FaChessPawn } from 'react-icons/fa';
 // TODO: Liste des bots
 
 const SelectBot = () => {
-    const [difficulty, setDifficulty] = useState('Master');
+    const [elo, setElo] = useState<number>(1500);
     const [behaviour, setBehaviour] = useState<Behaviour>('default');
     const [timeControl, setTimeControl] = useState('10+0');
 
     const difficultyComponent =
         <div className='flex flex-row justify-around items-center flex-wrap w-full' >
-            <div onClick={() => setDifficulty('Beginner')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: difficulty === 'Beginner' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => setElo(400)} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: elo === 400 ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♙</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >Beginner</span>
             </div>
-            <div onClick={() => setDifficulty('Casual')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: difficulty === 'Casual' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => setElo(1000)} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: elo === 1000 ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♘</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >Casual</span>
             </div>
-            <div onClick={() => setDifficulty('Intermediate')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: difficulty === 'Intermediate' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => setElo(1500)} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: elo === 1500 ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♗</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >Intermediate</span>
             </div>
-            <div onClick={() => setDifficulty('Advanced')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: difficulty === 'Advanced' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
+            <div onClick={() => setElo(2000)} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: elo === 2000 ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
                 <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♖</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >Advanced</span>
             </div>
-            <div onClick={() => setDifficulty('Master')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: difficulty === 'Master' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
+            <div onClick={() => setElo(2600)} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: elo === 2600 ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
                 <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♕</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >Master</span>
             </div>
-            <div onClick={() => setDifficulty('Maximum')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: difficulty === 'Maximum' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => setElo(3200)} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: elo === 3200 ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♔</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >Maximum</span>
             </div>
@@ -205,7 +205,7 @@ const SelectBot = () => {
                 href = {{
                 pathname: '/chess',
                 query: {
-                    difficulty: difficulty,
+                    elo: elo,
                     behaviour: behaviour,
                     timeControl: timeControl,
                 }

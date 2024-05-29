@@ -18,10 +18,15 @@ import { FaRotate } from "react-icons/fa6";
 import { fetchChessDotComDB, safeFetchPlayerLichessDB } from "../libs/fetchLichess";
 
 
-const ChessPage = () => {
+const SpeedrunPage = () => {
     const searchParams = useSearchParams();
-    const botElo: number = eval(searchParams.get('elo') || '1500');
-    const botBehaviour: Behaviour = searchParams.get('behaviour') as Behaviour || 'default';
+    //const botElo: number = eval(searchParams.get('elo') || '1500');
+    //const botBehaviour: Behaviour = searchParams.get('behaviour') as Behaviour || 'default';
+    const eloMin: number = eval(searchParams.get('eloMin') || '400');
+    const eloMax: number = eval(searchParams.get('eloMax') || '2000');
+    const eloStep: number = eval(searchParams.get('eloStep') || '10');
+    //const playerElo: number = eval(searchParams.get('playerElo') || '400');
+    const [playerElo, setPlayerElo] = useState<number>(eval(searchParams.get('playerElo') || '400'));
     const timeControl = searchParams.get('timeControl') || 'infinite';
     const toolbox = new GameToolBox();
     const gameActive = useRef(false);
@@ -29,7 +34,9 @@ const ChessPage = () => {
     const virtualGame = useRef(new Chess());
     const engine = useRef<Engine>();
     const botAI = useRef<BotsAI>();
-    const [playerColor, setPlayerColor] = useState<Color>('w');
+    const [playerColor, setPlayerColor] = useState<Color>(Math.random() < 0.5 ? 'w' : 'b');
+    const [botElo, setBotElo] = useState<number>(playerElo);
+    const [botBehaviour, setBotBehaviour] = useState<Behaviour>('default');
     //const [viewColor, setViewColor] = useState<Color>('w');
     const [gameStarted, setGameStarted] = useState(false);
     const [currentTimeout, setCurrentTimeout] = useState<NodeJS.Timeout>();
@@ -81,13 +88,29 @@ const ChessPage = () => {
       points: 0,
     });
 
+    function pickRandomBehaviour(): Behaviour{
+        const behaviourRand = Math.random()*100;
+        if(behaviourRand < 40) return 'human';
+        if(behaviourRand < 50) return 'stonewall';
+        if(behaviourRand < 60) return 'pawn-pusher';
+        if(behaviourRand < 70) return 'caro-london';
+        if(behaviourRand < 80) return 'cow-lover';
+        if(behaviourRand < 90) return 'fianchetto-sniper';
+        return 'gambit-fanatic';
+    }
+
     useEffect(() => {
         engine.current = new Engine();
         engine.current.init();
         const botColor = playerColor === 'w' ? 'b' : 'w';
-        botAI.current = new BotsAI(botBehaviour, botElo, botColor, timeControl);
-        console.log("Bot Elo: " + botElo);
-        console.log("Bot Behaviour: " + botBehaviour);
+        const newBotElo = Math.round(Math.min(3200, Math.max(100, playerElo + (Math.random()*100 - 50))));
+        //TODO: Génération aléatoire du comportement et de l'élo
+        const newBotBehaviour = pickRandomBehaviour();
+        botAI.current = new BotsAI(newBotBehaviour, newBotElo, botColor, timeControl);
+        setBotElo(newBotElo);
+        setBotBehaviour(newBotBehaviour);
+        console.log("Bot Elo: " + newBotElo);
+        console.log("Bot Behaviour: " + newBotBehaviour);
     }, []);
 
     useEffect(() => {
@@ -120,35 +143,44 @@ const ChessPage = () => {
     }
 
     function resetGame() {
-      game.reset();
-      engine.current?.newGame();
-      botAI.current?.reset();
-      gameActive.current = false;
-      movesTypeRef.current = [];
-      setShowGameoverWindow(false);
-      setWinner('');
-      setGameStarted(false);
-      setIsVirtualMode(false);
-      setCurrentFen(DEFAULT_POSITION);
-      setVirtualFen(DEFAULT_POSITION);
-      setWhiteMaterialAdvantage({
-        pawn: 0,
-        knight: 0,
-        bishop: 0,
-        rook: 0,
-        queen: 0,
-        points: 0,
-      });
-      setBlackMaterialAdvantage({
-        pawn: 0,
-        knight: 0,
-        bishop: 0,
-        rook: 0,
-        queen: 0,
-        points: 0,
-      });
+        const newBotElo = Math.round(Math.min(3200, Math.max(100, playerElo + (Math.random()*100 - 50))));
+        const newPlayerColor = Math.random() < 0.5 ? 'w' : 'b';
+        const newBotColor = playerColor === 'w' ? 'b' : 'w';
+        const newBotBehaviour = pickRandomBehaviour();
+        game.reset();
+        engine.current?.newGame();
+        //botAI.current?.reset();
+        console.log(newBotElo);
+        botAI.current?.new(newBotBehaviour, newBotElo, newBotColor, timeControl);
+        gameActive.current = false;
+        movesTypeRef.current = [];
+        setShowGameoverWindow(false);
+        setWinner('');
+        setPlayerColor(newPlayerColor);
+        setBotBehaviour(newBotBehaviour);
+        setBotElo(newBotElo);
+        setGameStarted(false);
+        setIsVirtualMode(false);
+        setCurrentFen(DEFAULT_POSITION);
+        setVirtualFen(DEFAULT_POSITION);
+        setWhiteMaterialAdvantage({
+            pawn: 0,
+            knight: 0,
+            bishop: 0,
+            rook: 0,
+            queen: 0,
+            points: 0,
+        });
+        setBlackMaterialAdvantage({
+            pawn: 0,
+            knight: 0,
+            bishop: 0,
+            rook: 0,
+            queen: 0,
+            points: 0,
+        });
     }
-  
+    
     function checkGameOver() {
       if(!gameActive.current) return false;
       if (game.isGameOver()){
@@ -167,6 +199,13 @@ const ChessPage = () => {
           setWinner('d');
         }
         if(game.isCheckmate()){
+          let newPlayerElo = playerElo;
+          if(game.turn() !== playerColor){
+            newPlayerElo+= eloStep;
+          }else{
+            newPlayerElo-= eloStep;
+          }
+          setPlayerElo(Math.max(100, newPlayerElo));
           if(game.turn() === 'w'){
             setEngineEval('0 - 1');
             setWinner('b');
@@ -189,6 +228,13 @@ const ChessPage = () => {
         setEngineEval('1 - 0');
         setWinner('w');
       }
+      let newPlayerElo = playerElo;
+        if(game.turn() !== playerColor){
+        newPlayerElo+= eloStep;
+        }else{
+        newPlayerElo-= eloStep;
+        }
+      setPlayerElo(Math.max(100, playerElo - eloStep));
       console.log('Game Over !');
       console.log(game.pgn());
       gameActive.current = false;
@@ -412,7 +458,7 @@ const ChessPage = () => {
           className=" m-4 p-1 bg-fuchsia-600 text-white border rounded cursor-pointer"
           onClick={() => resetGame()}
         >
-          Nouvelle partie
+          Adversaire suivant
         </div>
       </div>
 
@@ -489,7 +535,7 @@ const ChessPage = () => {
           />
           <div className=" relative flex justify-around p-2 w-full h-10 font-medium rounded-b-md bg-slate-100">
             <div className=" h-full flex justify-start items-center flex-grow-[4]" >
-              Joueur {playerColor === 'w' ? (
+              Joueur ({playerElo}) {playerColor === 'w' ? (
                 showMaterialAdvantage('w')
               ) : (
                 showMaterialAdvantage('b')
@@ -585,4 +631,4 @@ const ChessPage = () => {
     )
 }
 
-export default ChessPage;
+export default SpeedrunPage;

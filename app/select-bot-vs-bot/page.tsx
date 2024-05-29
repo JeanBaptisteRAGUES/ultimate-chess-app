@@ -24,9 +24,9 @@ import { FaChessPawn } from 'react-icons/fa';
 
 const SelectBotVsBotPage = () => {
     const [timeControl, setTimeControl] = useState('3+0');
-    const [bot1_Level, setBot1_Level] = useState('Master');
+    const [bot1_Elo, setBot1_Elo] = useState<number>(2600);
     const [bot1_Behaviour, setBot1_Behaviour] = useState<Behaviour>('default');
-    const [bot2_Level, setBot2_Level] = useState('Master');
+    const [bot2_Elo, setBot2_Elo] = useState<number>(2600);
     const [bot2_Behaviour, setBot2_Behaviour] = useState<Behaviour>('default');
 
     const timeControlComponent =
@@ -51,27 +51,27 @@ const SelectBotVsBotPage = () => {
 
     const bot1_LevelComponent =
         <div className='flex mt-10 flex-row justify-around items-center flex-wrap w-full' >
-            <div onClick={() => setBot1_Level('Beginner')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot1_Level === 'Beginner' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => setBot1_Elo(400)} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot1_Elo === 400 ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♙</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >Beginner</span>
             </div>
-            <div onClick={() => setBot1_Level('Casual')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot1_Level === 'Casual' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => setBot1_Elo(1000)} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot1_Elo === 1000 ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♘</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >Casual</span>
             </div>
-            <div onClick={() => setBot1_Level('Intermediate')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot1_Level === 'Intermediate' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => setBot1_Elo(1500)} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot1_Elo === 1500 ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♗</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >Intermediate</span>
             </div>
-            <div onClick={() => setBot1_Level('Advanced')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot1_Level === 'Advanced' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
+            <div onClick={() => setBot1_Elo(2000)} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot1_Elo === 2000 ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
                 <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♖</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >Advanced</span>
             </div>
-            <div onClick={() => setBot1_Level('Master')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot1_Level === 'Master' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
+            <div onClick={() => setBot1_Elo(2600)} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot1_Elo === 2600 ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
                 <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♕</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >Master</span>
             </div>
-            <div onClick={() => setBot1_Level('Maximum')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot1_Level === 'Maximum' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => setBot1_Elo(3200)} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot1_Elo === 3200 ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♔</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >Maximum</span>
             </div>
@@ -79,27 +79,27 @@ const SelectBotVsBotPage = () => {
     
     const bot2_LevelComponent =
         <div className='flex mt-10 flex-row justify-around items-center flex-wrap w-full' >
-            <div onClick={() => setBot2_Level('Beginner')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot2_Level === 'Beginner' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => setBot2_Elo(400)} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot2_Elo === 400 ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♙</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >Beginner</span>
             </div>
-            <div onClick={() => setBot2_Level('Casual')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot2_Level === 'Casual' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => setBot2_Elo(1000)} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot2_Elo === 1000 ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♘</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >Casual</span>
             </div>
-            <div onClick={() => setBot2_Level('Intermediate')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot2_Level === 'Intermediate' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => setBot2_Elo(1500)} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot2_Elo === 1500 ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♗</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >Intermediate</span>
             </div>
-            <div onClick={() => setBot2_Level('Advanced')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot2_Level === 'Advanced' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
+            <div onClick={() => setBot2_Elo(2000)} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot2_Elo === 2000 ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
                 <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♖</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >Advanced</span>
             </div>
-            <div onClick={() => setBot2_Level('Master')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot2_Level === 'Master' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
+            <div onClick={() => setBot2_Elo(2600)} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot2_Elo === 2600 ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
                 <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♕</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >Master</span>
             </div>
-            <div onClick={() => setBot2_Level('Maximum')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot2_Level === 'Maximum' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => setBot2_Elo(3200)} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot2_Elo === 3200 ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♔</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >Maximum</span>
             </div>
@@ -275,9 +275,9 @@ const bot2_BehaviourComponent =
                 href = {{
                 pathname: '/bot-vs-bot',
                 query: {
-                    bot1_Level: bot1_Level,
+                    bot1_Elo: bot1_Elo,
                     bot1_Behaviour: bot1_Behaviour,
-                    bot2_Level: bot2_Level,
+                    bot2_Elo: bot2_Elo,
                     bot2_Behaviour: bot2_Behaviour,
                     timeControl: timeControl,
                 }

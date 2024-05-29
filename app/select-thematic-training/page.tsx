@@ -13,7 +13,7 @@ export type Avantage = 'low' | 'medium' | 'high' | 'very high';
 
 
 const SelectThematicTrainingPage = () => {
-    const [difficulty, setDifficulty] = useState('Master');
+    const [elo, setElo] = useState(2600);
     const [themeChoice, setThemeChoice] = useState('Attack');
 
     // TODO: Créer une BDD pour stocker ces données
@@ -211,27 +211,27 @@ const SelectThematicTrainingPage = () => {
 
     const difficultyComponent =
         <div className='flex flex-row justify-around items-center flex-wrap w-full mt-10' >
-            <div onClick={() => setDifficulty('Beginner')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: difficulty === 'Beginner' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => setElo(400)} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: elo === 400 ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♙</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >Beginner</span>
             </div>
-            <div onClick={() => setDifficulty('Casual')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: difficulty === 'Casual' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => setElo(1000)} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: elo === 1000 ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♘</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >Casual</span>
             </div>
-            <div onClick={() => setDifficulty('Intermediate')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: difficulty === 'Intermediate' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => setElo(1500)} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: elo === 1500 ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♗</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >Intermediate</span>
             </div>
-            <div onClick={() => setDifficulty('Advanced')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: difficulty === 'Advanced' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
+            <div onClick={() => setElo(2000)} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: elo === 2000 ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
                 <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♖</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >Advanced</span>
             </div>
-            <div onClick={() => setDifficulty('Master')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: difficulty === 'Master' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
+            <div onClick={() => setElo(2600)} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: elo === 2600 ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
                 <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♕</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >Master</span>
             </div>
-            <div onClick={() => setDifficulty('Maximum')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: difficulty === 'Maximum' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => setElo(3200)} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: elo === 3200 ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♔</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >Maximum</span>
             </div>
@@ -271,7 +271,7 @@ const SelectThematicTrainingPage = () => {
                                 href = {{
                                 pathname: '/thematic-training',
                                 query: {
-                                    difficulty: difficulty,
+                                    elo: elo,
                                     startingFen: position.startingFen,
                                     nextMove: position.nextMove,
                                     playerColor: position.playerColor,
@@ -305,7 +305,7 @@ const SelectThematicTrainingPage = () => {
                                 href = {{
                                 pathname: '/thematic-training',
                                 query: {
-                                    difficulty: difficulty,
+                                    elo: elo,
                                     startingFen: position.startingFen,
                                     nextMove: position.nextMove,
                                     playerColor: position.playerColor,
@@ -339,7 +339,7 @@ const SelectThematicTrainingPage = () => {
                                 href = {{
                                 pathname: '/thematic-training',
                                 query: {
-                                    difficulty: difficulty,
+                                    elo: elo,
                                     startingFen: position.startingFen,
                                     nextMove: position.nextMove,
                                     playerColor: position.playerColor,

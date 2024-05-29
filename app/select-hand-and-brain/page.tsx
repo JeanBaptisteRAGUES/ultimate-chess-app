@@ -22,8 +22,8 @@ import { FaChessPawn } from 'react-icons/fa';
 
 const SelectHandAndBrainPage = () => {
     const [playerRole, setPlayerRole] = useState('Brain');
-    const [allyRating, setAllyRating] = useState('Master');
-    const [difficulty, setDifficulty] = useState('Master');
+    const [allyElo, setAllyElo] = useState(2600);
+    const [opponentElo, setOpponentElo] = useState(2600);
     const [behaviour, setBehaviour] = useState<Behaviour>('default');
 
     const playerRoleComponent =
@@ -40,55 +40,55 @@ const SelectHandAndBrainPage = () => {
 
     const allyRatingComponent =
         <div className='flex flex-row justify-around items-center flex-wrap w-full mt-5 mb-10' >
-            <div onClick={() => setAllyRating('Beginner')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: allyRating === 'Beginner' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => setAllyElo(400)} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: allyElo === 400 ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♙</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >Beginner</span>
             </div>
-            <div onClick={() => setAllyRating('Casual')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: allyRating === 'Casual' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => setAllyElo(1000)} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: allyElo === 1000 ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♘</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >Casual</span>
             </div>
-            <div onClick={() => setAllyRating('Intermediate')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: allyRating === 'Intermediate' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => setAllyElo(1500)} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: allyElo === 1500 ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♗</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >Intermediate</span>
             </div>
-            <div onClick={() => setAllyRating('Advanced')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: allyRating === 'Advanced' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
+            <div onClick={() => setAllyElo(2000)} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: allyElo === 2000 ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
                 <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♖</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >Advanced</span>
             </div>
-            <div onClick={() => setAllyRating('Master')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: allyRating === 'Master' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
+            <div onClick={() => setAllyElo(2600)} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: allyElo === 2600 ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
                 <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♕</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >Master</span>
             </div>
-            <div onClick={() => setAllyRating('Maximum')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: allyRating === 'Maximum' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => setAllyElo(3200)} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: allyElo === 3200 ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♔</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >Maximum</span>
             </div>
         </div>
 
     const difficultyComponent =
-        <div className='flex flex-row justify-around items-center flex-wrap w-full mt-5 mb-10' >
-            <div onClick={() => setDifficulty('Beginner')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: difficulty === 'Beginner' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+        <div className='flex flex-row justify-around items-center flex-wrap w-full' >
+            <div onClick={() => setOpponentElo(400)} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: opponentElo === 400 ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♙</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >Beginner</span>
             </div>
-            <div onClick={() => setDifficulty('Casual')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: difficulty === 'Casual' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => setOpponentElo(1000)} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: opponentElo === 1000 ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♘</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >Casual</span>
             </div>
-            <div onClick={() => setDifficulty('Intermediate')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: difficulty === 'Intermediate' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => setOpponentElo(1500)} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: opponentElo === 1500 ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♗</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >Intermediate</span>
             </div>
-            <div onClick={() => setDifficulty('Advanced')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: difficulty === 'Advanced' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
+            <div onClick={() => setOpponentElo(2000)} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: opponentElo === 2000 ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
                 <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♖</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >Advanced</span>
             </div>
-            <div onClick={() => setDifficulty('Master')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: difficulty === 'Master' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
+            <div onClick={() => setOpponentElo(2600)} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: opponentElo === 2600 ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
                 <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♕</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >Master</span>
             </div>
-            <div onClick={() => setDifficulty('Maximum')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: difficulty === 'Maximum' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => setOpponentElo(3200)} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: opponentElo === 3200 ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <div className=' h-[90px] w-full text-8xl flex justify-center items-center' >♔</div>
                 <span className=' w-full h-[10px] flex justify-center items-center' >Maximum</span>
             </div>
@@ -187,8 +187,8 @@ const SelectHandAndBrainPage = () => {
                 pathname: '/hand-and-brain',
                 query: {
                     playerRole: playerRole,
-                    allyRating: allyRating,
-                    opponentRating: difficulty,
+                    allyElo: allyElo,
+                    opponentElo: opponentElo,
                     opponentBehaviour: behaviour
                 }
                 }}

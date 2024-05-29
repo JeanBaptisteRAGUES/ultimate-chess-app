@@ -18,7 +18,7 @@ const ThematicTrainingPage = () => {
     const playerColor = searchParams.get('playerColor');
     const startingFen = searchParams.get('startingFen');
     const nextMove = searchParams.get('nextMove');
-    const difficulty = searchParams.get('difficulty') || 'Master';
+    const elo: number = eval(searchParams.get('elo') || '2600');
     const gameActive = useRef(true);
     const [game, setGame] = useState(new Chess());
     const engine = useRef<Engine>();
@@ -64,12 +64,12 @@ const ThematicTrainingPage = () => {
         engine.current = new Engine();
         engine.current.init();
         const botColor = playerColor === 'w' ? 'b' : 'w';
-        botAI.current = new BotsAI('default', difficulty, botColor, timeControl);
+        botAI.current = new BotsAI('default', elo, botColor, timeControl);
         console.log('Starting Fen: ' + startingFen);
         console.log('Game Fen: ' + game.fen());
         console.log('Current Fen:' + currentFen);
         console.log('Next Move: ' + nextMove);
-        console.log("Difficulty: " + difficulty);
+        console.log("Elo: " + elo);
         console.log("Player Color: " + playerColor);
         game.load(startingFen || DEFAULT_POSITION);
 
@@ -80,9 +80,9 @@ const ThematicTrainingPage = () => {
     }, []);
 
     useEffect(() => {
-      console.log('New Level : ' + difficulty);
       const botColor = playerColor === 'w' ? 'b' : 'w';
-      botAI.current = new BotsAI('default', difficulty, botColor, timeControl);
+      //botAI.current = new BotsAI('default', difficulty, botColor, timeControl);
+      botAI.current?.changeColor(botColor);
     }, [playerColor]);
 
     // TODO: Problème lors de la promotion d'un pion (promeut automatiquement en cavalier)
@@ -282,7 +282,7 @@ const ThematicTrainingPage = () => {
       null
 
     const titleComponent = <h4 className=" text-lg text-white" >
-      {"Niveau de l adversaire: " + difficulty}
+      {"Niveau de l adversaire: " + elo}
     </h4>
 
     /* const pgnComponentDesktop =
@@ -299,7 +299,7 @@ const ThematicTrainingPage = () => {
       <div className=" flex flex-col justify-center items-center h-[300px] md:h-[500px] w-[95vw] md:w-[500px] my-10" >
           <div className=" relative flex justify-start p-2 w-full h-10 font-medium bg-slate-100 rounded-t-md">
             <div className=" h-full flex justify-start items-center flex-grow-[4]" >
-              Stockfish 16 ({difficulty})
+              Stockfish 16 ({elo})
             </div>
           </div>
           <Chessboard 

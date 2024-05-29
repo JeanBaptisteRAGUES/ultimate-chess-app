@@ -26,10 +26,25 @@ type DefaultBotParams = {
     randMoveInterval: number, 
     filterLevel: number,
     securityLvl: number,
+    elo: number,
     skillValueMin: number,
     skillValueMax: number,
+    eloRange: number[],
     depth: number,
     playForcedMate: number,
+}
+
+function getLevelFromElo(elo: number) {
+    if(elo < 800) return 'Beginner';
+    if(elo < 1200) return 'Casual';
+    if(elo < 1800) return 'Intermediate';
+    if(elo < 2200) return 'Advanced';
+    if(elo < 3200) return 'Master';
+    return 'Maximum';
+}
+
+function convertChesscomEloToLichessElo(elo: number) {
+    return elo + 300;
 }
 
 function createEloIntervals(from: number, to: number, intervalsNumber: number) {
@@ -56,7 +71,7 @@ function createSkillValueIntervals(from: number, to: number) {
     return intervalsArray;
 }
 
-function selectSkillValue(eloIntervals: number[], skillMin: number, skillMax: number, elo: number) {
+function selectSkillValue(eloIntervals: number[], skillMin: number, elo: number) {
     if(eloIntervals.length < 1) return skillMin;
     
     let selectedSkillValue = skillMin;
@@ -64,19 +79,39 @@ function selectSkillValue(eloIntervals: number[], skillMin: number, skillMax: nu
     
     eloIntervals.forEach((interval, i) => {
         let rand = Math.random();
-        let chances = Math.min(interval, elo)/Math.max(interval, elo);
-        //console.log('Interval: ' + interval);
-        //console.log('Rand: ' + rand);
-        //console.log('Chances: ' + chances);
-        //console.log('diff: ' + (chances - rand));
+        let chances = Math.min(0.9, Math.min(interval, elo)/Math.max(interval, elo));
+        /*console.log('Interval: ' + interval);
+        console.log('Rand: ' + rand);
+        console.log('Chances: ' + chances);
+        console.log('diff: ' + (chances - rand)); */
         if(rand <= chances && maxDiff < (chances - rand)){
             selectedSkillValue = skillMin + i;
-            //console.log('selectedSkillValue: ' + selectedSkillValue);
+            console.log('selectedSkillValue: ' + selectedSkillValue);
             maxDiff = chances - rand;
         }
-    })
+    });
+
+    console.log(`Selected skill value for elo ${elo} ([${eloIntervals[0]}, ${eloIntervals.pop()}]): ${selectedSkillValue}`);
     
     return selectedSkillValue;
+}
+
+/**
+ * Retourne une valeur aléatoire du skillLevel dans un intervalle qui dépend du Élo du bot.
+ * @param eloRange 
+ * @param elo 
+ * @param skillMin 
+ * @param skillMax 
+ * @returns 
+ */
+function getSkillValue(eloRange: number[], elo: number, skillMin: number, skillMax: number) {
+    if(eloRange.length < 2) throw new Error("L'intervalle d'Élo n'est pas bon ! " + eloRange);
+    console.log(`Elo Range: [${eloRange[0]}, ${eloRange[1]}]`);
+    const iArray = createEloIntervals(eloRange[0], eloRange[1], skillMax - skillMin);
+    console.log(`Elo Intervals: `);
+    console.log(iArray);
+
+    return selectSkillValue(iArray, skillMin, elo);
 }
 
 function testProba(fromElo: number, toElo: number, fromSkillValue: number, toSkillValue: number, elo: number, testsNumber: number) {
@@ -90,7 +125,7 @@ function testProba(fromElo: number, toElo: number, fromSkillValue: number, toSki
     console.log(skillValuesArray);
     
     for(let i = 0; i < testsNumber; ++i){
-        selectedSkillValue = selectSkillValue(iArray, fromSkillValue, toSkillValue, elo);
+        selectedSkillValue = selectSkillValue(iArray, fromSkillValue, elo);
         results.push(selectedSkillValue);
     }
     
@@ -197,7 +232,7 @@ function makeRandomMove(filterLevel: number, safeMoves: boolean, game: Chess): M
 }
 
 //TODO: Prendre en entrée le classement Élo et déterminer ENSUITE le 'level'
-function initDefaultBotParams(level: string, timeControl: string): DefaultBotParams {
+function initDefaultBotParams(elo: number, timeControl: string): DefaultBotParams {
     const baseDetph = new Map([
         ['1+0', 8],
         ['3+0', 10],
@@ -215,6 +250,7 @@ function initDefaultBotParams(level: string, timeControl: string): DefaultBotPar
     let depth = 5;
     let filterLevel = 0; // Empèche de jouer certaines pièces lors d'un coup aléatoire
     let securityLvl = 0; // 0: Pas de sécurité, 1: Réagit dernier coup adversaire, 2: Coup aléatoire -> case non défendue
+    let eloRange = [1200, 1800];
 
     // Empeche d'avoir un deuxième coup aléatoire avant le Xème coup
     let randMoveInterval = 5;
@@ -226,59 +262,66 @@ function initDefaultBotParams(level: string, timeControl: string): DefaultBotPar
     // un clouage au contraire maintient cette charge mentale. Plus la partie avance, plus la charge mentale augmente (légèrement)
     let mentalChargeLimit = 100;
 
+    const level = getLevelFromElo(elo);
+
     switch (level) {
         case 'Beginner':
             // ~900 Elo (Bot chess.com)
-            randMoveChance = 20; 
-            randMoveInterval = 3; 
+            randMoveChance = 30; 
+            randMoveInterval = 2; 
             filterLevel = 0;
             securityLvl = 0;
             skillValueMin = 0;
             skillValueMax = 2;
+            eloRange = [100, 699];
             depth = baseDetph;
             playForcedMate = 0;
             break;
         case 'Casual':
             // ~1400 bot chess.com
-            randMoveChance = 15;
+            randMoveChance = 20;
             randMoveInterval = 5;
             filterLevel = 1;
-            securityLvl = 2;
+            securityLvl = 0;
             skillValueMin = 0;
             skillValueMax = 4;
+            eloRange = [700, 1199];
             depth = baseDetph;
             playForcedMate = 1;
             break;
         case 'Intermediate':
             // 1700~1800 bot chess.comm
-            randMoveChance = 10; 
+            randMoveChance = 20; 
             randMoveInterval = 10;
             filterLevel = 2;
-            securityLvl = 2; 
+            securityLvl = 1; 
             skillValueMin = 2;
-            skillValueMax = 8; 
+            skillValueMax = 8;
+            eloRange = [1200, 1799]; 
             depth = baseDetph;
             playForcedMate = 2;
             break;
         case 'Advanced':
             // ~2000 bot chess.com
-            randMoveChance = 5;
+            randMoveChance = 10;
             randMoveInterval = 15;
             filterLevel = 3;
             securityLvl = 2;
             skillValueMin = 6;
             skillValueMax = 14;
+            eloRange = [1800, 2199];
             depth = baseDetph;
             playForcedMate = 3;
             break;
         case 'Master':
             // ???
-            randMoveChance = 5;
+            randMoveChance = 3;
             randMoveInterval = 20;
             filterLevel = 4;
             securityLvl = 2;
             skillValueMin = 12;
             skillValueMax = 20;
+            eloRange = [2200, 3199];
             depth = baseDetph;
             playForcedMate = 4;
             break;
@@ -289,6 +332,7 @@ function initDefaultBotParams(level: string, timeControl: string): DefaultBotPar
             securityLvl = 0;
             skillValueMin = 20;
             skillValueMax = 20;
+            eloRange = [3200, 3200];
             depth = baseDetph + 4;
             break;
         default:
@@ -304,8 +348,10 @@ function initDefaultBotParams(level: string, timeControl: string): DefaultBotPar
         randMoveInterval,
         filterLevel,
         securityLvl,
+        elo,
         skillValueMin,
         skillValueMax,
+        eloRange,
         depth,
         playForcedMate,
     }
@@ -328,7 +374,9 @@ async function makeStockfishMove(botParams: DefaultBotParams, game: Chess, engin
         type: -1
     }
 
-    const stockfishRes = await engine.findBestMove(game.fen(), botParams.depth, botParams.skillValue);
+    const skillValue = getSkillValue(botParams.eloRange, botParams.elo, botParams.skillValueMin, botParams.skillValueMax);
+
+    const stockfishRes = await engine.findBestMove(game.fen(), botParams.depth, skillValue);
     stockfishMove.notation = stockfishRes;
     stockfishMove.type = 2;
 
@@ -389,23 +437,25 @@ class BotsAI {
     #defaultBotParams: DefaultBotParams;
     #behaviour: Behaviour; 
     #botLevel: string;
+    //#botElo: number;
     #lastRandomMove: number;
     #botColor: Color;
 
     //TODO: Prendre en entrée le classement Élo et déterminer ENSUITE le 'level'
-    constructor(behaviour: Behaviour, level: string, botColor: Color, timeControl: string) {
+    constructor(behaviour: Behaviour, elo: number, botColor: Color, timeControl: string) {
         this.#engine = new Engine();
         this.#toolbox = new GameToolBox();
-        this.#botLevel = level;
+        //this.#botElo = elo;
+        this.#botLevel = getLevelFromElo(elo);
         this.#behaviour = behaviour;
         this.#lastRandomMove = botColor === 'w' ? (-1)*Math.floor(Math.random()*3) - 1 : Math.floor(Math.random()*3) + 1;
         this.#botColor = botColor;
         this.#engine.init();
-        this.#defaultBotParams = initDefaultBotParams(level, timeControl);
+        this.#defaultBotParams = initDefaultBotParams(elo, timeControl);
 
-        if(behaviour === 'stockfish-only') {
+        /* if(behaviour === 'stockfish-only') {
             this.#engine.setStrength(1400);
-        }
+        } */
     }
 
     #isLastMoveDangerous(game: Chess): {danger: boolean, dangerCases: {dangerCase: string, dangerValue: number}[] } {
@@ -899,7 +949,14 @@ class BotsAI {
         const pawnsCases: Square[] = ['b3', 'b6', 'g3', 'g6'];
         const bishopCases: Square[] = ['b2', 'b7', 'g2', 'g7'];
 
-        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, this.#defaultBotParams.skillValue, 50, false);
+        const skillValue = getSkillValue(
+            this.#defaultBotParams.eloRange, 
+            this.#defaultBotParams.elo, 
+            this.#defaultBotParams.skillValueMin, 
+            this.#defaultBotParams.skillValueMax
+        );
+
+        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, skillValue, 50, false);
 
         stockfishMoves = stockfishMoves.map((evalRes) => {
             const moveDestination = this.#toolbox.getMoveDestination(evalRes.bestMove);
@@ -967,7 +1024,14 @@ class BotsAI {
             return move;
         }
 
-        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, this.#defaultBotParams.skillValue, 50, false);
+        const skillValue = getSkillValue(
+            this.#defaultBotParams.eloRange, 
+            this.#defaultBotParams.elo, 
+            this.#defaultBotParams.skillValueMin, 
+            this.#defaultBotParams.skillValueMax
+        );
+
+        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, skillValue, 50, false);
 
         stockfishMoves = stockfishMoves.map((evalRes) => {
             const moveDistance = this.#toolbox.getMoveDistance(evalRes.bestMove);
@@ -1104,7 +1168,14 @@ class BotsAI {
 
         const pawnsCases: Square[] = ['c3', 'c4', 'c5', 'c6', 'e3', 'e4', 'e6', 'e5'];
 
-        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, this.#defaultBotParams.skillValue, 50, false);
+        const skillValue = getSkillValue(
+            this.#defaultBotParams.eloRange, 
+            this.#defaultBotParams.elo, 
+            this.#defaultBotParams.skillValueMin, 
+            this.#defaultBotParams.skillValueMax
+        );
+
+        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, skillValue, 50, false);
 
         stockfishMoves = stockfishMoves.map((evalRes) => {
             const moveDestination = this.#toolbox.getMoveDestination(evalRes.bestMove);
@@ -3023,7 +3094,14 @@ class BotsAI {
             type: -1,
         };
 
-        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, this.#defaultBotParams.skillValue, 50, false);
+        const skillValue = getSkillValue(
+            this.#defaultBotParams.eloRange, 
+            this.#defaultBotParams.elo, 
+            this.#defaultBotParams.skillValueMin, 
+            this.#defaultBotParams.skillValueMax
+        );
+
+        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, skillValue, 50, false);
 
         stockfishMoves = stockfishMoves.map((evalRes) => {
             const moveDestination = this.#toolbox.getMoveDestination(evalRes.bestMove);
@@ -3081,7 +3159,14 @@ class BotsAI {
             type: -1,
         };
 
-        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, this.#defaultBotParams.skillValue, 50, false);
+        const skillValue = getSkillValue(
+            this.#defaultBotParams.eloRange, 
+            this.#defaultBotParams.elo, 
+            this.#defaultBotParams.skillValueMin, 
+            this.#defaultBotParams.skillValueMax
+        );
+
+        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, skillValue, 50, false);
 
         stockfishMoves = stockfishMoves.map((evalRes) => {
             const moveDestination = this.#toolbox.getMoveDestination(evalRes.bestMove);
@@ -3273,7 +3358,14 @@ class BotsAI {
             return move;
         }
 
-        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, Math.max(10, this.#defaultBotParams.skillValue), 50, false);
+        const skillValue = getSkillValue(
+            this.#defaultBotParams.eloRange, 
+            this.#defaultBotParams.elo, 
+            this.#defaultBotParams.skillValueMin, 
+            this.#defaultBotParams.skillValueMax
+        );
+
+        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, Math.max(10, skillValue), 50, false);
         const opponentKingColor: Color = this.#botColor === 'w' ? 'b' : 'w';
         const kingsideCastleFiles = ['f', 'g', 'h'];
         const queensideCastleFiles = ['a', 'b', 'c', 'd'];
@@ -3448,7 +3540,14 @@ class BotsAI {
         const badPawnsCases: Square[] = ['d4', 'd5'];
         const bishopCases: Square[] = ['b2', 'g2', 'g7'];
 
-        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, this.#defaultBotParams.skillValue, 50, false);
+        const skillValue = getSkillValue(
+            this.#defaultBotParams.eloRange, 
+            this.#defaultBotParams.elo, 
+            this.#defaultBotParams.skillValueMin, 
+            this.#defaultBotParams.skillValueMax
+        );
+
+        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, skillValue, 50, false);
 
         stockfishMoves = stockfishMoves.map((evalRes) => {
             const moveDestination = this.#toolbox.getMoveDestination(evalRes.bestMove);
@@ -4025,7 +4124,14 @@ class BotsAI {
         const fianchettoPawnsCases: Square[] = ['g3', 'g6'];
         const bishopCases: Square[] = ['g2', 'g7'];
 
-        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, this.#defaultBotParams.skillValue, 50, false);
+        const skillValue = getSkillValue(
+            this.#defaultBotParams.eloRange, 
+            this.#defaultBotParams.elo, 
+            this.#defaultBotParams.skillValueMin, 
+            this.#defaultBotParams.skillValueMax
+        );
+
+        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, skillValue, 50, false);
 
         stockfishMoves = stockfishMoves.map((evalRes) => {
             const moveOrigin = this.#toolbox.getMoveOrigin(evalRes.bestMove);
@@ -4265,12 +4371,12 @@ class BotsAI {
                 break;
 
             case 'chessable-master':
-                initDefaultBotParams('Casual', '3+0');
+                initDefaultBotParams(700, '3+0');
                 move = await this.#makeChessableMasterMove(game);
                 break;
 
             case 'auto-didacte':
-                initDefaultBotParams('Advanced', '3+0');
+                initDefaultBotParams(1800, '3+0');
                 move = await this.#makeAutoDidacteMove(game);
                 break;
 
@@ -4325,7 +4431,14 @@ class BotsAI {
             return correctCastleMove(lichessMove, game.fen(), this.#toolbox);
         } 
 
-        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 12, this.#defaultBotParams.skillValue, 50, false);
+        const skillValue = getSkillValue(
+            this.#defaultBotParams.eloRange, 
+            this.#defaultBotParams.elo, 
+            this.#defaultBotParams.skillValueMin, 
+            this.#defaultBotParams.skillValueMax
+        );
+
+        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 12, skillValue, 50, false);
         
         const bestMoveIndex = stockfishMoves.findIndex((evalRes) => this.#toolbox.getMovePiece(evalRes.bestMove, game.fen()).type === selectedPiece);
         move.notation = stockfishMoves[bestMoveIndex].bestMove;
@@ -4350,6 +4463,21 @@ class BotsAI {
         const move = await makeStockfishMove(this.#defaultBotParams, game, this.#engine);
 
         return game.get(this.#toolbox.getMoveOrigin(move.notation) || 'a1').type;
+    }
+
+    changeColor(newColor: Color) {
+        this.#botColor = newColor;
+        this.#lastRandomMove = this.#botColor === 'w' ? (-1)*Math.floor(Math.random()*3) - 1 : Math.floor(Math.random()*3) + 1;
+    }
+
+    new(newBehaviour: Behaviour, newElo: number, newColor: Color, timeControl: string) {
+        this.#engine.newGame();
+        this.#lastRandomMove = this.#botColor === 'w' ? (-1)*Math.floor(Math.random()*3) - 1 : Math.floor(Math.random()*3) + 1;
+        this.#botColor = newColor;
+        this.#botLevel = getLevelFromElo(newElo);
+        this.#behaviour = newBehaviour;
+        this.#engine.init();
+        this.#defaultBotParams = initDefaultBotParams(newElo, timeControl);
     }
 
     reset() {
