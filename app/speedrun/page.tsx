@@ -90,12 +90,12 @@ const SpeedrunPage = () => {
 
     function pickRandomBehaviour(): Behaviour{
         const behaviourRand = Math.random()*100;
-        if(behaviourRand < 40) return 'human';
-        if(behaviourRand < 50) return 'stonewall';
-        if(behaviourRand < 60) return 'pawn-pusher';
-        if(behaviourRand < 70) return 'caro-london';
-        if(behaviourRand < 80) return 'cow-lover';
-        if(behaviourRand < 90) return 'fianchetto-sniper';
+        if(behaviourRand < 70) return 'human';
+        if(behaviourRand < 75) return 'stonewall';
+        if(behaviourRand < 80) return 'pawn-pusher';
+        if(behaviourRand < 85) return 'caro-london';
+        if(behaviourRand < 90) return 'cow-lover';
+        if(behaviourRand < 95) return 'fianchetto-sniper';
         return 'gambit-fanatic';
     }
 

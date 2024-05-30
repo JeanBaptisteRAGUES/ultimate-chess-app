@@ -458,6 +458,10 @@ class BotsAI {
         } */
     }
 
+    //TODO: Suivant le security level, ne prendre en compte que certaines attaques
+    //TODO: SL 0 -> Danger qu'après une capture
+    //TODO: SL 1 -> Danger si capture ou attaque avec une pièce de moindre valeur
+    //TODO: SL 2 -> Danger si capture, attaque pièce de moindre valeur ou attaque pièce non protégée 
     #isLastMoveDangerous(game: Chess): {danger: boolean, dangerCases: {dangerCase: string, dangerValue: number}[] } {
         //console.log("Is last move dangerous ?");
         const history = JSON.parse(JSON.stringify(game.history({verbose: true})));
@@ -563,6 +567,7 @@ class BotsAI {
         return move;
     }
 
+    //TODO: Si le bot ne réagit pas 'mal' à la menace, faire un coup humain plutôt que le meilleur coup de stockfish
     async #makeHumanThreatReaction(game: Chess, dangerCases: {dangerCase: string, dangerValue: number}[] ): Promise<Move> {
         let stockfishMove: Move = {
             notation: '',
@@ -613,9 +618,9 @@ class BotsAI {
         //console.log(stockfishMoves);
 
         stockfishMove.notation = stockfishMoves[0].bestMove;
-        stockfishMove.type = 3;
 
         //if(dangerCases.includes(this.#toolbox.getMoveOrigin(stockfishMove.notation))) stockfishMove.type = 5;
+        //Si humanReaction === false, type = -1 donc le coup n'est pas joué
         if(humanReaction) stockfishMove.type = 5;
 
         return stockfishMove
@@ -807,7 +812,7 @@ class BotsAI {
                 //console.log(`${this.#botColor} make Lichess move`);
                 return lichessMove;
             } 
-            //console.log('No more moves in the Lichess Database for ' + this.#botColor);
+            console.log('No more moves in the Lichess Database for ' + this.#botColor);
         }
 
         //TODO: Cause un gros problème
@@ -840,6 +845,14 @@ class BotsAI {
             if(reactingThreatMove.type >= 0 ){
                 return reactingThreatMove;
             }
+
+            const tunelVisionMove = await this.#makeTunelVisionMove(game);
+
+            if(tunelVisionMove.type >= 0) {
+                if(tunelVisionMove.type === 5) console.log(`Human move (${tunelVisionMove.type}): ${this.#toolbox.convertMoveLanToSan(game.fen(), tunelVisionMove.notation)}`);
+                this.#lastRandomMove = this.#lastRandomMove-1;
+                return tunelVisionMove;
+            } 
         }
 
         if(useRandom && isRandomMovePlayable(this.#defaultBotParams, this.#botLevel, this.#lastRandomMove)) {
