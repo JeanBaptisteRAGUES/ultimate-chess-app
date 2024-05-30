@@ -244,7 +244,7 @@ function initDefaultBotParams(elo: number, timeControl: string): DefaultBotParam
         ['infinite', 16],
       ]).get(timeControl) || 12;
 
-    let randMoveChance = 0;
+    let randMoveChance = Math.max(3, 70 - Math.pow(elo, 1/1.8));
     let skillValueMin = 0;
     let skillValueMax = 20;
     let depth = 5;
@@ -264,11 +264,12 @@ function initDefaultBotParams(elo: number, timeControl: string): DefaultBotParam
 
     const level = getLevelFromElo(elo);
 
+    console.log(randMoveChance);
+
     switch (level) {
         case 'Beginner':
-            // ~900 Elo (Bot chess.com)
-            randMoveChance = 30; 
-            randMoveInterval = 2; 
+            // ~900 Elo (Bot chess.com) 
+            randMoveInterval = 1; 
             filterLevel = 0;
             securityLvl = 0;
             skillValueMin = 0;
@@ -279,8 +280,7 @@ function initDefaultBotParams(elo: number, timeControl: string): DefaultBotParam
             break;
         case 'Casual':
             // ~1400 bot chess.com
-            randMoveChance = 20;
-            randMoveInterval = 5;
+            randMoveInterval = 3;
             filterLevel = 1;
             securityLvl = 0;
             skillValueMin = 0;
@@ -291,8 +291,7 @@ function initDefaultBotParams(elo: number, timeControl: string): DefaultBotParam
             break;
         case 'Intermediate':
             // 1700~1800 bot chess.comm
-            randMoveChance = 20; 
-            randMoveInterval = 10;
+            randMoveInterval = 5;
             filterLevel = 2;
             securityLvl = 1; 
             skillValueMin = 2;
@@ -303,8 +302,7 @@ function initDefaultBotParams(elo: number, timeControl: string): DefaultBotParam
             break;
         case 'Advanced':
             // ~2000 bot chess.com
-            randMoveChance = 10;
-            randMoveInterval = 15;
+            randMoveInterval = 10;
             filterLevel = 3;
             securityLvl = 2;
             skillValueMin = 6;
@@ -315,8 +313,7 @@ function initDefaultBotParams(elo: number, timeControl: string): DefaultBotParam
             break;
         case 'Master':
             // ???
-            randMoveChance = 3;
-            randMoveInterval = 20;
+            randMoveInterval = 15;
             filterLevel = 4;
             securityLvl = 2;
             skillValueMin = 12;
