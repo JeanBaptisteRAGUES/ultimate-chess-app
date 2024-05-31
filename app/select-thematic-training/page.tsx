@@ -31,6 +31,13 @@ const SelectThematicTrainingPage = () => {
             startingFen: 'rn1qkb1r/pp2p1p1/2p1p2p/3p4/3Pn1PP/3Q1N2/PPPN1P2/R1B1K2R b KQkq - 4 10',
             nextMove: 'Nxd2',
             playerColor: 'w',
+            avantage: 'medium'
+        },
+        {
+            title: 'Caro-Kann Tal Variation',
+            startingFen: 'r2k1b1r/pp1np1p1/1qp1pnQp/3p3P/3P2P1/2N2N2/PPPB1P2/2KR3R b - - 10 14',
+            nextMove: 'a5',
+            playerColor: 'w',
             avantage: 'high'
         },
         {
