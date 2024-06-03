@@ -9,9 +9,7 @@ interface ClockProps {
     clockColor: string,
     timeControl: string,
     timeControls: any,
-    setEngineEval: (val: string) => void,
-    setWinner: (val: string) => void,
-    setShowGameoverWindow: (val: boolean) => void,
+    gameOver: (winner: string) => void,
     gameStarted: boolean,
     gameActive: any,
 }
@@ -22,9 +20,7 @@ const Clock: React.FC<ClockProps> = ({
     clockColor,
     timeControl,
     timeControls,
-    setEngineEval,
-    setWinner,
-    setShowGameoverWindow,
+    gameOver,
     gameStarted,
     gameActive
 }) => {
@@ -115,19 +111,15 @@ const Clock: React.FC<ClockProps> = ({
         checkTimeout();
     }, [timestamp]);
 
-    //TODO: il faut faire en sorte de changer gameActive
+    //TODO: Déclencher une callback qui permet de gérer le résultat directement depuis la page du mode de jeu
     function checkTimeout() {
-        //console.log("Check Timeout")
+        console.log("Check Timeout")
         if(timeControlRef.current.startingTime - timeControlRef.current.timeElapsed <= 0){
             if(clockColor === 'w'){
-                setWinner('b');
-                setEngineEval('0 - 1');
+                gameOver('b');
             } else {
-                setWinner('w');
-                setEngineEval('1 - 0');
+                gameOver('w');
             }
-            setShowGameoverWindow(true);
-            gameActive.current = false;
             return ;
         }
     }

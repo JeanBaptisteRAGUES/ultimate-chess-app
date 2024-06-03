@@ -149,46 +149,7 @@ const ChessPage = () => {
       });
     }
   
-    function checkGameOver() {
-      if(!gameActive.current) return false;
-      if (game.isGameOver()){
-        console.log('Game Over !');
-        console.log(game.pgn());
-        gameActive.current = false;
-        /* engine.current?.quit();
-        botAI.current?.disable(); */
-        engine.current?.stop();
-        botAI.current?.pause();
-        // TODO: Modifier si on veut directement relancer la partie depuis un bouton
-        /* delete engine.current;
-        delete botAI.current; */
-        if(game.isDraw() || game.isInsufficientMaterial() || game.isStalemate() || game.isInsufficientMaterial()) {
-          setEngineEval('1/2 - 1/2');
-          setWinner('d');
-        }
-        if(game.isCheckmate()){
-          if(game.turn() === 'w'){
-            setEngineEval('0 - 1');
-            setWinner('b');
-          }else{
-            setEngineEval('1 - 0');
-            setWinner('w');
-          }
-        }
-        setShowGameoverWindow(true);
-        return true;
-      }
-      return false;
-    }
-
-    function resign() {
-      if(playerColor === 'w'){
-        setEngineEval('0 - 1');
-        setWinner('b');
-      }else{
-        setEngineEval('1 - 0');
-        setWinner('w');
-      }
+    function gameOver(winner: string) {
       console.log('Game Over !');
       console.log(game.pgn());
       gameActive.current = false;
@@ -196,10 +157,54 @@ const ChessPage = () => {
       botAI.current?.disable(); */
       engine.current?.stop();
       botAI.current?.pause();
-      // TODO: Modifier si on veut directement relancer la partie depuis un bouton
-      /* delete engine.current;
-      delete botAI.current; */
+      setWinner(winner);
+      
+      switch (winner) {
+        case 'd':
+          setEngineEval('1/2 - 1/2');
+          break;
+        case 'w':
+          setEngineEval('0 - 1');
+          break;
+        case 'b':
+          setEngineEval('1 - 0');
+          break;
+        default:
+          break;
+      }
+      
       setShowGameoverWindow(true);
+    }
+    
+    function checkGameOver() {
+      if(!gameActive.current) return false;
+      if (game.isGameOver()){
+        
+        // TODO: Modifier si on veut directement relancer la partie depuis un bouton
+        /* delete engine.current;
+        delete botAI.current; */
+        if(game.isDraw() || game.isInsufficientMaterial() || game.isStalemate() || game.isInsufficientMaterial()) {
+          gameOver('d');
+        }
+        if(game.isCheckmate()){
+          
+          if(game.turn() === 'w'){
+            gameOver('w');
+          }else{
+            gameOver('b');
+          }
+        }
+        return true;
+      }
+      return false;
+    }
+
+    function resign() {
+      if(playerColor === 'w'){
+        gameOver('b');
+      }else{
+        gameOver('w');
+      }
     }
 
     function movesHistorySan(gamePGN: string){
@@ -474,9 +479,7 @@ const ChessPage = () => {
               clockColor={playerColor === 'w' ? 'b' : 'w'}
               timeControl={timeControl} 
               timeControls={timeControls}
-              setEngineEval={setEngineEval}
-              setWinner={setWinner}
-              setShowGameoverWindow={setShowGameoverWindow}
+              gameOver={gameOver}
               gameStarted={gameStarted} 
               gameActive={gameActive}
             />
@@ -501,9 +504,7 @@ const ChessPage = () => {
               clockColor={playerColor === 'w' ? 'w' : 'b'}
               timeControl={timeControl} 
               timeControls={timeControls}
-              setEngineEval={setEngineEval}
-              setWinner={setWinner}
-              setShowGameoverWindow={setShowGameoverWindow}
+              gameOver={gameOver}
               gameStarted={gameStarted} 
               gameActive={gameActive}
             />

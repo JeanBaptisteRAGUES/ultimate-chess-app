@@ -117,7 +117,7 @@ const SelectSpeedrun = () => {
                     eloMax: eloMax,
                     eloStep: eloStep,
                     playerElo: eloMin,
-                    timecontrol: timeControl,
+                    timeControl: timeControl,
                 }
                 }}
             >

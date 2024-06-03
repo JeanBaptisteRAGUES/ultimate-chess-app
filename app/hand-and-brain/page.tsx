@@ -116,30 +116,53 @@ const HandAndBrainPage = () => {
       checkGameOver();
       setSelectedPiece('');
     }
-  
+
+    function gameOver(winner: string) {
+      console.log('Game Over !');
+      console.log(game.pgn());
+      gameActive.current = false;
+      /* engine.current?.quit();
+      botAI.current?.disable(); */
+      engine.current?.stop();
+      allyAI.current?.pause();
+      opponentAI.current?.pause();
+      setWinner(winner);
+      
+      switch (winner) {
+        case 'd':
+          setEngineEval('1/2 - 1/2');
+          break;
+        case 'w':
+          setEngineEval('0 - 1');
+          break;
+        case 'b':
+          setEngineEval('1 - 0');
+          break;
+        default:
+          break;
+      }
+      
+      setShowGameoverWindow(true);
+    }
+    
     function checkGameOver() {
       if(!gameActive.current) return false;
       if (game.isGameOver()){
-        console.log('Game Over !');
-        console.log(game.pgn());
-        gameActive.current = false;
-        engine.current?.quit();
-        allyAI.current?.disable();
-        opponentAI.current?.disable();
+        
+        // TODO: Modifier si on veut directement relancer la partie depuis un bouton
+        /* delete engine.current;
+        delete botAI.current; */
         if(game.isDraw() || game.isInsufficientMaterial() || game.isStalemate() || game.isInsufficientMaterial()) {
-          setEngineEval('1/2 - 1/2');
-          setWinner('d');
+          gameOver('d');
         }
         if(game.isCheckmate()){
+          
           if(game.turn() === 'w'){
-            setEngineEval('0 - 1');
-            setWinner('b');
+            gameOver('w');
           }else{
-            setEngineEval('1 - 0');
-            setWinner('w');
+            gameOver('b');
           }
         }
-        setShowGameoverWindow(true);
         return true;
       }
       return false;
@@ -147,18 +170,10 @@ const HandAndBrainPage = () => {
 
     function resign() {
       if(playerColor === 'w'){
-        setEngineEval('0 - 1');
-        setWinner('b');
+        gameOver('b');
       }else{
-        setEngineEval('1 - 0');
-        setWinner('w');
+        gameOver('w');
       }
-      console.log('Game Over !');
-      console.log(game.pgn());
-      engine.current?.quit();
-      allyAI.current?.disable();
-      opponentAI.current?.disable();
-      setShowGameoverWindow(true);
     }
 
     function movesHistorySan(gamePGN: string){
@@ -554,9 +569,7 @@ const selectPieceComponentSmartphone =
               clockColor={playerColor === 'w' ? 'b' : 'w'}
               timeControl={timeControl} 
               timeControls={timeControls}
-              setEngineEval={setEngineEval}
-              setWinner={setWinner}
-              setShowGameoverWindow={setShowGameoverWindow}
+              gameOver={gameOver}
               gameStarted={gameStarted} 
               gameActive={gameActive}
             />
@@ -603,9 +616,7 @@ const selectPieceComponentSmartphone =
               clockColor={playerColor === 'w' ? 'w' : 'b'}
               timeControl={timeControl} 
               timeControls={timeControls}
-              setEngineEval={setEngineEval}
-              setWinner={setWinner}
-              setShowGameoverWindow={setShowGameoverWindow}
+              gameOver={gameOver}
               gameStarted={gameStarted} 
               gameActive={gameActive}
             />

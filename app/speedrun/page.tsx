@@ -25,9 +25,9 @@ const SpeedrunPage = () => {
     const eloMin: number = eval(searchParams.get('eloMin') || '400');
     const eloMax: number = eval(searchParams.get('eloMax') || '2000');
     const eloStep: number = eval(searchParams.get('eloStep') || '10');
+    const timeControl = searchParams.get('timeControl') || 'infinite';
     //const playerElo: number = eval(searchParams.get('playerElo') || '400');
     const [playerElo, setPlayerElo] = useState<number>(eval(searchParams.get('playerElo') || '400'));
-    const timeControl = searchParams.get('timeControl') || 'infinite';
     const toolbox = new GameToolBox();
     const gameActive = useRef(false);
     const [game, setGame] = useState(new Chess());
@@ -111,6 +111,7 @@ const SpeedrunPage = () => {
         setBotBehaviour(newBotBehaviour);
         console.log("Bot Elo: " + newBotElo);
         console.log("Bot Behaviour: " + newBotBehaviour);
+        console.log(timeControl);
     }, []);
 
     useEffect(() => {
@@ -180,61 +181,8 @@ const SpeedrunPage = () => {
             points: 0,
         });
     }
-    
-    function checkGameOver() {
-      if(!gameActive.current) return false;
-      if (game.isGameOver()){
-        console.log('Game Over !');
-        console.log(game.pgn());
-        gameActive.current = false;
-        /* engine.current?.quit();
-        botAI.current?.disable(); */
-        engine.current?.stop();
-        botAI.current?.pause();
-        // TODO: Modifier si on veut directement relancer la partie depuis un bouton
-        /* delete engine.current;
-        delete botAI.current; */
-        if(game.isDraw() || game.isInsufficientMaterial() || game.isStalemate() || game.isInsufficientMaterial()) {
-          setEngineEval('1/2 - 1/2');
-          setWinner('d');
-        }
-        if(game.isCheckmate()){
-          let newPlayerElo = playerElo;
-          if(game.turn() !== playerColor){
-            newPlayerElo+= eloStep;
-          }else{
-            newPlayerElo-= eloStep;
-          }
-          setPlayerElo(Math.max(100, newPlayerElo));
-          if(game.turn() === 'w'){
-            setEngineEval('0 - 1');
-            setWinner('b');
-          }else{
-            setEngineEval('1 - 0');
-            setWinner('w');
-          }
-        }
-        setShowGameoverWindow(true);
-        return true;
-      }
-      return false;
-    }
 
-    function resign() {
-      if(playerColor === 'w'){
-        setEngineEval('0 - 1');
-        setWinner('b');
-      }else{
-        setEngineEval('1 - 0');
-        setWinner('w');
-      }
-      let newPlayerElo = playerElo;
-        if(game.turn() !== playerColor){
-        newPlayerElo+= eloStep;
-        }else{
-        newPlayerElo-= eloStep;
-        }
-      setPlayerElo(Math.max(100, playerElo - eloStep));
+    function gameOver(winner: string) {
       console.log('Game Over !');
       console.log(game.pgn());
       gameActive.current = false;
@@ -242,10 +190,73 @@ const SpeedrunPage = () => {
       botAI.current?.disable(); */
       engine.current?.stop();
       botAI.current?.pause();
-      // TODO: Modifier si on veut directement relancer la partie depuis un bouton
-      /* delete engine.current;
-      delete botAI.current; */
+      setWinner(winner);
+      let newPlayerElo = playerElo;
+      
+      switch (winner) {
+        case 'd':
+          setEngineEval('1/2 - 1/2');
+          if(playerElo >= (botAI.current?.getElo() || botElo)){
+            newPlayerElo+= eloStep/2;
+          }else{
+            newPlayerElo-= eloStep/2;
+          }
+          setPlayerElo(Math.max(100, newPlayerElo));
+          break;
+        case 'w':
+          setEngineEval('0 - 1');
+          if(playerColor === 'w'){
+            newPlayerElo+= eloStep;
+          }else{
+            newPlayerElo-= eloStep;
+          }
+          setPlayerElo(Math.max(100, newPlayerElo));
+          break;
+        case 'b':
+          setEngineEval('1 - 0');
+          if(playerColor === 'b'){
+            newPlayerElo+= eloStep;
+          }else{
+            newPlayerElo-= eloStep;
+          }
+          setPlayerElo(Math.max(100, newPlayerElo));
+          break;
+        default:
+          break;
+      }
+      
       setShowGameoverWindow(true);
+    }
+    
+    function checkGameOver() {
+      if(!gameActive.current) return false;
+      if (game.isGameOver()){
+        
+        // TODO: Modifier si on veut directement relancer la partie depuis un bouton
+        /* delete engine.current;
+        delete botAI.current; */
+        if(game.isDraw() || game.isInsufficientMaterial() || game.isStalemate() || game.isInsufficientMaterial()) {
+          gameOver('d');
+        }
+        if(game.isCheckmate()){
+          
+          if(game.turn() === 'w'){
+            gameOver('w');
+          }else{
+            gameOver('b');
+          }
+        }
+        return true;
+      }
+      return false;
+    }
+
+    function resign() {
+      if(playerColor === 'w'){
+        gameOver('b');
+      }else{
+        gameOver('w');
+      }
     }
 
     function movesHistorySan(gamePGN: string){
@@ -508,7 +519,7 @@ const SpeedrunPage = () => {
       <div className=" relative flex flex-col justify-center items-center h-fit md:h-[500px] w-[95vw] md:w-[500px] my-10" >
           <div className=" relative flex justify-start p-2 w-full h-10 font-medium bg-slate-100 rounded-t-md">
             <div className=" h-full flex justify-start items-center flex-grow-[4]" >
-              {botBehaviour} ({botElo}) {playerColor === 'w' ? (
+              {botAI.current?.getUsername()} ({botElo}) {playerColor === 'w' ? (
                 showMaterialAdvantage('b')
               ) : (
                 showMaterialAdvantage('w')
@@ -520,9 +531,7 @@ const SpeedrunPage = () => {
               clockColor={playerColor === 'w' ? 'b' : 'w'}
               timeControl={timeControl} 
               timeControls={timeControls}
-              setEngineEval={setEngineEval}
-              setWinner={setWinner}
-              setShowGameoverWindow={setShowGameoverWindow}
+              gameOver={gameOver}
               gameStarted={gameStarted} 
               gameActive={gameActive}
             />
@@ -547,9 +556,7 @@ const SpeedrunPage = () => {
               clockColor={playerColor === 'w' ? 'w' : 'b'}
               timeControl={timeControl} 
               timeControls={timeControls}
-              setEngineEval={setEngineEval}
-              setWinner={setWinner}
-              setShowGameoverWindow={setShowGameoverWindow}
+              gameOver={gameOver}
               gameStarted={gameStarted} 
               gameActive={gameActive}
             />

@@ -5,6 +5,7 @@ import { fetchLichessDatabase, getHandMoveFromLichessDB } from "../libs/fetchLic
 import Engine, { EvalResultSimplified } from "../engine/Engine";
 import GameToolBox from "../game-toolbox/GameToolbox";
 import { useEffect, useRef } from "react";
+const humanNames = require('human-names');
 
 // Bots "célébrités"
 // TODO: Jouent les coups trouvés dans la BDD de chess.com pour des joueurs connus, puis stockfish
@@ -428,6 +429,12 @@ function evalMove(move: EvalResultSimplified, botColor: Color, toolbox: GameTool
     return eval(move.eval);
 }
 
+function generateUsername(): string {
+    const usernameNumber = Math.random() < 0.55 ? (Math.round(Math.random()*100)).toString() : (2020 - Math.round(Math.random()*70)).toString();
+    const usernameSpeChar = Math.random() < 0.55 ? '' : (Math.random() < 0.7 ? '_' : '-');
+    return humanNames.allRandom() + usernameSpeChar + usernameNumber;
+}
+
 class BotsAI {
     #engine: Engine;
     #toolbox: GameToolBox;
@@ -437,6 +444,7 @@ class BotsAI {
     //#botElo: number;
     #lastRandomMove: number;
     #botColor: Color;
+    #username: string;
 
     //TODO: Prendre en entrée le classement Élo et déterminer ENSUITE le 'level'
     constructor(behaviour: Behaviour, elo: number, botColor: Color, timeControl: string) {
@@ -449,6 +457,9 @@ class BotsAI {
         this.#botColor = botColor;
         this.#engine.init();
         this.#defaultBotParams = initDefaultBotParams(elo, timeControl);
+        this.#username = generateUsername();
+
+        console.log(this.#username);
 
         /* if(behaviour === 'stockfish-only') {
             this.#engine.setStrength(1400);
@@ -4553,6 +4564,14 @@ class BotsAI {
         const move = await makeStockfishMove(this.#defaultBotParams, game, this.#engine);
 
         return game.get(this.#toolbox.getMoveOrigin(move.notation) || 'a1').type;
+    }
+
+    getUsername() {
+        return this.#username;
+    }
+
+    getElo() {
+        return this.#defaultBotParams.elo;
     }
 
     changeColor(newColor: Color) {
