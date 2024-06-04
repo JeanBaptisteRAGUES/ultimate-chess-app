@@ -583,14 +583,16 @@ class BotsAI {
         } 
         let humanReaction = false;
 
-        const badReactionChanceBase = new Map([
+        /* const badReactionChanceBase = new Map([
             ['Beginner', 10],
             ['Casual', 5],
             ['Intermediate', 2],
             ['Advanced', 1],
             ['Master', 0.5],
             ['Maximum', 0]
-          ]).get(this.#botLevel) || 10;
+          ]).get(this.#botLevel) || 10; */
+
+        const badReactionChanceBase = Math.max(1, 30 - Math.pow(this.#defaultBotParams.elo, 1/2.3));
 
         //console.log("Attacked cases: ");
         //console.log(dangerCases);
@@ -637,14 +639,15 @@ class BotsAI {
     async #makeTunelVisionMove(game: Chess): Promise<Move> {
         const newGame = new Chess(game.fen());
         const opponentColor = this.#botColor === 'b' ? 'w' : 'b';
-        const forgotPieceChance = new Map([
+        /* const forgotPieceChance = new Map([
             ['Beginner', 30],
             ['Casual', 20],
             ['Intermediate', 15],
             ['Advanced', 10],
             ['Master', 5],
             ['Maximum', 0]
-          ]).get(this.#botLevel) || 10;
+          ]).get(this.#botLevel) || 10; */
+        const forgotPieceChance = Math.max(1, (Math.round(55 - Math.sqrt(this.#defaultBotParams.elo))));
         let hasForgotten = false;
 
         game.board().forEach((rank) => {
