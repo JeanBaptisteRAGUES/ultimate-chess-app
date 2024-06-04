@@ -110,6 +110,13 @@ const SelectThematicTrainingPage = () => {
             playerColor: 'w',
             avantage: 'low'
         },
+        {
+            title: 'Italian Opening Trap',
+            startingFen: 'r1bq1rk1/pppp1pp1/2n2n2/2b1p1P1/2B1P3/2NP1N2/PPP2PP1/R2QK2R b KQ - 0 8',
+            nextMove: 'Nh7',
+            playerColor: 'w',
+            avantage: 'medium'
+        },
     ];
 
     const defensePositions = [
