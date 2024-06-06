@@ -56,9 +56,38 @@ function calculateWinrate(data: any) {
     }
 }
 
-export async function fetchLichessDatabase(moves: Array<String>, level: string, fen = "") {
+function getClosestLichessRating(chessComElo: number) {
+    const lichessEloBase = Math.min(3200, chessComElo + 300);
+    const eloRanges = [400, 1000, 1200, 1400, 1600, 1800, 2000, 2200, 2500];
+    let isMaster = false;
+    let lichessElo = lichessEloBase;
+
+    if(lichessEloBase >= 2500) isMaster = true;
+
+    if(!isMaster) {
+        let closestElo = 400;
+        let closestDiff = Math.abs(closestElo - lichessElo);
+
+        eloRanges.forEach((eloRange) => {
+            if(Math.abs(eloRange - lichessElo) <= closestDiff) {
+                closestDiff = Math.abs(eloRange - lichessElo);
+                closestElo = eloRange;
+            }
+        });
+
+        lichessElo = closestElo;
+    }
+
+    console.log(`Le bot d'Élo Lichess (${lichessElo}) est un maître ? -> ${isMaster}`);
+
+    return {
+        isMaster: isMaster,
+        lichessElo: lichessElo,
+    }
+}
+
+export async function fetchLichessDatabase(moves: Array<String>, chessComElo: number, fen = "") {
     try {
-        if(!ratings.has(level)) level = 'Master';
         if(fen === "") {
             fen = "rnbqkbnr%2Fpppppppp%2F8%2F8%2F8%2F8%2FPPPPPPPP%2FRNBQKBNR+w+KQkq+-+0+1";
         } else{
@@ -67,14 +96,16 @@ export async function fetchLichessDatabase(moves: Array<String>, level: string, 
         }
 
         const movesFormated = moves.join("%2C");
+        const lichessRating = getClosestLichessRating(chessComElo);
         let req = "";
 
-        if(level === 'Master') {
+        if(lichessRating.isMaster) {
             req = `https://explorer.lichess.ovh/masters?variant=standard&fen=${fen}&play=${movesFormated}&source=analysis`
         }else {
-            const eloRange = ratings.get(level);
-            req = `https://explorer.lichess.ovh/lichess?variant=standard&fen=${fen}&play=${movesFormated}&since=2012-01&until=2022-12&speeds=rapid%2Cclassical&ratings=${eloRange}`;
+            req = `https://explorer.lichess.ovh/lichess?variant=standard&fen=${fen}&play=${movesFormated}&since=2012-01&until=2022-12&speeds=rapid%2Cclassical&ratings=${lichessRating.lichessElo}`;
         }
+
+        console.log(req);
 
         const res = await fetch(req);
         const data = await res.json();

@@ -204,7 +204,7 @@ const SpeedrunPage = () => {
           setPlayerElo(Math.max(100, newPlayerElo));
           break;
         case 'w':
-          setEngineEval('0 - 1');
+          setEngineEval('1 - 0');
           if(playerColor === 'w'){
             newPlayerElo+= eloStep;
           }else{
@@ -213,7 +213,7 @@ const SpeedrunPage = () => {
           setPlayerElo(Math.max(100, newPlayerElo));
           break;
         case 'b':
-          setEngineEval('1 - 0');
+          setEngineEval('0 - 1');
           if(playerColor === 'b'){
             newPlayerElo+= eloStep;
           }else{
@@ -241,9 +241,9 @@ const SpeedrunPage = () => {
         if(game.isCheckmate()){
           
           if(game.turn() === 'w'){
-            gameOver('w');
-          }else{
             gameOver('b');
+          }else{
+            gameOver('w');
           }
         }
         return true;

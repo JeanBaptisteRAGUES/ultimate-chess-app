@@ -113,7 +113,7 @@ const Clock: React.FC<ClockProps> = ({
 
     //TODO: Déclencher une callback qui permet de gérer le résultat directement depuis la page du mode de jeu
     function checkTimeout() {
-        console.log("Check Timeout")
+        //console.log("Check Timeout")
         if(timeControlRef.current.startingTime - timeControlRef.current.timeElapsed <= 0){
             if(clockColor === 'w'){
                 gameOver('b');

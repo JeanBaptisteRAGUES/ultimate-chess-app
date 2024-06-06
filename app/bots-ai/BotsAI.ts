@@ -396,7 +396,7 @@ async function makeLimitedStrengthMove(botParams: DefaultBotParams, game: Chess,
     return stockfishMove;
 }
 
-async function makeLichessMove(movesList: string[], databaseRating: string, fen: string, toolbox: GameToolBox): Promise<Move> {
+async function makeLichessMove(movesList: string[], botElo: number, fen: string, toolbox: GameToolBox): Promise<Move> {
     //console.log('Make Lichess Move');
     let lichessMove: Move = {
         notation: '',
@@ -404,9 +404,9 @@ async function makeLichessMove(movesList: string[], databaseRating: string, fen:
     }
     let lichessResult = {san: "", uci: "", winrate: {white: 33, draws: 33, black: 33}};
 
-    if(databaseRating === 'Maximum' || movesList.length > 42) return lichessMove;
+    if(botElo >= 3200 || movesList.length > 42) return lichessMove;
 
-    lichessResult = await fetchLichessDatabase(movesList, databaseRating, fen);
+    lichessResult = await fetchLichessDatabase(movesList, botElo, fen);
 
     lichessMove.notation = lichessResult.uci;
 
@@ -510,6 +510,13 @@ class BotsAI {
         });
     
         console.log(`Is last move \x1B[34m(${lastMove.san})\x1B[0m dangerous: \x1B[31m` + danger);
+
+        const ignoreDanger = Math.max(1, 50 - Math.pow(this.#defaultBotParams.elo, 1/1.8));
+
+        if(danger && Math.random()*100 < ignoreDanger){
+            danger = false;
+            console.log(`${this.#username} ignore le danger !`);
+        }
     
         return {
             danger: danger,
@@ -704,7 +711,7 @@ class BotsAI {
             const startingFen = game.history().length > 0 ? game.history({verbose: true})[0].before : DEFAULT_POSITION;
             const movesList = this.#toolbox.convertHistorySanToLan(game.history(), startingFen);
 
-            const lichessMove = await makeLichessMove(movesList, this.#botLevel, startingFen, this.#toolbox);
+            const lichessMove = await makeLichessMove(movesList, this.#defaultBotParams.elo, startingFen, this.#toolbox);
             if(lichessMove.type >= 0){
                 return lichessMove;
             } 
@@ -818,7 +825,7 @@ class BotsAI {
             const startingFen = game.history().length > 0 ? game.history({verbose: true})[0].before : DEFAULT_POSITION;
             const movesList = this.#toolbox.convertHistorySanToLan(game.history(), startingFen);
 
-            const lichessMove = await makeLichessMove(movesList, this.#botLevel, startingFen, this.#toolbox);
+            const lichessMove = await makeLichessMove(movesList, this.#defaultBotParams.elo, startingFen, this.#toolbox);
             if(lichessMove.type >= 0){
                 //console.log(`${this.#botColor} make Lichess move`);
                 return lichessMove;
@@ -3377,7 +3384,7 @@ class BotsAI {
         };
         const movesList = this.#toolbox.convertHistorySanToLan(this.#toolbox.convertPgnToHistory(game.pgn()));
 
-        const lichessMove = await makeLichessMove(movesList, 'Master', '', this.#toolbox);
+        const lichessMove = await makeLichessMove(movesList, 2500, '', this.#toolbox);
         if(lichessMove.type >= 0){
             return lichessMove;
         }
@@ -3408,7 +3415,7 @@ class BotsAI {
 
         const movesList = this.#toolbox.convertHistorySanToLan(this.#toolbox.convertPgnToHistory(game.pgn()));
 
-        const lichessMove = await makeLichessMove(movesList, 'Beginner', '', this.#toolbox);
+        const lichessMove = await makeLichessMove(movesList, 500, '', this.#toolbox);
         if(lichessMove.type >= 0){
             return lichessMove;
         }
@@ -4556,7 +4563,7 @@ class BotsAI {
         const startingFen = game.history().length > 0 ? game.history({verbose: true})[0].before : DEFAULT_POSITION;
         const movesList = this.#toolbox.convertHistorySanToLan(game.history(), startingFen);
 
-        const lichessMove = await makeLichessMove(movesList, this.#botLevel, startingFen, this.#toolbox);
+        const lichessMove = await makeLichessMove(movesList, this.#defaultBotParams.elo, startingFen, this.#toolbox);
         if(lichessMove.type >= 0){
             console.log(`${this.#botColor} make Lichess move`);
             return game.get(this.#toolbox.getMoveOrigin(lichessMove.notation) || 'a1').type;

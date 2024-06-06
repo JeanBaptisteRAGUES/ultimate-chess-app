@@ -133,10 +133,10 @@ const HandAndBrainPage = () => {
           setEngineEval('1/2 - 1/2');
           break;
         case 'w':
-          setEngineEval('0 - 1');
+          setEngineEval('1 - 0');
           break;
         case 'b':
-          setEngineEval('1 - 0');
+          setEngineEval('0 - 1');
           break;
         default:
           break;
@@ -158,9 +158,9 @@ const HandAndBrainPage = () => {
         if(game.isCheckmate()){
           
           if(game.turn() === 'w'){
-            gameOver('w');
-          }else{
             gameOver('b');
+          }else{
+            gameOver('w');
           }
         }
         return true;
