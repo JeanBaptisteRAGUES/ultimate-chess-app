@@ -26,6 +26,8 @@ const SpeedrunPage = () => {
     const eloMax: number = eval(searchParams.get('eloMax') || '2000');
     const eloStep: number = eval(searchParams.get('eloStep') || '10');
     const timeControl = searchParams.get('timeControl') || 'infinite';
+    const playerColorBase = searchParams.get('playerColor') || 'random';
+    const [playerColor, setPlayerColor] = useState<Color>('w');
     //const playerElo: number = eval(searchParams.get('playerElo') || '400');
     const [playerElo, setPlayerElo] = useState<number>(eval(searchParams.get('playerElo') || '400'));
     const toolbox = new GameToolBox();
@@ -34,7 +36,7 @@ const SpeedrunPage = () => {
     const virtualGame = useRef(new Chess());
     const engine = useRef<Engine>();
     const botAI = useRef<BotsAI>();
-    const [playerColor, setPlayerColor] = useState<Color>(Math.random() < 0.5 ? 'w' : 'b');
+    //const [playerColor, setPlayerColor] = useState<Color>(Math.random() < 0.5 ? 'w' : 'b');
     const [botElo, setBotElo] = useState<number>(playerElo);
     const [botBehaviour, setBotBehaviour] = useState<Behaviour>('default');
     //const [viewColor, setViewColor] = useState<Color>('w');
@@ -102,13 +104,16 @@ const SpeedrunPage = () => {
     useEffect(() => {
         engine.current = new Engine();
         engine.current.init();
+        const newPlayerColor = playerColorBase === 'random' ? (Math.random() < 0.5 ? 'w' : 'b') : playerColorBase;
         const botColor = playerColor === 'w' ? 'b' : 'w';
         const newBotElo = Math.round(Math.min(3200, Math.max(100, playerElo + (Math.random()*100 - 50))));
         //TODO: Génération aléatoire du comportement et de l'élo
         const newBotBehaviour = pickRandomBehaviour();
         botAI.current = new BotsAI(newBotBehaviour, newBotElo, botColor, timeControl);
+        setPlayerColor(newPlayerColor as Color);
         setBotElo(newBotElo);
         setBotBehaviour(newBotBehaviour);
+        console.log('Player Color: ' + newPlayerColor);
         console.log("Bot Elo: " + newBotElo);
         console.log("Bot Behaviour: " + newBotBehaviour);
         console.log(timeControl);
@@ -145,7 +150,7 @@ const SpeedrunPage = () => {
 
     function resetGame() {
         const newBotElo = Math.round(Math.min(3200, Math.max(100, playerElo + (Math.random()*100 - 50))));
-        const newPlayerColor = Math.random() < 0.5 ? 'w' : 'b';
+        const newPlayerColor = playerColorBase === 'random' ? (Math.random() < 0.5 ? 'w' : 'b') : playerColorBase;
         const newBotColor = playerColor === 'w' ? 'b' : 'w';
         const newBotBehaviour = pickRandomBehaviour();
         game.reset();
@@ -157,7 +162,7 @@ const SpeedrunPage = () => {
         movesTypeRef.current = [];
         setShowGameoverWindow(false);
         setWinner('');
-        setPlayerColor(newPlayerColor);
+        setPlayerColor(newPlayerColor as Color);
         setBotBehaviour(newBotBehaviour);
         setBotElo(newBotElo);
         setGameStarted(false);
@@ -593,27 +598,9 @@ const SpeedrunPage = () => {
         <FaFontAwesomeFlag size={40} />
       </div>
 
-    const changeColor = () => {
-      if(gameActive.current) return;
-      playerColor === 'w' ? setPlayerColor('b') : setPlayerColor('w');
-    }
-    
-    const switchButton = 
-      <div 
-        onClick={() => changeColor()} 
-        className=' h-[50px] w-[50px] flex flex-col justify-center items-center cursor-pointer hover:text-cyan-400'>
-          <FaRotate size={40} />
-    </div>
-
-    const virtualModeButton = <div onClick={() => switchMode()} className=' h-[50px] w-[50px] flex flex-col justify-start items-start cursor-pointer hover:text-cyan-400' style={{color: isVirtualMode ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
-        <PiVirtualReality size={50} />
-    </div>
-
     const buttonsComponent =
       <div className="flex justify-center mt-5 pt-2 md:mt-0 items-center gap-5 w-full h-fit" >
-        {virtualModeButton}
         {startGameButton}
-        {switchButton}
       </div>
 
     const gameComponent = 

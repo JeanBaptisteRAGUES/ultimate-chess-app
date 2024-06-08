@@ -7,12 +7,14 @@ import { GiBulletBill } from 'react-icons/gi';
 import { SiStackblitz } from 'react-icons/si';
 import { LuAlarmClock } from 'react-icons/lu';
 import { IoHourglassOutline, IoInfiniteSharp } from 'react-icons/io5';
+import { Color } from 'chess.js';
 
 const SelectSpeedrun = () => {
     const [eloMin, setEloMin] = useState<number>(400);
     const [eloMax, setEloMax] = useState<number>(2000);
     const [eloStep, setEloStep] = useState<number>(10);
-    const [timeControl, setTimeControl] = useState('10+0');
+    const [timeControl, setTimeControl] = useState<string>('10+0');
+    const [playerColor, setPlayerColor] = useState<string>('random');
 
     const setEloRange = (e: ChangeResult) => {
         setEloMin(e.minValue);
@@ -93,6 +95,19 @@ const SelectSpeedrun = () => {
                 <span className=' w-full h-[10px] flex justify-center items-center' >Infini</span>
             </div>
         </div>
+
+    const playerColorComponent = 
+        <div className='flex flex-row justify-around items-center flex-wrap w-full mt-2 px-2 gap-2' >
+            <div onClick={() => setPlayerColor('random')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: playerColor === 'random' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <span className=' w-full h-full flex justify-center items-center text-4xl font-bold text-center' >Random</span>
+            </div>
+            <div onClick={() => setPlayerColor('w')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: playerColor === 'w' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <span className=' w-full h-full flex justify-center items-center text-4xl font-bold text-center' >White</span>
+            </div>
+            <div onClick={() => setPlayerColor('b')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: playerColor === 'b' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <span className=' w-full h-full flex justify-center items-center text-4xl font-bold text-center' >Black</span>
+            </div>
+        </div>
     
 
 
@@ -108,6 +123,8 @@ const SelectSpeedrun = () => {
             {eloStepComponent}
             <div className=' w-full mt-20 md:ml-10 flex justify-center md:justify-start items-center text-2xl font-semibold text-white' >Cadence:</div>
             {timeControlComponent}
+            <div className=' w-full mt-20 md:ml-10 flex justify-center md:justify-start items-center text-2xl font-semibold text-white' >Couleur:</div>
+            {playerColorComponent}
             <Link
                 className=' text-white hover:text-cyan-400 cursor-pointer text-3xl font-bold my-20 '
                 href = {{
@@ -118,6 +135,7 @@ const SelectSpeedrun = () => {
                     eloStep: eloStep,
                     playerElo: eloMin,
                     timeControl: timeControl,
+                    playerColor: playerColor,
                 }
                 }}
             >
