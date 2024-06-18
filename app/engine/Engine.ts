@@ -164,13 +164,14 @@ class Engine {
     
 
     findBestMoves(fen: string, depth: number, skillValue: number, multiPv: number, useCoeff: boolean): Promise<EvalResultSimplified[]> {
-        //console.log('Find Best Moves');
+        console.log('Find Best Moves: ' + fen);
         let coeff = fen.includes(' w ') ? 1 : -1;
         if(!useCoeff) coeff = 1;
         let bestMoves: EvalResultSimplified[] = [];
 
         return new Promise((resolve, reject) => {
             try {
+                this.stockfish.postMessage('stop');
                 this.stockfish.postMessage(`position fen ${fen}`);
                 this.stockfish.postMessage(`setoption name Skill Level value ${skillValue}`);
                 this.stockfish.postMessage(`setoption name MultiPv value ${multiPv}`);
@@ -181,7 +182,7 @@ class Engine {
                     if(event.data.includes(`info depth ${depth} seldepth`)){
                         let evaluationStr: string | null = getEvalFromData(event.data, coeff);
                         let bestMove: string | null = getBestMoveFromData(event.data);
-                        //console.log(bestMove + ': ' + evaluationStr);
+                        console.log(bestMove + ': ' + evaluationStr);
 
                         if(!evaluationStr || !bestMove || !event.data.match(firstEvalMoveRegex)){
                             //console.log(event.data);
@@ -189,25 +190,31 @@ class Engine {
                             return;
                         }
 
+                        console.log(bestMoves);
+                        console.log(bestMoves.some((move) => move.bestMove === bestMove));
                         if(!bestMoves.some((move) => move.bestMove === bestMove)){
-                            //console.log(bestMove + ': ' + evaluationStr);
+                            console.log(bestMove + ' (2): ' + evaluationStr);
                             bestMoves.push({
                                 eval: evaluationStr,
                                 bestMove: bestMove
                             });
                         }
                     }
+                    //TODO: Corriger erreur
                     if((event.data.match(bestMoveRegex)) !== null){
                         if(event.data.match(bestMoveRegex)[1]){
-                            resolve(bestMoves);
-                        } else{
-                            reject(null);
-                        }
+                            if(bestMoves.length > 0){
+                                resolve(bestMoves);
+                            }else{
+                                //reject('Erreur: aucun coup trouvé');
+                                console.log('Erreur: aucun coup trouvé');
+                            }
+                        } 
                     }
                 }
             } catch (error) {
                 console.log('findBestMoves error: ' + error);
-                resolve(bestMoves);
+                reject(error);
             }
         })
     }

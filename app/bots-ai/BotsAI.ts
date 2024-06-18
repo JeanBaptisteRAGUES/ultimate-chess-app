@@ -466,17 +466,21 @@ class BotsAI {
         } */
     }
 
-    //TODO: Suivant le security level, ne prendre en compte que certaines attaques
-    //TODO: SL 0 -> Danger qu'après une capture
-    //TODO: SL 1 -> Danger si capture ou attaque avec une pièce de moindre valeur
-    //TODO: SL 2 -> Danger si capture, attaque pièce de moindre valeur ou attaque pièce non protégée 
+    //Suivant le security level, ne prendre en compte que certaines attaques
+    //SL 0 -> Ne détecte jamais le danger
+    //SL 1 -> Danger qu'après une capture
+    //SL 2 -> Danger si capture ou attaque avec une pièce de moindre valeur
+    //TODO: SL 3 -> Danger si capture, attaque pièce de moindre valeur ou attaque pièce non protégée 
     #isLastMoveDangerous(game: Chess): {danger: boolean, dangerCases: {dangerCase: string, dangerValue: number}[] } {
         //console.log("Is last move dangerous ?");
         const history = JSON.parse(JSON.stringify(game.history({verbose: true})));
         const lastMove = history.pop();
         const gameTest = new Chess();
+        const securityLvl = Math.round(Math.max(0, Math.pow(this.#defaultBotParams.elo, 1/4) - 3.5));
+
+        console.log('Security Level: ' + securityLvl);
     
-        if(lastMove === null || lastMove === undefined) return {
+        if(securityLvl === 0 || lastMove === null || lastMove === undefined) return {
             danger: false,
             dangerCases: []
         };
@@ -501,11 +505,16 @@ class BotsAI {
     
             //console.log(squareInfos);
             if(squareInfos && squareInfos?.type !== 'p' && squareInfos?.color === this.#botColor) {
-                dangerCases.push({
-                    dangerCase: attackedCase,
-                    dangerValue: this.#toolbox.getExchangeValue(gameTest.fen(), pieceMove.lan)
-                })
-                danger = true;
+                const dangerValue = this.#toolbox.getExchangeValue(gameTest.fen(), pieceMove.lan);
+                console.log(`Danger: ${pieceMove.san} -> ${dangerValue}`);
+
+                if(securityLvl >= 2 && dangerValue > 0){
+                    dangerCases.push({
+                        dangerCase: attackedCase,
+                        dangerValue: dangerValue
+                    })
+                    danger = true;
+                }
             }
         });
     
@@ -700,6 +709,36 @@ class BotsAI {
         return stockfishMove;
     }
 
+    async #ignoreOpponentMove(game: Chess): Promise<Move> {
+        //const history = JSON.parse(JSON.stringify(game.history({verbose: true})));
+        let fenBeforeOpponentMove = game.history({verbose: true}).pop()?.before || DEFAULT_POSITION;
+        fenBeforeOpponentMove = this.#botColor === 'w' ? fenBeforeOpponentMove.replace(' b ', ' w ') : fenBeforeOpponentMove.replace(' w ', ' b ');
+        const gameTest = new Chess();
+        const ignoreOpponentMoveChance = Math.max(1, (Math.round(55 - Math.pow(this.#defaultBotParams.elo, 1/1.9))));
+        let moveType = 5;
+
+        if(Math.random()*100 > ignoreOpponentMoveChance) {
+            return {
+                notation: '',
+                type: -1,
+            }
+        }
+
+        console.log(`${this.#username} ignore le dernier coup de l'adversaire !`);
+        gameTest.load(fenBeforeOpponentMove);
+
+        const stockfishMove = await makeStockfishMove(this.#defaultBotParams, gameTest, this.#engine);
+        
+        if(!this.#toolbox.isMoveValid(game.fen(), stockfishMove.notation)) {
+            console.log(`Le coup ${stockfishMove.notation} n'est pas jouable dans la position actuelle !`);
+            moveType = -1;
+        } 
+
+        stockfishMove.type = moveType;
+
+        return stockfishMove;
+    }
+
     async #defaultMoveLogic(game: Chess, useDatabase: Boolean, useRandom: Boolean): Promise<Move> {
         let move: Move = {
             notation: '',
@@ -815,10 +854,6 @@ class BotsAI {
 
     // TODO: isLastMoveDangerous ? Si oui -> plus le bot est faible, plus il aura envie de bouger la pièce
     async #humanMoveLogic(game: Chess, useDatabase: Boolean, useRandom: Boolean): Promise<Move> {
-        let move: Move = {
-            notation: '',
-            type: -1,
-        };
 
         if(useDatabase) {
             //const movesList = this.#toolbox.convertHistorySanToLan(this.#toolbox.convertPgnToHistory(game.pgn()));
@@ -844,6 +879,8 @@ class BotsAI {
         //this.#engine.stop();
         //const stockfishBestMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), this.#defaultBotParams.depth, this.#defaultBotParams.skillValue, 3, false);
         const stockfishBestMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, 20, 3, false);
+        console.log(game.fen());
+        console.log(stockfishBestMoves);
         console.log(`Sans erreurs humaines, les 3 meilleurs coups de Stockfish sont: ${stockfishBestMoves[0]?.bestMove}, ${stockfishBestMoves[1]?.bestMove}, ${stockfishBestMoves[2]?.bestMove}`);
         //console.log(newGame.ascii());
         
@@ -878,16 +915,26 @@ class BotsAI {
             return makeRandomMove(this.#defaultBotParams.filterLevel, this.#defaultBotParams.securityLvl > 1, game);
         }
 
+        const noOpponentMove = await this.#ignoreOpponentMove(game);
+
+        if(noOpponentMove.type === 5) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return noOpponentMove;
+        }
+
         // TODO: Faire en sorte que les débutant favorisent les coups vers l'avant et les échecs
         const tunelVisionMove = await this.#makeTunelVisionMove(game);
 
-        if(tunelVisionMove.type >= 0) {
-            if(tunelVisionMove.type === 5) console.log(`Human move (${tunelVisionMove.type}): ${this.#toolbox.convertMoveLanToSan(game.fen(), tunelVisionMove.notation)}`);
+        if(tunelVisionMove.type > 0) {
+            console.log(`Human move (${tunelVisionMove.type}): ${this.#toolbox.convertMoveLanToSan(game.fen(), tunelVisionMove.notation)}`);
             this.#lastRandomMove = this.#lastRandomMove-1;
             return tunelVisionMove;
         } 
 
-        return move;
+        const stockfishMove = await makeStockfishMove(this.#defaultBotParams, game, this.#engine);
+        this.#lastRandomMove = this.#lastRandomMove-1;
+
+        return stockfishMove;
     }
 
     async #makeHumanMove(game: Chess): Promise<Move> {

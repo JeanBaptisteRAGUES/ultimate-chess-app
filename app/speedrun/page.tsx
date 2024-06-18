@@ -6,7 +6,7 @@ import { Chessboard } from "react-chessboard";
 import { Piece, Square } from "react-chessboard/dist/chessboard/types";
 import EvalAndWinrate from "../components/EvalAndWinrate";
 import Clock from "../components/Clock";
-import Engine from "../engine/Engine";
+import Engine, { EvalResultSimplified } from "../engine/Engine";
 import Link from "next/link";
 import BotsAI, { Behaviour, Move } from "../bots-ai/BotsAI";
 import { useSearchParams } from "next/navigation";
@@ -455,6 +455,14 @@ const SpeedrunPage = () => {
       await fetchChessDotComDB();
     }
 
+    async function test() {
+      console.log('Test engine.findBestMoves()');
+      const stockfishBestMoves: EvalResultSimplified[] = await engine.current?.findBestMoves(game.fen(), 10, 20, 3, false) || [];
+
+      console.log(game.fen());
+      console.log(stockfishBestMoves);
+    }
+
     const analysisMenu =
       <div className=" flex flex-col justify-center items-center gap-5">
         <Link
@@ -575,10 +583,10 @@ const SpeedrunPage = () => {
           }
       </div>
 
-    /* const testButton =
-    <button onClick={() => fetchPlayerDB()}>
-      Hippo31 Lichess DB
-    </button> */
+    const testButton =
+      <button onClick={() => test()}>
+        Stockfish
+      </button>
 
     const startGameButton = !gameStarted ? 
       <div 
@@ -601,6 +609,7 @@ const SpeedrunPage = () => {
     const buttonsComponent =
       <div className="flex justify-center mt-5 pt-2 md:mt-0 items-center gap-5 w-full h-fit" >
         {startGameButton}
+        {testButton}
       </div>
 
     const gameComponent = 
