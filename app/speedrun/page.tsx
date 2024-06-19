@@ -97,15 +97,11 @@ const SpeedrunPage = () => {
         gimmicks: [
           {
             gimmick: 'random-player',
-            chance: 50,
-          },
-          {
-            gimmick: 'shy',
             chance: 60,
           },
           {
             gimmick: 'botez-gambit',
-            chance: 80
+            chance: 90
           },
           {
             gimmick: 'blundering',
@@ -750,7 +746,6 @@ const SpeedrunPage = () => {
     const buttonsComponent =
       <div className="flex justify-center mt-5 pt-2 md:mt-0 items-center gap-5 w-full h-fit" >
         {startGameButton}
-        {testButton}
       </div>
 
     const gameComponent = 
