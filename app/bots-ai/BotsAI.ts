@@ -724,19 +724,29 @@ class BotsAI {
             }
         }
 
-        console.log(`${this.#username} ignore le dernier coup de l'adversaire !`);
-        gameTest.load(fenBeforeOpponentMove);
+        try {
+            console.log(`${this.#username} ignore le dernier coup de l'adversaire !`);
+            gameTest.load(fenBeforeOpponentMove);
+    
+            const stockfishMove = await makeStockfishMove(this.#defaultBotParams, gameTest, this.#engine);
+            
+            if(!this.#toolbox.isMoveValid(game.fen(), stockfishMove.notation)) {
+                console.log(`Le coup ${stockfishMove.notation} n'est pas jouable dans la position actuelle !`);
+                moveType = -1;
+            } 
+    
+            stockfishMove.type = moveType;
+    
+            return stockfishMove; 
+        } catch (error) {
+            console.log(error);
 
-        const stockfishMove = await makeStockfishMove(this.#defaultBotParams, gameTest, this.#engine);
+            return {
+                notation: '',
+                type: -1,
+            }
+        }
         
-        if(!this.#toolbox.isMoveValid(game.fen(), stockfishMove.notation)) {
-            console.log(`Le coup ${stockfishMove.notation} n'est pas jouable dans la position actuelle !`);
-            moveType = -1;
-        } 
-
-        stockfishMove.type = moveType;
-
-        return stockfishMove;
     }
 
     async #defaultMoveLogic(game: Chess, useDatabase: Boolean, useRandom: Boolean): Promise<Move> {
@@ -1388,7 +1398,7 @@ class BotsAI {
             type: -1,
         };
 
-        if(game.history().length > 40) {
+        if(game.history().length > 20) {
             return move;
         }
 

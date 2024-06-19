@@ -90,15 +90,156 @@ const SpeedrunPage = () => {
       points: 0,
     });
 
-    function pickRandomBehaviour(): Behaviour{
+    const gimmicks: {min: number, max: number, gimmicks: {gimmick: Behaviour, chance: number}[]}[] = [
+      {
+        min: 0,
+        max: 99,
+        gimmicks: [
+          {
+            gimmick: 'random-player',
+            chance: 50,
+          },
+          {
+            gimmick: 'shy',
+            chance: 60,
+          },
+          {
+            gimmick: 'botez-gambit',
+            chance: 80
+          },
+          {
+            gimmick: 'blundering',
+            chance: 100
+          }
+        ]
+      },
+      {
+        min: 100,
+        max: 499,
+        gimmicks: [
+          {
+            gimmick: 'human',
+            chance: 70,
+          },
+          {
+            gimmick: 'queen-player',
+            chance: 90
+          },
+          {
+            gimmick: 'pawn-pusher',
+            chance: 100
+          }
+        ]
+      },
+      {
+        min: 500,
+        max: 999,
+        gimmicks: [
+          {
+            gimmick: 'human',
+            chance: 70,
+          },
+          {
+            gimmick: 'caro-london',
+            chance: 75
+          },
+          {
+            gimmick: 'copycat',
+            chance: 80
+          },
+          {
+            gimmick: 'fianchetto-sniper',
+            chance: 85
+          },
+          {
+            gimmick: 'bongcloud',
+            chance: 90
+          },
+          {
+            gimmick: 'stonewall',
+            chance: 100
+          },
+        ]
+      },
+      {
+        min: 1000,
+        max: 1499,
+        gimmicks: [
+          {
+            gimmick: 'human',
+            chance: 70,
+          },
+          {
+            gimmick: 'caro-london',
+            chance: 80
+          },
+          {
+            gimmick: 'gambit-fanatic',
+            chance: 90
+          },
+          {
+            gimmick: 'fianchetto-sniper',
+            chance: 95
+          },
+          {
+            gimmick: 'cow-lover',
+            chance: 100
+          },
+        ]
+      },
+      {
+        min: 1500,
+        max: 2999,
+        gimmicks: [
+          {
+            gimmick: 'human',
+            chance: 75,
+          },
+          {
+            gimmick: 'indian-king',
+            chance: 80
+          },
+          {
+            gimmick: 'gambit-fanatic',
+            chance: 90
+          },
+          {
+            gimmick: 'dragon',
+            chance: 100
+          },
+        ]
+      },
+      {
+        min: 3000,
+        max: 3200,
+        gimmicks: [
+          {
+            gimmick: 'stockfish-only',
+            chance: 75,
+          },
+          {
+            gimmick: 'dragon',
+            chance: 100,
+          },
+        ]
+      },
+    ]
+
+    function pickRandomBehaviour(botElo: number): Behaviour{
         const behaviourRand = Math.random()*100;
-        if(behaviourRand < 70) return 'human';
-        if(behaviourRand < 75) return 'stonewall';
-        if(behaviourRand < 80) return 'pawn-pusher';
-        if(behaviourRand < 85) return 'caro-london';
-        if(behaviourRand < 90) return 'cow-lover';
-        if(behaviourRand < 95) return 'fianchetto-sniper';
-        return 'gambit-fanatic';
+        let botBehaviour: Behaviour = 'default';
+
+        gimmicks.forEach(gimmick => {
+          if(gimmick.min <= botElo && botElo <= gimmick.max){
+            gimmick.gimmicks.forEach(behaviour => {
+              if(botBehaviour === 'default' && behaviourRand <= behaviour.chance) botBehaviour = behaviour.gimmick;
+            })
+          }
+        })
+
+        console.log('Selected bot behaviour: ' + botBehaviour);
+
+        return botBehaviour;
     }
 
     useEffect(() => {
@@ -106,9 +247,9 @@ const SpeedrunPage = () => {
         engine.current.init();
         const newPlayerColor = playerColorBase === 'random' ? (Math.random() < 0.5 ? 'w' : 'b') : playerColorBase;
         const botColor = playerColor === 'w' ? 'b' : 'w';
-        const newBotElo = Math.round(Math.min(3200, Math.max(100, playerElo + (Math.random()*100 - 50))));
+        const newBotElo = Math.round(Math.min(3200, Math.max(0, playerElo + (Math.random()*100 - 50))));
         //TODO: Génération aléatoire du comportement et de l'élo
-        const newBotBehaviour = pickRandomBehaviour();
+        const newBotBehaviour = pickRandomBehaviour(newBotElo);
         botAI.current = new BotsAI(newBotBehaviour, newBotElo, botColor, timeControl);
         setPlayerColor(newPlayerColor as Color);
         setBotElo(newBotElo);
@@ -149,10 +290,10 @@ const SpeedrunPage = () => {
     }
 
     function resetGame() {
-        const newBotElo = Math.round(Math.min(3200, Math.max(100, playerElo + (Math.random()*100 - 50))));
+        const newBotElo = Math.round(Math.min(3200, Math.max(0, playerElo + (Math.random()*100 - 50))));
         const newPlayerColor = playerColorBase === 'random' ? (Math.random() < 0.5 ? 'w' : 'b') : playerColorBase;
         const newBotColor = playerColor === 'w' ? 'b' : 'w';
-        const newBotBehaviour = pickRandomBehaviour();
+        const newBotBehaviour = pickRandomBehaviour(newBotElo);
         game.reset();
         engine.current?.newGame();
         //botAI.current?.reset();
@@ -206,7 +347,7 @@ const SpeedrunPage = () => {
           }else{
             newPlayerElo-= eloStep/2;
           }
-          setPlayerElo(Math.max(100, newPlayerElo));
+          setPlayerElo(Math.max(0, newPlayerElo));
           break;
         case 'w':
           setEngineEval('1 - 0');
@@ -215,7 +356,7 @@ const SpeedrunPage = () => {
           }else{
             newPlayerElo-= eloStep;
           }
-          setPlayerElo(Math.max(100, newPlayerElo));
+          setPlayerElo(Math.max(0, newPlayerElo));
           break;
         case 'b':
           setEngineEval('0 - 1');
@@ -224,7 +365,7 @@ const SpeedrunPage = () => {
           }else{
             newPlayerElo-= eloStep;
           }
-          setPlayerElo(Math.max(100, newPlayerElo));
+          setPlayerElo(Math.max(0, newPlayerElo));
           break;
         default:
           break;

@@ -27,7 +27,7 @@ const SelectSpeedrun = () => {
                 className='w-full'
                 label={true}
                 ruler={false}
-                min={100}
+                min={0}
                 max={3200}
                 step={100}
                 stepOnly={true}
