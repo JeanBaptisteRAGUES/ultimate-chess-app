@@ -164,7 +164,7 @@ class Engine {
     
 
     findBestMoves(fen: string, depth: number, skillValue: number, multiPv: number, useCoeff: boolean): Promise<EvalResultSimplified[]> {
-        console.log('Find Best Moves: ' + fen);
+        //console.log('Find Best Moves: ' + fen);
         let coeff = fen.includes(' w ') ? 1 : -1;
         if(!useCoeff) coeff = 1;
         let bestMoves: EvalResultSimplified[] = [];
@@ -182,7 +182,7 @@ class Engine {
                     if(event.data.includes(`info depth ${depth} seldepth`)){
                         let evaluationStr: string | null = getEvalFromData(event.data, coeff);
                         let bestMove: string | null = getBestMoveFromData(event.data);
-                        console.log(bestMove + ': ' + evaluationStr);
+                        //console.log(bestMove + ': ' + evaluationStr);
 
                         if(!evaluationStr || !bestMove || !event.data.match(firstEvalMoveRegex)){
                             //console.log(event.data);
@@ -190,10 +190,10 @@ class Engine {
                             return;
                         }
 
-                        console.log(bestMoves);
-                        console.log(bestMoves.some((move) => move.bestMove === bestMove));
+                        //console.log(bestMoves);
+                        //console.log(bestMoves.some((move) => move.bestMove === bestMove));
                         if(!bestMoves.some((move) => move.bestMove === bestMove)){
-                            console.log(bestMove + ' (2): ' + evaluationStr);
+                            //console.log(bestMove + ' (2): ' + evaluationStr);
                             bestMoves.push({
                                 eval: evaluationStr,
                                 bestMove: bestMove
@@ -207,7 +207,7 @@ class Engine {
                                 resolve(bestMoves);
                             }else{
                                 //reject('Erreur: aucun coup trouvé');
-                                console.log('Erreur: aucun coup trouvé');
+                                console.log('Erreur (findBestMoves): aucun coup trouvé');
                             }
                         } 
                     }

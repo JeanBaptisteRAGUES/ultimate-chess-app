@@ -78,7 +78,7 @@ function getClosestLichessRating(chessComElo: number) {
         lichessElo = closestElo;
     }
 
-    console.log(`Le bot d'Élo Lichess (${lichessElo}) est un maître ? -> ${isMaster}`);
+    //console.log(`Le bot d'Élo Lichess (${lichessElo}) est un maître ? -> ${isMaster}`);
 
     return {
         isMaster: isMaster,
@@ -105,7 +105,7 @@ export async function fetchLichessDatabase(moves: Array<String>, chessComElo: nu
             req = `https://explorer.lichess.ovh/lichess?variant=standard&fen=${fen}&play=${movesFormated}&since=2012-01&until=2022-12&speeds=rapid%2Cclassical&ratings=${lichessRating.lichessElo}`;
         }
 
-        console.log(req);
+        //console.log(req);
 
         const res = await fetch(req);
         const data = await res.json();

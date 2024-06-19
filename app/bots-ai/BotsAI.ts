@@ -92,7 +92,7 @@ function selectSkillValue(eloIntervals: number[], skillMin: number, elo: number)
         }
     });
 
-    console.log(`Selected skill value for elo ${elo} ([${eloIntervals[0]}, ${eloIntervals.pop()}]): ${selectedSkillValue}`);
+    //console.log(`Selected skill value for elo ${elo} ([${eloIntervals[0]}, ${eloIntervals.pop()}]): ${selectedSkillValue}`);
     
     return selectedSkillValue;
 }
@@ -107,10 +107,10 @@ function selectSkillValue(eloIntervals: number[], skillMin: number, elo: number)
  */
 function getSkillValue(eloRange: number[], elo: number, skillMin: number, skillMax: number) {
     if(eloRange.length < 2) throw new Error("L'intervalle d'Élo n'est pas bon ! " + eloRange);
-    console.log(`Elo Range: [${eloRange[0]}, ${eloRange[1]}]`);
+    //console.log(`Elo Range: [${eloRange[0]}, ${eloRange[1]}]`);
     const iArray = createEloIntervals(eloRange[0], eloRange[1], skillMax - skillMin);
-    console.log(`Elo Intervals: `);
-    console.log(iArray);
+    //console.log(`Elo Intervals: `);
+    //console.log(iArray);
 
     return selectSkillValue(iArray, skillMin, elo);
 }
@@ -478,7 +478,7 @@ class BotsAI {
         const gameTest = new Chess();
         const securityLvl = Math.round(Math.max(0, Math.pow(this.#defaultBotParams.elo, 1/4) - 3.5));
 
-        console.log('Security Level: ' + securityLvl);
+        //console.log('Security Level: ' + securityLvl);
     
         if(securityLvl === 0 || lastMove === null || lastMove === undefined) return {
             danger: false,
@@ -538,7 +538,7 @@ class BotsAI {
         if(!positionEval.eval.includes('#')) return false;
         
         const mateValue = this.#toolbox.getMateValue(positionEval.eval, this.#botColor, '#');
-        console.log(`Position eval: ${positionEval.eval}, checkmate distance: ${mateValue} (max: ${maxMateValue}) -> ${positionEval.bestMove}`);
+        //console.log(`Position eval: ${positionEval.eval}, checkmate distance: ${mateValue} (max: ${maxMateValue}) -> ${positionEval.bestMove}`);
         return mateValue > 0 && mateValue <= maxMateValue;
     }
 
@@ -854,7 +854,8 @@ class BotsAI {
 
     // TODO: isLastMoveDangerous ? Si oui -> plus le bot est faible, plus il aura envie de bouger la pièce
     async #humanMoveLogic(game: Chess, useDatabase: Boolean, useRandom: Boolean): Promise<Move> {
-
+        console.countReset();
+        console.log('human logic: 0');
         if(useDatabase) {
             //const movesList = this.#toolbox.convertHistorySanToLan(this.#toolbox.convertPgnToHistory(game.pgn()));
             const startingFen = game.history().length > 0 ? game.history({verbose: true})[0].before : DEFAULT_POSITION;
@@ -867,6 +868,7 @@ class BotsAI {
             } 
             console.log('No more moves in the Lichess Database for ' + this.#botColor);
         }
+        console.log('human logic: 1');
 
         //TODO: Cause un gros problème
         const isNearCheckmateRes = await this.#isNearCheckmate(this.#defaultBotParams.playForcedMate, game) 
@@ -874,13 +876,14 @@ class BotsAI {
             const checkmateMove = await this.#makeForcedCheckmate(game);
             return checkmateMove;
         }
+        console.log('human logic: 2');
 
 
         //this.#engine.stop();
         //const stockfishBestMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), this.#defaultBotParams.depth, this.#defaultBotParams.skillValue, 3, false);
         const stockfishBestMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, 20, 3, false);
-        console.log(game.fen());
-        console.log(stockfishBestMoves);
+        //console.log(game.fen());
+        //console.log(stockfishBestMoves);
         console.log(`Sans erreurs humaines, les 3 meilleurs coups de Stockfish sont: ${stockfishBestMoves[0]?.bestMove}, ${stockfishBestMoves[1]?.bestMove}, ${stockfishBestMoves[2]?.bestMove}`);
         //console.log(newGame.ascii());
         
@@ -890,6 +893,7 @@ class BotsAI {
             this.#lastRandomMove = this.#lastRandomMove-1;
             return forcedExchangeMove;
         }
+        console.log('human logic: 3');
         
         const {danger, dangerCases} = this.#isLastMoveDangerous(game);
 
@@ -900,6 +904,7 @@ class BotsAI {
             if(reactingThreatMove.type >= 0 ){
                 return reactingThreatMove;
             }
+            console.log('human logic: 4');
 
             const tunelVisionMove = await this.#makeTunelVisionMove(game);
 
@@ -907,13 +912,16 @@ class BotsAI {
                 if(tunelVisionMove.type === 5) console.log(`Human move (${tunelVisionMove.type}): ${this.#toolbox.convertMoveLanToSan(game.fen(), tunelVisionMove.notation)}`);
                 this.#lastRandomMove = this.#lastRandomMove-1;
                 return tunelVisionMove;
-            } 
+            }
+            console.log('human logic: 5');
         }
+        console.log('human logic: 6');
 
         if(useRandom && isRandomMovePlayable(this.#defaultBotParams, this.#botLevel, this.#lastRandomMove)) {
             this.#lastRandomMove = this.#defaultBotParams.randMoveInterval;
             return makeRandomMove(this.#defaultBotParams.filterLevel, this.#defaultBotParams.securityLvl > 1, game);
         }
+        console.log('human logic: 7');
 
         const noOpponentMove = await this.#ignoreOpponentMove(game);
 
@@ -921,6 +929,7 @@ class BotsAI {
             this.#lastRandomMove = this.#lastRandomMove-1;
             return noOpponentMove;
         }
+        console.log('human logic: 8');
 
         // TODO: Faire en sorte que les débutant favorisent les coups vers l'avant et les échecs
         const tunelVisionMove = await this.#makeTunelVisionMove(game);
@@ -930,16 +939,19 @@ class BotsAI {
             this.#lastRandomMove = this.#lastRandomMove-1;
             return tunelVisionMove;
         } 
+        console.log('human logic: 9');
 
         const stockfishMove = await makeStockfishMove(this.#defaultBotParams, game, this.#engine);
         this.#lastRandomMove = this.#lastRandomMove-1;
+        console.log('human logic: 10');
+        console.log(stockfishMove);
 
         return stockfishMove;
     }
 
     async #makeHumanMove(game: Chess): Promise<Move> {
         console.log('Bot AI: Human behaviour');
-        console.log('Last Random Move: ' + this.#lastRandomMove);
+        //console.log('Last Random Move: ' + this.#lastRandomMove);
         let move: Move = {
             notation: '',
             type: -1,
@@ -4423,7 +4435,7 @@ class BotsAI {
      * Aime jouer un coup de pion sur le flanc (c4 ou c5) et le fou en fianchetto côté roi.
      */
     async #makeCaroLondonMove(game: Chess): Promise<Move> {
-        console.log('Bot AI: Indian King');
+        console.log('Bot AI: Caro London');
         let move: Move = {
             notation: '',
             type: -1,
