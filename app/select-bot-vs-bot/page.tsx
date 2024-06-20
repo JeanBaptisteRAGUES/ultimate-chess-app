@@ -155,6 +155,9 @@ const SelectBotVsBotPage = () => {
             <div onClick={() => setBot1_Behaviour('random-player')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot1_Behaviour === 'random-player' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Random Player</span>
             </div>
+            <div onClick={() => setBot1_Behaviour('semi-random')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot1_Behaviour === 'semi-random' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Semi Random</span>
+            </div>
             <div onClick={() => setBot1_Behaviour('copycat')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot1_Behaviour === 'copycat' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Copycat</span>
             </div>
@@ -231,6 +234,9 @@ const bot2_BehaviourComponent =
         <div onClick={() => setBot2_Behaviour('random-player')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot2_Behaviour === 'random-player' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
             <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Random Player</span>
         </div>
+        <div onClick={() => setBot2_Behaviour('semi-random')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot2_Behaviour === 'semi-random' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Semi Random</span>
+            </div>
         <div onClick={() => setBot2_Behaviour('copycat')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: bot2_Behaviour === 'copycat' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
             <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Copycat</span>
         </div>

@@ -96,7 +96,7 @@ const SpeedrunPage = () => {
         max: 99,
         gimmicks: [
           {
-            gimmick: 'random-player',
+            gimmick: 'semi-random',
             chance: 60,
           },
           {

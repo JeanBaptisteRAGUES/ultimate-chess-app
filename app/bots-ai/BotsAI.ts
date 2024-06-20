@@ -20,7 +20,7 @@ export type Move = {
 }
 
 // TODO: 'strategy-stranger' | 'sacrifice-enjoyer' | 'min-max | 'botdanov' | 'sharp-player' | 'closed' | 'open' | 'hyper-aggressive'
-export type Behaviour = 'default' | 'stockfish-random' | 'stockfish-only' | 'human' | 'pawn-pusher' | 'fianchetto-sniper' | 'shy' | 'blundering' | 'drawish' | 'exchanges-lover' | 'exchanges-hater' | 'queen-player' | 'botez-gambit' | 'castle-destroyer' | 'chessable-master' | 'auto-didacte' | 'random-player' | 'copycat' | 'bongcloud' | 'gambit-fanatic' | 'cow-lover' | 'indian-king' | 'stonewall' | 'dragon' | 'caro-london';
+export type Behaviour = 'default' | 'stockfish-random' | 'stockfish-only' | 'human' | 'pawn-pusher' | 'fianchetto-sniper' | 'shy' | 'blundering' | 'drawish' | 'exchanges-lover' | 'exchanges-hater' | 'queen-player' | 'botez-gambit' | 'castle-destroyer' | 'chessable-master' | 'auto-didacte' | 'random-player' | 'semi-random' | 'copycat' | 'bongcloud' | 'gambit-fanatic' | 'cow-lover' | 'indian-king' | 'stonewall' | 'dragon' | 'caro-london';
 
 type DefaultBotParams = {
     randMoveChance: number, 
@@ -177,69 +177,6 @@ function correctCastleMove(lichessMove: Move, fen: string, toolbox: GameToolBox)
     
         default:
             return lichessMove;
-    }
-}
-
-function filterMoves(movesList: string[], filterLevel: number) {
-    // Minimise le risque que l'IA joue un coup aléatoire trop catastrophique en l'empechant de jouer certaines pièces
-    const filter = [
-        /noFilter/gm, // Beginner - Ban List [rien]
-        /[Q][a-z]*[1-9]/gm, // Casual - Ban List [Queen]
-        /[QK][a-z]*[1-9]/gm, // Intermediate - Ban List [Queen, King]
-        /[QKR][a-z]*[1-9]/gm, // Advanced - Ban List [Queen, King, Rook]
-        /[QKRNB][a-z]*[1-9]/gm, // Master - Ban List [Queen, King, Rook, Knight, Bishop]
-    ];
-
-    let possiblesMovesFiltered = movesList.filter(move => !move.match(filter[filterLevel]));
-
-    if(possiblesMovesFiltered.length < 1) possiblesMovesFiltered = movesList;
-
-    return possiblesMovesFiltered;
-}
-
-function getSafeMovesOnly(movesList: string[], game: Chess) {
-    let safePossibleMoves: string[] = [];
-    const playerColor = game.turn() === 'w' ? 'b' : 'w';
-
-    const isPawn = (move: string) => !move.match(/[QKRNB][a-z]*[1-9]/gm);
-    const isDestinationDefended = (move: string) => {
-        // @ts-expect-error
-        return game.isAttacked(getMoveDestination(move), playerColor);
-    }
-    
-    safePossibleMoves = movesList.filter(pMove => isPawn(pMove) || !isDestinationDefended(pMove));
-    if(safePossibleMoves.length < 1) safePossibleMoves = movesList;
-
-    return safePossibleMoves;
-}
-
-/*
-    0-250 -> securityLvl = 0
-    250-600 -> securityLvl = 1
-    600-1295 -> securityLvl = 2
-    1295- 2400 -> securityLvl = 3
-*/
-//TODO: securityLvl = 0 -> joue n'importe quel coup
-//TODO: securityLvl = 1 -> ne joue pas une pièce sur une case défendue par un pion
-//TODO: securityLvl = 2 -> ne joue pas une pièce sur une case défendue par une pièce/pion et pas défendue par son camp
-//TODO: securityLvl = 3 -> ne joue pas une pièce sur une case défendue par une pièce/pion
-//TODO: securityLvl = 3 -> ne joue pas une pièce ou un pion sur une case défendue
-function makeRandomMove(filterLevel: number, safeMoves: boolean, game: Chess): Move {
-    //if(checkGameOver()) return;
-    console.log('Make Random Move');
-
-    const possibleMoves = game.moves();
-    let possiblesMovesFiltered = filterMoves(possibleMoves, filterLevel);
-
-    let finalMovesList: string[] = possiblesMovesFiltered;
-
-    if(safeMoves) finalMovesList = getSafeMovesOnly(possiblesMovesFiltered, game);
-
-    const randomIndex = Math.floor(Math.random() * finalMovesList.length);
-
-    return {
-        notation: finalMovesList[randomIndex],
-        type: 4
     }
 }
 
@@ -476,6 +413,36 @@ class BotsAI {
         /* if(behaviour === 'stockfish-only') {
             this.#engine.setStrength(1400);
         } */
+    }
+
+    /*
+        0-250 -> securityLvl = 0
+        250-600 -> securityLvl = 1
+        600-1295 -> securityLvl = 2
+        1295- 2400 -> securityLvl = 3
+    */
+    //securityLvl = 0 -> joue n'importe quel coup
+    //securityLvl = 1 -> ne joue pas une pièce sur une case défendue par un pion
+    //securityLvl = 2 -> ne joue pas une pièce sur une case défendue par une pièce/pion et pas défendue par son camp
+    //securityLvl = 3 -> ne joue pas une pièce sur une case défendue par une pièce/pion
+    //TODO: securityLvl = 4 -> ne joue pas une pièce ou un pion sur une case défendue
+    #makeRandomMove(filterLevel: number, securityLvl: number, game: Chess, botColor: Color): Move {
+        //if(checkGameOver()) return;
+        console.log('Make Random Move');
+
+        const possibleMoves = game.moves();
+        let possiblesMovesFiltered = this.#toolbox.filterMoves(possibleMoves, filterLevel);
+
+        let finalMovesList: string[] = possiblesMovesFiltered;
+
+        finalMovesList = this.#toolbox.getSafeMovesOnly(possiblesMovesFiltered, game.fen(), securityLvl, botColor);
+
+        const randomIndex = Math.floor(Math.random() * finalMovesList.length);
+
+        return {
+            notation: finalMovesList[randomIndex],
+            type: 4
+        }
     }
 
     //Suivant le security level, ne prendre en compte que certaines attaques
@@ -798,7 +765,7 @@ class BotsAI {
 
         if(useRandom && isRandomMovePlayable(this.#defaultBotParams, this.#botLevel, this.#lastRandomMove)) {
             this.#lastRandomMove = this.#defaultBotParams.randMoveInterval;
-            return makeRandomMove(this.#defaultBotParams.filterLevel, this.#defaultBotParams.securityLvl > 1, game);
+            return this.#makeRandomMove(this.#defaultBotParams.filterLevel, this.#defaultBotParams.securityLvl, game, this.#botColor);
         }
 
         const stockfishMove = await makeStockfishMove(this.#defaultBotParams, game, this.#engine);
@@ -940,7 +907,7 @@ class BotsAI {
 
         if(useRandom && isRandomMovePlayable(this.#defaultBotParams, this.#botLevel, this.#lastRandomMove)) {
             this.#lastRandomMove = this.#defaultBotParams.randMoveInterval;
-            return makeRandomMove(this.#defaultBotParams.filterLevel, this.#defaultBotParams.securityLvl > 1, game);
+            return this.#makeRandomMove(this.#defaultBotParams.filterLevel, this.#defaultBotParams.securityLvl, game, this.#botColor);
         }
         console.log('human logic: 7');
 
@@ -1199,6 +1166,41 @@ class BotsAI {
         }
 
         return move;
+    }
+
+    #semiRandomLogic(game: Chess): Move {
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+        let maxValue = 0;
+
+        game.moves({verbose: true}).forEach(possibleMove => {
+            if(possibleMove.captured){
+                let captureValue = this.#toolbox.getExchangeValue(game.fen(), possibleMove.lan) + 1 + Math.random()*1.5;
+
+                if(captureValue >= maxValue){
+                    maxValue = captureValue;
+                    move.notation = possibleMove.lan;
+                    move.type = 4;
+                }
+            }
+        })
+
+        return move;
+    }
+
+    #makeSemiRandomMove(game: Chess): Move {
+        console.log('Make Semi Random Move');
+        const gimmickMove = this.#semiRandomLogic(game);
+        if(gimmickMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return gimmickMove;
+        }
+
+        const randomMove = this.#makeRandomMove(2, 2, game, this.#botColor);
+
+        return randomMove;
     }
 
     async #blunderLogic(game: Chess): Promise<Move> {
@@ -3355,7 +3357,7 @@ class BotsAI {
 
         if(isRandomMovePlayable(this.#defaultBotParams, this.#botLevel, this.#lastRandomMove)) {
             this.#lastRandomMove = this.#defaultBotParams.randMoveInterval;
-            return makeRandomMove(this.#defaultBotParams.filterLevel, this.#defaultBotParams.securityLvl > 1, game);
+            return this.#makeRandomMove(this.#defaultBotParams.filterLevel, this.#defaultBotParams.securityLvl, game, this.#botColor);
         }
 
         const gimmickMove = await this.#exchangesLoverLogic(game);
@@ -3423,7 +3425,7 @@ class BotsAI {
 
         if(isRandomMovePlayable(this.#defaultBotParams, this.#botLevel, this.#lastRandomMove)) {
             this.#lastRandomMove = this.#defaultBotParams.randMoveInterval;
-            return makeRandomMove(this.#defaultBotParams.filterLevel, this.#defaultBotParams.securityLvl > 1, game);
+            return this.#makeRandomMove(this.#defaultBotParams.filterLevel, this.#defaultBotParams.securityLvl, game, this.#botColor);
         }
 
         const gimmickMove = await this.#exchangesHaterLogic(game);
@@ -4621,7 +4623,11 @@ class BotsAI {
                 break;
 
             case 'random-player':
-                move = makeRandomMove(2, true, game);
+                move = this.#makeRandomMove(2, 0, game, this.#botColor);
+                break;
+
+            case 'semi-random':
+                move = this.#makeSemiRandomMove(game);
                 break;
 
             case 'chessable-master':

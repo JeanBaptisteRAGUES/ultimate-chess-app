@@ -212,6 +212,93 @@ class GameToolBox {
       return attackedPieceValue - attackingPieceValue;
     }
 
+    filterMoves(movesList: string[], filterLevel: number) {
+        // Minimise le risque que l'IA joue un coup aléatoire trop catastrophique en l'empechant de jouer certaines pièces
+        const filter = [
+            /noFilter/gm, // Beginner - Ban List [rien]
+            /[Q][a-z]*[1-9]/gm, // Casual - Ban List [Queen]
+            /[QK][a-z]*[1-9]/gm, // Intermediate - Ban List [Queen, King]
+            /[QKR][a-z]*[1-9]/gm, // Advanced - Ban List [Queen, King, Rook]
+            /[QKRNB][a-z]*[1-9]/gm, // Master - Ban List [Queen, King, Rook, Knight, Bishop]
+        ];
+    
+        let possiblesMovesFiltered = movesList.filter(move => !move.match(filter[filterLevel]));
+    
+        if(possiblesMovesFiltered.length < 1) possiblesMovesFiltered = movesList;
+    
+        return possiblesMovesFiltered;
+    }
+
+    getCaseSafetyLevel(fen: string, move: string, botColor: Color) {
+        const newGame = new Chess();
+        let safetyLevel = 0; // On ne sait pas si la case est défendue
+        const opponentColor = botColor === 'w' ? 'b' : 'w';
+        //console.log('getCaseSafetyLevel: ' + move);
+    
+        newGame.load(fen);
+    
+        newGame.board().forEach(row => {
+            row.forEach(boardCase => {
+                if(boardCase && boardCase.type !== 'p') {
+                    newGame.remove(boardCase.square);
+                }
+            })
+        });
+    
+        if(!newGame.isAttacked(this.getMoveDestination(move), opponentColor)) {
+            safetyLevel = 1;
+            //console.log(`La case ${this.getMoveDestination(move)} n'est pas défendue par des pions adverses`);
+        } 
+
+        if(safetyLevel >= 1) {
+            //const newFen = fen.replace(` ${botColor} `, ` ${opponentColor} `);
+            newGame.load(fen);
+            newGame.remove(this.getMoveOrigin(move));
+    
+            if(newGame.isAttacked(this.getMoveDestination(move), botColor)) {
+                safetyLevel = 2;
+                //console.log(`La case ${this.getMoveDestination(move)} est défendue par des pions/pièces alliées`);
+            }
+        }
+    
+        if(safetyLevel >= 2) {
+            newGame.load(fen);
+    
+            if(!newGame.isAttacked(this.getMoveDestination(move), opponentColor)) {
+                safetyLevel = 3;
+                //console.log(`La case ${this.getMoveDestination(move)} n'est pas défendue par des pions/pièces adverses`);
+            }
+        }
+    
+        //console.log(`La case ${this.getMoveDestination(move)} a une sécurité de niveau: ${safetyLevel}`);
+    
+        return safetyLevel;
+    }
+
+    getSafeMovesOnly(movesList: string[], fen: string, securityLvl: number, botColor: Color) {
+        let safePossibleMoves: string[] = [];
+        //const opponentColor = game.turn() === 'w' ? 'b' : 'w';
+        /* let newGame = new Chess();
+
+        newGame.load(fen);
+
+        newGame.moves({verbose: true}).forEach(ngMove => {
+          this.getCaseSafetyLevel(fen, ngMove.lan, botColor);
+        }) */
+    
+        const isPawn = (move: string) => !move.match(/[QKRNB][a-z]*[1-9]/gm);
+        const isDestinationSafe = (move: string) => {
+            return this.getCaseSafetyLevel(fen, move, botColor) >= securityLvl;
+        }
+        
+        safePossibleMoves = movesList.filter(pMove => isPawn(pMove) || isDestinationSafe(this.convertMoveSanToLan(fen, pMove)));
+        if(safePossibleMoves.length < 1) safePossibleMoves = movesList;
+    
+        console.log(safePossibleMoves);
+    
+        return safePossibleMoves;
+    }
+
     getCaseIndex(myCase: Square, boardOrientation: Color): number {
         const fileValue = myCase.charCodeAt(0) - 'a'.charCodeAt(0);
         const rankValue = eval(myCase.charAt(1))-1;

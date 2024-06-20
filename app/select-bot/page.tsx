@@ -100,6 +100,9 @@ const SelectBot = () => {
             <div onClick={() => setBehaviour('random-player')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: behaviour === 'random-player' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Random Player</span>
             </div>
+            <div onClick={() => setBehaviour('semi-random')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: behaviour === 'semi-random' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <span className=' w-full h-full flex justify-center items-center text-2xl font-bold text-center' >Semi Random</span>
+            </div>
         </div>
 
     const openingBotsComponent = 
