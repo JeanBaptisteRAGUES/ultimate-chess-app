@@ -213,6 +213,17 @@ function getSafeMovesOnly(movesList: string[], game: Chess) {
     return safePossibleMoves;
 }
 
+/*
+    0-250 -> securityLvl = 0
+    250-600 -> securityLvl = 1
+    600-1295 -> securityLvl = 2
+    1295- 2400 -> securityLvl = 3
+*/
+//TODO: securityLvl = 0 -> joue n'importe quel coup
+//TODO: securityLvl = 1 -> ne joue pas une pièce sur une case défendue par un pion
+//TODO: securityLvl = 2 -> ne joue pas une pièce sur une case défendue par une pièce/pion et pas défendue par son camp
+//TODO: securityLvl = 3 -> ne joue pas une pièce sur une case défendue par une pièce/pion
+//TODO: securityLvl = 3 -> ne joue pas une pièce ou un pion sur une case défendue
 function makeRandomMove(filterLevel: number, safeMoves: boolean, game: Chess): Move {
     //if(checkGameOver()) return;
     console.log('Make Random Move');
@@ -250,8 +261,15 @@ function initDefaultBotParams(elo: number, timeControl: string): DefaultBotParam
     let skillValueMax = 20;
     let depth = 5;
     let filterLevel = 0; // Empèche de jouer certaines pièces lors d'un coup aléatoire
-    let securityLvl = 0; // 0: Pas de sécurité, 1: Réagit dernier coup adversaire, 2: Coup aléatoire -> case non défendue
     let eloRange = [1200, 1800];
+
+    /*
+        0-250 -> securityLvl = 0
+        250-600 -> securityLvl = 1
+        600-1295 -> securityLvl = 2
+        1295- 2400 -> securityLvl = 3
+    */
+    const securityLvl = Math.round(Math.max(0, Math.pow(elo, 1/4) - 3.5));
 
     // Empeche d'avoir un deuxième coup aléatoire avant le Xème coup
     let randMoveInterval = 5;
@@ -272,7 +290,6 @@ function initDefaultBotParams(elo: number, timeControl: string): DefaultBotParam
             // ~900 Elo (Bot chess.com) 
             randMoveInterval = 1; 
             filterLevel = 0;
-            securityLvl = 0;
             skillValueMin = 0;
             skillValueMax = 2;
             eloRange = [100, 699];
@@ -283,7 +300,6 @@ function initDefaultBotParams(elo: number, timeControl: string): DefaultBotParam
             // ~1400 bot chess.com
             randMoveInterval = 3;
             filterLevel = 1;
-            securityLvl = 0;
             skillValueMin = 0;
             skillValueMax = 4;
             eloRange = [700, 1199];
@@ -293,8 +309,7 @@ function initDefaultBotParams(elo: number, timeControl: string): DefaultBotParam
         case 'Intermediate':
             // 1700~1800 bot chess.comm
             randMoveInterval = 5;
-            filterLevel = 2;
-            securityLvl = 1; 
+            filterLevel = 2; 
             skillValueMin = 2;
             skillValueMax = 8;
             eloRange = [1200, 1799]; 
@@ -305,7 +320,6 @@ function initDefaultBotParams(elo: number, timeControl: string): DefaultBotParam
             // ~2000 bot chess.com
             randMoveInterval = 10;
             filterLevel = 3;
-            securityLvl = 2;
             skillValueMin = 6;
             skillValueMax = 14;
             eloRange = [1800, 2199];
@@ -316,7 +330,6 @@ function initDefaultBotParams(elo: number, timeControl: string): DefaultBotParam
             // ???
             randMoveInterval = 15;
             filterLevel = 4;
-            securityLvl = 2;
             skillValueMin = 12;
             skillValueMax = 20;
             eloRange = [2200, 3199];
@@ -327,7 +340,6 @@ function initDefaultBotParams(elo: number, timeControl: string): DefaultBotParam
             randMoveChance = 0;
             randMoveInterval = 0;
             filterLevel = 0;
-            securityLvl = 0;
             skillValueMin = 20;
             skillValueMax = 20;
             eloRange = [3200, 3200];
@@ -476,11 +488,10 @@ class BotsAI {
         const history = JSON.parse(JSON.stringify(game.history({verbose: true})));
         const lastMove = history.pop();
         const gameTest = new Chess();
-        const securityLvl = Math.round(Math.max(0, Math.pow(this.#defaultBotParams.elo, 1/4) - 3.5));
 
         //console.log('Security Level: ' + securityLvl);
     
-        if(securityLvl === 0 || lastMove === null || lastMove === undefined) return {
+        if(this.#defaultBotParams.securityLvl === 0 || lastMove === null || lastMove === undefined) return {
             danger: false,
             dangerCases: []
         };
@@ -508,7 +519,7 @@ class BotsAI {
                 const dangerValue = this.#toolbox.getExchangeValue(gameTest.fen(), pieceMove.lan);
                 console.log(`Danger: ${pieceMove.san} -> ${dangerValue}`);
 
-                if(securityLvl >= 2 && dangerValue > 0){
+                if(this.#defaultBotParams.securityLvl >= 2 && dangerValue > 0){
                     dangerCases.push({
                         dangerCase: attackedCase,
                         dangerValue: dangerValue
@@ -1271,6 +1282,64 @@ class BotsAI {
         return move;
     }
 
+    #queenPlayerOpenings(game: Chess): Move {
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+
+        const formatedPGN = game.pgn().replaceAll(/\.\s/g, '.');
+
+        if(game.history().length === 0) {
+            move.notation = 'e2e4';
+            move.type = 2;
+            return move;
+        }
+
+        if(game.history().length === 1) {
+            if(formatedPGN === '1.e4') {
+                move.notation = 'e7e5';
+                move.type = 2;
+                return move;
+            }
+            move.notation = 'e7e6';
+            move.type = 2;
+            return move;
+        }
+
+        if(game.history().length === 2) {
+            if(formatedPGN === '1.e4 g6' || formatedPGN === '1.e4 Nf6') {
+                move.notation = 'd1f3';
+                move.type = 2;
+                return move;
+            }
+            move.notation = 'd1h5';
+            move.type = 2;
+            return move;
+        }
+
+        if(game.history().length === 3) {
+            move.notation = 'd8f6';
+            move.type = 2;
+            return move;
+        }
+
+        if(game.history().length === 4) {
+            if(formatedPGN === '1.e4 e5 2.Qh5 g6' || formatedPGN === '1.e4 e5 2.Qh5 Nf6') {
+                move.notation = 'h5e5';
+                move.type = 2;
+                return move;
+            }
+            if(formatedPGN === '1.e4 e5 2.Qh5 Nc6') {
+                move.notation = 'f1c4';
+                move.type = 2;
+                return move;
+            }
+        }
+
+        return move;
+    }
+
     async #queenPlayerLogic(game: Chess): Promise<Move> {
         let move: Move = {
             notation: '',
@@ -1279,6 +1348,11 @@ class BotsAI {
 
         if(game.history().length > 20) {
             return move;
+        }
+
+        let openingMove = this.#queenPlayerOpenings(game);
+        if(openingMove.type >= 0) {
+            return openingMove;
         }
 
         const pawnsCases: Square[] = ['c3', 'c4', 'c5', 'c6', 'e3', 'e4', 'e6', 'e5'];
