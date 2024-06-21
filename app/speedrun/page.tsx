@@ -17,6 +17,14 @@ import { FaFontAwesomeFlag } from "react-icons/fa";
 import { FaRotate } from "react-icons/fa6";
 import { fetchChessDotComDB, safeFetchPlayerLichessDB } from "../libs/fetchLichess";
 
+type GameInfos = {
+  title: string,
+  pgn: string,
+  result: string,
+  currentElo: number,
+  eloGain: number,
+}
+
 
 const SpeedrunPage = () => {
     const searchParams = useSearchParams();
@@ -49,9 +57,9 @@ const SpeedrunPage = () => {
     const [isVirtualMode, setIsVirtualMode] = useState(false);
     const [engineEval, setEngineEval] = useState('0.3');
     const [showEval, setShowEval] = useState(true);
-    const scoreHistory = useRef(new Array());
+    const gamesHistory = useRef<GameInfos[]>(new Array());
     const movesTypeRef = useRef(new Array()); // -1: erreur, 0(blanc): joueur, 1(jaune): lichess, 2(vert clair): stockfish, 3(vert foncé): stockfish forcé, 4(rouge): random, 5(rose): human
-    const [showGameoverWindow, setShowGameoverWindow] = useState(false);
+    const [showGameoverWindow, setShowGameoverWindow] = useState(0); // 0: Rien, 1: Adversaire suivant, 2: Bilan Speedrun
     const [winner, setWinner] = useState(''); // 'w' -> blancs gagnent, 'b' -> noirs gagnent, 'd' -> draw
     const whiteTimeControl = useRef({
       startingTime: 600,
@@ -297,7 +305,7 @@ const SpeedrunPage = () => {
         botAI.current?.new(newBotBehaviour, newBotElo, newBotColor, timeControl);
         gameActive.current = false;
         movesTypeRef.current = [];
-        setShowGameoverWindow(false);
+        setShowGameoverWindow(0);
         setWinner('');
         setPlayerColor(newPlayerColor as Color);
         setBotBehaviour(newBotBehaviour);
@@ -324,6 +332,11 @@ const SpeedrunPage = () => {
         });
     }
 
+    function stopSpeedrun() {
+      //console.log('Stop Speedrun (TODO:)');
+      setShowGameoverWindow(2);
+    }
+
     function gameOver(winner: string) {
       console.log('Game Over !');
       console.log(game.pgn());
@@ -339,8 +352,22 @@ const SpeedrunPage = () => {
         case 'd':
           setEngineEval('1/2 - 1/2');
           if(playerElo >= (botAI.current?.getElo() || botElo)){
+            gamesHistory.current.push({
+              title: playerColor === 'w' ? `Joueur VS ${botAI.current?.getUsername()}` : `${botAI.current?.getUsername()} VS Joueur`,
+              pgn: game.pgn(),
+              result: '1/2 - 1/2',
+              currentElo: playerElo,
+              eloGain: eloStep/2,
+            });
             newPlayerElo+= eloStep/2;
           }else{
+            gamesHistory.current.push({
+              title: playerColor === 'w' ? `Joueur VS ${botAI.current?.getUsername()}` : `${botAI.current?.getUsername()} VS Joueur`,
+              pgn: game.pgn(),
+              result: '1/2 - 1/2',
+              currentElo: playerElo,
+              eloGain: -eloStep/2,
+            });
             newPlayerElo-= eloStep/2;
           }
           setPlayerElo(Math.max(0, newPlayerElo));
@@ -348,8 +375,22 @@ const SpeedrunPage = () => {
         case 'w':
           setEngineEval('1 - 0');
           if(playerColor === 'w'){
+            gamesHistory.current.push({
+              title: `Joueur VS ${botAI.current?.getUsername()}`,
+              pgn: game.pgn(),
+              result: '1 - 0',
+              currentElo: playerElo,
+              eloGain: eloStep,
+            });
             newPlayerElo+= eloStep;
           }else{
+            gamesHistory.current.push({
+              title: `${botAI.current?.getUsername()} VS Joueur`,
+              pgn: game.pgn(),
+              result: '1 - 0',
+              currentElo: playerElo,
+              eloGain: -eloStep,
+            });
             newPlayerElo-= eloStep;
           }
           setPlayerElo(Math.max(0, newPlayerElo));
@@ -357,8 +398,22 @@ const SpeedrunPage = () => {
         case 'b':
           setEngineEval('0 - 1');
           if(playerColor === 'b'){
+            gamesHistory.current.push({
+              title: `${botAI.current?.getUsername()} VS Joueur`,
+              pgn: game.pgn(),
+              result: '0 - 1',
+              currentElo: playerElo,
+              eloGain: eloStep,
+            });
             newPlayerElo+= eloStep;
           }else{
+            gamesHistory.current.push({
+              title: `Joueur VS ${botAI.current?.getUsername()}`,
+              pgn: game.pgn(),
+              result: '0 - 1',
+              currentElo: playerElo,
+              eloGain: -eloStep,
+            });
             newPlayerElo-= eloStep;
           }
           setPlayerElo(Math.max(0, newPlayerElo));
@@ -367,7 +422,11 @@ const SpeedrunPage = () => {
           break;
       }
       
-      setShowGameoverWindow(true);
+      if(newPlayerElo >= eloMax) {
+        setShowGameoverWindow(2);
+      }else{
+        setShowGameoverWindow(1);
+      }
     }
     
     function checkGameOver() {
@@ -600,21 +659,14 @@ const SpeedrunPage = () => {
       console.log(stockfishBestMoves);
     }
 
-    const analysisMenu =
+    const speedrunMenu_1 =
       <div className=" flex flex-col justify-center items-center gap-5">
-        <Link
+        <div
           className=" m-4 p-1 bg-fuchsia-600 text-white border rounded cursor-pointer"
-          onClick={() => clearEngines()}
-          href = {{
-            pathname: '/game-analysis',
-            query: {
-              pgn: game.pgn(),
-              depth: 12
-            }
-          }}
+          onClick={() => stopSpeedrun()}
         >
-          Analyse rapide
-        </Link>
+          Arrêter le speedrun
+        </div>
         <div
           className=" m-4 p-1 bg-fuchsia-600 text-white border rounded cursor-pointer"
           onClick={() => resetGame()}
@@ -623,7 +675,35 @@ const SpeedrunPage = () => {
         </div>
       </div>
 
-    const gameOverWindow = showGameoverWindow ? 
+    const speedrunMenu_2 =
+      <div className=" flex flex-col justify-start items-start gap-5">
+        <div className=" flex flex-col justify-start items-start gap-5">
+          {
+            gamesHistory.current.map(gameInfos => {
+              return <div key={gameInfos.title + gameInfos.pgn} className="flex flex-col justify-start items-start">
+                <span className=" text-lg font-semibold" >{gameInfos.title}</span>
+                <span>{gameInfos.pgn.slice(0, 50)}...   {gameInfos.result}</span>
+                <span>({gameInfos.currentElo} {gameInfos.eloGain >= 0 ? <span className=" text-green-600" >+{gameInfos.eloGain}</span> : <span className=" text-red-600" >-{gameInfos.eloGain}</span>})</span>
+                <Link
+                  className=" p-1 bg-fuchsia-600 text-white border rounded cursor-pointer"
+                  onClick={() => clearEngines()}
+                  href = {{
+                    pathname: '/game-analysis',
+                    query: {
+                      pgn: gameInfos.pgn,
+                      depth: 12
+                    }
+                  }}
+                >
+                  Analyse rapide
+                </Link>
+              </div>
+            })
+          }
+        </div>
+      </div>
+
+    const gameOverWindow_1 = showGameoverWindow === 1 ? 
       <div className=" flex justify-center items-center w-full h-full absolute top-0 left-0" >
         <div className=" flex flex-col justify-start items-center w-3/4 h-2/3 md:w-1/2 md:h-1/2 bg-gray-200 rounded" >
           <div className=" relative flex justify-center items-center w-full h-1/4 bg-fuchsia-600 text-white rounded-t" >
@@ -638,12 +718,39 @@ const SpeedrunPage = () => {
                 )
               }
             </h1>
-            <button className=" text-white font-extrabold absolute top-5 left-5" onClick={() => setShowGameoverWindow(false)}>
+            <button className=" text-white font-extrabold absolute top-5 left-5" onClick={() => setShowGameoverWindow(0)}>
               X
             </button>
           </div>
           <div className="flex justify-center items-center h-full w-full">
-            {analysisMenu}
+            {speedrunMenu_1}
+          </div>
+        </div>
+      </div>
+      :
+      null
+
+    const gameOverWindow_2 = showGameoverWindow === 2 ? 
+      <div className=" flex justify-center items-center w-full h-full absolute top-0 left-0" >
+        <div className=" flex flex-col justify-start items-center w-3/4 h-2/3 md:w-1/2 md:h-1/2 bg-gray-200 rounded" >
+          <div className=" relative flex justify-center items-center w-full h-1/4 bg-fuchsia-600 text-white rounded-t" >
+            <h1 className=" text-white font-bold flex justify-center items-center">
+              {
+                winner === 'w' ? 'Les blancs gagnent la partie !'
+                :
+                (
+                  winner === 'b' ? 'Les noirs gagnent la partie !'
+                  :
+                  'Match nul'
+                )
+              }
+            </h1>
+            <button className=" text-white font-extrabold absolute top-5 left-5" onClick={() => setShowGameoverWindow(0)}>
+              X
+            </button>
+          </div>
+          <div className="flex flex-col justify-start items-center h-full w-full p-2 overflow-y-auto">
+            {speedrunMenu_2}
           </div>
         </div>
       </div>
@@ -764,7 +871,8 @@ const SpeedrunPage = () => {
       <div className="flex flex-col md:flex-row justify-start md:justify-stretch items-center md:items-start bg-cyan-900 h-[95vh] w-full overflow-auto" >
           {pgnComponentDesktop}
           {gameContainer}
-          {gameOverWindow}
+          {gameOverWindow_1}
+          {gameOverWindow_2}
           {pgnComponentSmartphone}
       </div>
     )

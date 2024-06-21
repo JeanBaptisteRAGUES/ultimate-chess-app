@@ -4744,6 +4744,7 @@ class BotsAI {
         this.#botColor = newColor;
         this.#botLevel = getLevelFromElo(newElo);
         this.#behaviour = newBehaviour;
+        this.#username = generateUsername();
         this.#engine.init();
         this.#defaultBotParams = initDefaultBotParams(newElo, timeControl);
     }
