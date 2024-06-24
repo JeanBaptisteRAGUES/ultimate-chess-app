@@ -16,6 +16,7 @@ import { FaCirclePlay } from "react-icons/fa6";
 import { FaFontAwesomeFlag } from "react-icons/fa";
 import { FaRotate } from "react-icons/fa6";
 import { fetchChessDotComDB, safeFetchPlayerLichessDB } from "../libs/fetchLichess";
+import SpeedrunClock from "../components/SpeedrunClock";
 
 type GameInfos = {
   title: string,
@@ -857,7 +858,7 @@ const SpeedrunPage = () => {
 
     const gameComponent = 
       <div className="flex flex-col justify-start items-center h-full">
-        {titleComponent}
+        <SpeedrunClock gameActive={gameActive.current}/>
         {boardComponent}
         {buttonsComponent}
       </div>
