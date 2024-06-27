@@ -5,10 +5,12 @@ import React, { useEffect, useRef, useState } from 'react'
 //TODO: gameActive == gameStarted ?
 interface SpeedrunClockProps {
     gameActive: boolean,
+    setSpeedrunTime: (timestamp: string) => void,
 }
 
 const SpeedrunClock: React.FC<SpeedrunClockProps> = ({
-    gameActive
+    gameActive,
+    setSpeedrunTime
 }) => {
     const timeControlRef = useRef({
       startingTime: 0,
@@ -73,7 +75,10 @@ const SpeedrunClock: React.FC<SpeedrunClockProps> = ({
   
     useEffect(() => {
         //console.log('Check game started');
-        if(!gameActive) return;
+        if(!gameActive) {
+            setSpeedrunTime(timestamp);
+            return ;
+        }
         //console.log("Set Interval !");
         
         const interval = setInterval(() => updateTimers(), 1000);

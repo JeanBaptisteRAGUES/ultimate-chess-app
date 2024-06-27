@@ -62,6 +62,7 @@ const SpeedrunPage = () => {
     const movesTypeRef = useRef(new Array()); // -1: erreur, 0(blanc): joueur, 1(jaune): lichess, 2(vert clair): stockfish, 3(vert foncé): stockfish forcé, 4(rouge): random, 5(rose): human
     const [showGameoverWindow, setShowGameoverWindow] = useState(0); // 0: Rien, 1: Adversaire suivant, 2: Bilan Speedrun
     const [winner, setWinner] = useState(''); // 'w' -> blancs gagnent, 'b' -> noirs gagnent, 'd' -> draw
+    const [speedrunTime, setSpeedrunTime] = useState('00:00:00');
     const whiteTimeControl = useRef({
       startingTime: 600,
       increment: 0,
@@ -678,6 +679,7 @@ const SpeedrunPage = () => {
 
     const speedrunMenu_2 =
       <div className=" flex flex-col justify-start items-start gap-5">
+        <div className=" flex flex-col justify-start items-center text-3xl font-bold w-full">{speedrunTime}</div>
         <div className=" flex flex-col justify-start items-start gap-5">
           {
             gamesHistory.current.map(gameInfos => {
@@ -696,7 +698,7 @@ const SpeedrunPage = () => {
                     }
                   }}
                 >
-                  Analyse rapide
+                  Analyser
                 </Link>
               </div>
             })
@@ -858,7 +860,7 @@ const SpeedrunPage = () => {
 
     const gameComponent = 
       <div className="flex flex-col justify-start items-center h-full">
-        <SpeedrunClock gameActive={gameActive.current}/>
+        <SpeedrunClock gameActive={gameActive.current} setSpeedrunTime={setSpeedrunTime}/>
         {boardComponent}
         {buttonsComponent}
       </div>
