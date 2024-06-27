@@ -294,7 +294,7 @@ class GameToolBox {
         safePossibleMoves = movesList.filter(pMove => isPawn(pMove) || isDestinationSafe(this.convertMoveSanToLan(fen, pMove)));
         if(safePossibleMoves.length < 1) safePossibleMoves = movesList;
     
-        console.log(safePossibleMoves);
+        //console.log(safePossibleMoves);
     
         return safePossibleMoves;
     }

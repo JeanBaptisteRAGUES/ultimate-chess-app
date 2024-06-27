@@ -496,7 +496,7 @@ class BotsAI {
             }
         });
     
-        console.log(`Is last move \x1B[34m(${lastMove.san})\x1B[0m dangerous: \x1B[31m` + danger);
+        //console.log(`Is last move \x1B[34m(${lastMove.san})\x1B[0m dangerous: \x1B[31m` + danger);
 
         const ignoreDanger = Math.max(1, 50 - Math.pow(this.#defaultBotParams.elo, 1/1.8));
 
@@ -566,6 +566,10 @@ class BotsAI {
             }
         });
 
+        if(move.type > 0) {
+            console.log('Le bot est forcé de capturer en ' + this.#toolbox.getMoveDestination(move.notation));
+        }
+
         return move;
     }
 
@@ -603,7 +607,7 @@ class BotsAI {
                 let badReactionBonus = 0;
 
                 if(rand <= badReactionChance){
-                    badReactionBonus = 5;
+                    badReactionBonus = Math.round(12 - Math.pow(this.#defaultBotParams.elo, 1/3));
                     humanReaction = true;
                 }
                 //console.log(`badReactionChanceBase: ${badReactionChanceBase}, badReactionChance: ${badReactionChance}, rand: ${rand}, badReactionBonus: ${badReactionBonus}`);
@@ -627,6 +631,10 @@ class BotsAI {
         //Si humanReaction === false, type = -1 donc le coup n'est pas joué
         if(humanReaction) stockfishMove.type = 5;
 
+        if(stockfishMove.type >= 0) {
+            console.log('Le bot réagit mal à la menace et doit bouger sa pièce en ' + this.#toolbox.getMoveDestination(stockfishMove.notation))
+        }
+
         return stockfishMove
     }
 
@@ -643,6 +651,7 @@ class BotsAI {
           ]).get(this.#botLevel) || 10; */
         const forgotPieceChance = Math.max(1, (Math.round(55 - Math.sqrt(this.#defaultBotParams.elo))));
         let hasForgotten = false;
+        let thingsForgotten = '';
 
         game.board().forEach((rank) => {
             rank.forEach((boardCase) => {
@@ -655,19 +664,22 @@ class BotsAI {
                     //console.log(`Inactivité de la pièce en ${boardCase.square}: ${pieceInactivity} (mult: ${inactivityBonusMult})`);
 
                     if(boardCase?.type === 'b' && rand <= forgotPieceChanceFinal) {
-                        console.log('Oublie le fou en ' + boardCase.square);
+                        //console.log('Oublie le fou en ' + boardCase.square);
+                        thingsForgotten+= ` le fou en ${boardCase.square}`;
                         hasForgotten = true;
                         newGame.put({ type: 'p', color: opponentColor }, boardCase.square)
                     }
                     
                     if(boardCase?.type === 'q' && rand <= forgotPieceChance) {
-                        console.log('Oublie les déplacements en diagonale de la dame en ' + boardCase.square);
+                        //console.log('Oublie les déplacements en diagonale de la dame en ' + boardCase.square);
+                        thingsForgotten+= ` les déplacements en diagonale de la dame en ${boardCase.square}`;
                         hasForgotten = true;
                         newGame.put({ type: 'r', color: opponentColor }, boardCase.square)
                     }
 
                     if(boardCase?.type === 'q' && rand <= forgotPieceChanceFinal) {
-                        console.log('Oublie la dame en ' + boardCase.square);
+                        //console.log('Oublie la dame en ' + boardCase.square);
+                        thingsForgotten+= ` la dame en ${boardCase.square}`;
                         hasForgotten = true;
                         newGame.put({ type: 'p', color: opponentColor }, boardCase.square)
                     }
@@ -683,6 +695,10 @@ class BotsAI {
         
         if(hasForgotten) stockfishMove.type = 5;
         if(!this.#toolbox.isMoveValid(game.fen(), stockfishMove.notation)) stockfishMove.type = -1;
+
+        if(stockfishMove.type >= 0) {
+            console.log(`Le bot ${this.#username} oublie:${thingsForgotten}`);
+        }
 
         return stockfishMove;
     }
@@ -703,17 +719,21 @@ class BotsAI {
         }
 
         try {
-            console.log(`${this.#username} ignore le dernier coup de l'adversaire !`);
+            //console.log(`${this.#username} ignore le dernier coup de l'adversaire !`);
             gameTest.load(fenBeforeOpponentMove);
     
             const stockfishMove = await makeStockfishMove(this.#defaultBotParams, gameTest, this.#engine);
             
             if(!this.#toolbox.isMoveValid(game.fen(), stockfishMove.notation)) {
-                console.log(`Le coup ${stockfishMove.notation} n'est pas jouable dans la position actuelle !`);
+                //console.log(`Le coup ${stockfishMove.notation} n'est pas jouable dans la position actuelle !`);
                 moveType = -1;
             } 
     
             stockfishMove.type = moveType;
+
+            if(stockfishMove.type >= 0) {
+                console.log(`Le bot ${this.#username} ignore le dernier coup de l'adversaire`);
+            }
     
             return stockfishMove; 
         } catch (error) {
@@ -854,7 +874,7 @@ class BotsAI {
                 //console.log(`${this.#botColor} make Lichess move`);
                 return lichessMove;
             } 
-            console.log('No more moves in the Lichess Database for ' + this.#botColor);
+            //console.log('No more moves in the Lichess Database for ' + this.#botColor);
         }
         console.log('human logic: 1');
 
@@ -869,23 +889,25 @@ class BotsAI {
 
         //this.#engine.stop();
         //const stockfishBestMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), this.#defaultBotParams.depth, this.#defaultBotParams.skillValue, 3, false);
-        const stockfishBestMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, 20, 3, false);
+        //const stockfishBestMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, 20, 3, false);
         //console.log(game.fen());
         //console.log(stockfishBestMoves);
-        console.log(`Sans erreurs humaines, les 3 meilleurs coups de Stockfish sont: ${stockfishBestMoves[0]?.bestMove}, ${stockfishBestMoves[1]?.bestMove}, ${stockfishBestMoves[2]?.bestMove}`);
+        //console.log(`Sans erreurs humaines, les 3 meilleurs coups de Stockfish sont: ${stockfishBestMoves[0]?.bestMove}, ${stockfishBestMoves[1]?.bestMove}, ${stockfishBestMoves[2]?.bestMove}`);
         //console.log(newGame.ascii());
-        
-        const forcedExchangeMove = this.#makeForcedExchange(game);
-
-        if(forcedExchangeMove.type >= 0){
-            this.#lastRandomMove = this.#lastRandomMove-1;
-            return forcedExchangeMove;
-        }
-        console.log('human logic: 3');
         
         const {danger, dangerCases} = this.#isLastMoveDangerous(game);
 
         //console.log("Le dernier coup est dangereux: " + danger);
+
+        if(!danger) {
+            const forcedExchangeMove = this.#makeForcedExchange(game);
+
+            if(forcedExchangeMove.type >= 0){
+                this.#lastRandomMove = this.#lastRandomMove-1;
+                return forcedExchangeMove;
+            }
+        }
+        console.log('human logic: 3');
     
         if(danger) {
             const reactingThreatMove = await this.#makeHumanThreatReaction(game, dangerCases);
