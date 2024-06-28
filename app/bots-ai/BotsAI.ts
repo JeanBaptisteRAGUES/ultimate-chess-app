@@ -862,8 +862,7 @@ class BotsAI {
 
     // TODO: isLastMoveDangerous ? Si oui -> plus le bot est faible, plus il aura envie de bouger la pièce
     async #humanMoveLogic(game: Chess, useDatabase: Boolean, useRandom: Boolean): Promise<Move> {
-        console.countReset();
-        console.log('human logic: 0');
+        //console.log('human logic: 0');
         if(useDatabase) {
             //const movesList = this.#toolbox.convertHistorySanToLan(this.#toolbox.convertPgnToHistory(game.pgn()));
             const startingFen = game.history().length > 0 ? game.history({verbose: true})[0].before : DEFAULT_POSITION;
@@ -884,7 +883,7 @@ class BotsAI {
             const checkmateMove = await this.#makeForcedCheckmate(game);
             return checkmateMove;
         }
-        console.log('human logic: 2');
+        //console.log('human logic: 2');
 
 
         //this.#engine.stop();
@@ -907,14 +906,14 @@ class BotsAI {
                 return forcedExchangeMove;
             }
         }
-        console.log('human logic: 3');
+        //console.log('human logic: 3');
     
         if(danger) {
             const reactingThreatMove = await this.#makeHumanThreatReaction(game, dangerCases);
             if(reactingThreatMove.type >= 0 ){
                 return reactingThreatMove;
             }
-            console.log('human logic: 4');
+            //console.log('human logic: 4');
 
             const tunelVisionMove = await this.#makeTunelVisionMove(game);
 
@@ -923,15 +922,15 @@ class BotsAI {
                 this.#lastRandomMove = this.#lastRandomMove-1;
                 return tunelVisionMove;
             }
-            console.log('human logic: 5');
+            //console.log('human logic: 5');
         }
-        console.log('human logic: 6');
+        //console.log('human logic: 6');
 
         if(useRandom && isRandomMovePlayable(this.#defaultBotParams, this.#botLevel, this.#lastRandomMove)) {
             this.#lastRandomMove = this.#defaultBotParams.randMoveInterval;
             return this.#makeRandomMove(this.#defaultBotParams.filterLevel, this.#defaultBotParams.securityLvl, game, this.#botColor);
         }
-        console.log('human logic: 7');
+        //console.log('human logic: 7');
 
         const noOpponentMove = await this.#ignoreOpponentMove(game);
 
@@ -939,21 +938,21 @@ class BotsAI {
             this.#lastRandomMove = this.#lastRandomMove-1;
             return noOpponentMove;
         }
-        console.log('human logic: 8');
+        //console.log('human logic: 8');
 
         // TODO: Faire en sorte que les débutant favorisent les coups vers l'avant et les échecs
         const tunelVisionMove = await this.#makeTunelVisionMove(game);
 
         if(tunelVisionMove.type > 0) {
-            console.log(`Human move (${tunelVisionMove.type}): ${this.#toolbox.convertMoveLanToSan(game.fen(), tunelVisionMove.notation)}`);
+            //console.log(`Human move (${tunelVisionMove.type}): ${this.#toolbox.convertMoveLanToSan(game.fen(), tunelVisionMove.notation)}`);
             this.#lastRandomMove = this.#lastRandomMove-1;
             return tunelVisionMove;
         } 
-        console.log('human logic: 9');
+        //console.log('human logic: 9');
 
         const stockfishMove = await makeStockfishMove(this.#defaultBotParams, game, this.#engine);
         this.#lastRandomMove = this.#lastRandomMove-1;
-        console.log('human logic: 10');
+        //console.log('human logic: 10');
         console.log(stockfishMove);
 
         return stockfishMove;

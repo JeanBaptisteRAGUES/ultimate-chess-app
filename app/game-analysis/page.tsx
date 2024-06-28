@@ -7,7 +7,7 @@ import GameToolBox from "../game-toolbox/GameToolbox";
 import { AnalysisChart } from "../components/AnalysisChart";
 import { Chess, Color, DEFAULT_POSITION, Move } from "chess.js";
 import { Chessboard } from "react-chessboard";
-import { Piece, Square } from "react-chessboard/dist/chessboard/types";
+import { Arrow, Piece, Square } from "react-chessboard/dist/chessboard/types";
 import EvalAndWinrate from "../components/EvalAndWinrate";
 import { useSearchParams } from "next/navigation";
 import { FaRegCopy } from "react-icons/fa6";
@@ -62,6 +62,7 @@ const GameAnalysisPage = () => {
     const blunderIndexRef = useRef(-1);
     const startCaseRef = useRef<Element | null>(null);
     const endCaseRef = useRef<Element | null>(null);
+    const [customArrows, setCustomArrows] = useState<Arrow[]>([]);
     const [whiteMaterialAdvantage, setWhiteMaterialAdvantage] = useState({
         pawn: 0,
         knight: 0,
@@ -255,6 +256,9 @@ const GameAnalysisPage = () => {
         console.log(move.replaceAll(/\d*\./g, ''));
         // Setup board position
         const newGame = new Chess();
+        const bestMoveLan = formatedResults[moveIndex] ? toolbox.convertMoveSanToLan(gameHistory.current[moveIndex]?.before || DEFAULT_POSITION, formatedResults[moveIndex]?.bestMove) : '';
+        const bestMoveOrigin = bestMoveLan !== '' ? toolbox.getMoveOrigin(bestMoveLan) : '';
+        const bestMoveDestination = bestMoveLan !== '' ?  toolbox.getMoveDestination(bestMoveLan) : '';
         //newGame.load(gameHistory.current[moveIndex].after);
         newGame.load(gameHistory.current[moveIndex].before);
         newGame.move(move.replaceAll(/\d*\./g, ''));
@@ -270,11 +274,12 @@ const GameAnalysisPage = () => {
         const newEvalMovesList: string[] = JSON.parse(JSON.stringify(newMovesList));
         //newEvalMovesList.push(lastMove);
         setEvalMovesList(newEvalMovesList);
-
+        if(bestMoveOrigin !== '' && bestMoveDestination !== '') setCustomArrows([[bestMoveOrigin, bestMoveDestination]]);
         setCurrentFen(newGame.fen());
         setCurrentIndex(moveIndex);
         setGame(newGame);
         console.log('Changement de position');
+        console.log('Best Move: ' + formatedResults[moveIndex].bestMove);
     }
 
     const showMaterialAdvantage = (piecesColor: Color): string => {
@@ -328,6 +333,9 @@ const GameAnalysisPage = () => {
             return;
         }
         const newGame = new Chess();
+        const bestMoveLan = formatedResults[moveIndex-1] ? toolbox.convertMoveSanToLan(gameHistory.current[moveIndex-1]?.before || DEFAULT_POSITION, formatedResults[moveIndex-1]?.bestMove) : '';
+        const bestMoveOrigin = bestMoveLan !== '' ? toolbox.getMoveOrigin(bestMoveLan) : '';
+        const bestMoveDestination = bestMoveLan !== '' ?  toolbox.getMoveDestination(bestMoveLan) : '';
         newGame.load(gameHistory.current[moveIndex].before);
         toolbox.countMaterial(newGame.board(), setWhiteMaterialAdvantage, setBlackMaterialAdvantage);
 
@@ -341,12 +349,12 @@ const GameAnalysisPage = () => {
         const newEvalMovesList: string[] = JSON.parse(JSON.stringify(newMovesList));
         newEvalMovesList.pop();
         setEvalMovesList(newEvalMovesList);
-
-
+        if(bestMoveOrigin !== '' && bestMoveDestination !== '') setCustomArrows([[bestMoveOrigin, bestMoveDestination]]);
         setCurrentFen(newGame.fen());
         setCurrentIndex(moveIndex-1);
         setGame(newGame);
         console.log('Changement de position');
+        console.log('Best Move: ' + formatedResults[moveIndex].bestMove);
     }
 
     const nextMove = (moveIndex: number) => {
@@ -355,6 +363,9 @@ const GameAnalysisPage = () => {
             return;
         }
         const newGame = new Chess();
+        const bestMoveLan = formatedResults[moveIndex+1] ? toolbox.convertMoveSanToLan(gameHistory.current[moveIndex+1]?.before || DEFAULT_POSITION, formatedResults[moveIndex+1]?.bestMove) : '';
+        const bestMoveOrigin = bestMoveLan !== '' ? toolbox.getMoveOrigin(bestMoveLan) : '';
+        const bestMoveDestination = bestMoveLan !== '' ?  toolbox.getMoveDestination(bestMoveLan) : '';
         newGame.load(gameHistory.current[moveIndex+1].after);
         toolbox.countMaterial(newGame.board(), setWhiteMaterialAdvantage, setBlackMaterialAdvantage);
 
@@ -369,11 +380,12 @@ const GameAnalysisPage = () => {
         const newEvalMovesList: string[] = JSON.parse(JSON.stringify(newMovesList));
         newEvalMovesList.push(lastMove);
         setEvalMovesList(newEvalMovesList);
-
+        if(bestMoveOrigin !== '' && bestMoveDestination !== '') setCustomArrows([[bestMoveOrigin, bestMoveDestination]]);
         setCurrentFen(newGame.fen());
         setCurrentIndex(moveIndex+1);
         setGame(newGame);
         console.log('Changement de position');
+        console.log('Best Move: ' + formatedResults[moveIndex+1].bestMove);
     }
 
     /* function onDrop(sourceSquare: Square, targetSquare: Square, piece: Piece) {
@@ -553,10 +565,11 @@ const GameAnalysisPage = () => {
                 </div>
             </div>
             <Chessboard 
-            id="PlayVsRandom"
-            position={currentFen}
-            onPieceDrop={onDrop} 
-            boardOrientation={playerColor === 'w' ? 'white' : 'black'}
+                id="PlayVsRandom"
+                position={currentFen}
+                onPieceDrop={onDrop} 
+                boardOrientation={playerColor === 'w' ? 'white' : 'black'}
+                customArrows={customArrows}
             />
             <div className=" relative flex justify-around p-2 w-full h-10 font-medium rounded-b-md bg-slate-100">
                 <div className=" h-full flex justify-start items-center flex-grow-[4]" >
