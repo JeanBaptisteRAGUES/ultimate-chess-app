@@ -2,6 +2,9 @@ onmessage = function (event) {
     if(event.data === "Salut"){
         postMessage("Bonjour !");
     }else {
-        postMessage("Tu pourrais dire bonjour !");
+        // Crée une erreur
+        const tab = [];
+        let test = tab[5].truc;
+        postMessage(tab[5]);
     }
 }
