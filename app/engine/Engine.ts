@@ -134,7 +134,7 @@ class Engine {
     }
 
     
-    findBestMove(fen: string, depth: number, skillValue: number): Promise<string> {
+    /* findBestMove(fen: string, depth: number, skillValue: number): Promise<string> {
         return new Promise((resolve, reject) => {
             try {
                 this.stockfish.postMessage(`position fen ${fen}`);
@@ -156,6 +156,37 @@ class Engine {
             } catch (error) {
                 console.log('findBestMove error: ' + error);
                 resolve('????');
+            }
+            
+        })
+    } */
+
+    // v2
+    findBestMove(fen: string, depth: number, skillValue: number): Promise<string> {
+        return new Promise((resolve, reject) => {
+            this.stockfish.postMessage(`position fen ${fen}`);
+            this.stockfish.postMessage(`setoption name Skill Level value ${skillValue}`);
+            this.stockfish.postMessage(`setoption name MultiPv value 1`);
+            this.stockfish.postMessage(`go depth ${depth}`);
+
+            this.stockfish.onmessage = function(event: any) {
+                //console.log(event.data);
+                if((event.data.match(bestMoveRegex)) !== null){
+                    const newBestMove = event.data.match(bestMoveRegex)[1];
+                    if(newBestMove !== null){
+                        resolve(newBestMove);
+                    } else{
+                        reject(null);
+                    }
+                }
+            }
+
+            this.stockfish.onerror = function(event: ErrorEvent) {
+                //this = new Worker('stockfish.js#stockfish.wasm');
+                event.stopPropagation();
+                event.stopImmediatePropagation();
+                console.log('Crash de Stockfish 16: réinitialisation..');
+                resolve('a9b7'); //TODO: Test à supprimer
             }
             
         })

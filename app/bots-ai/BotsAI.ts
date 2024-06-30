@@ -696,7 +696,7 @@ class BotsAI {
         if(hasForgotten) stockfishMove.type = 5;
         if(!this.#toolbox.isMoveValid(game.fen(), stockfishMove.notation)) stockfishMove.type = -1;
 
-        if(stockfishMove.type >= 0) {
+        if(stockfishMove.type === 5) {
             console.log(`Le bot ${this.#username} oublie:${thingsForgotten}`);
         }
 
