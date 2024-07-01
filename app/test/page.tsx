@@ -3,15 +3,16 @@
 import { useEffect, useRef, useState } from 'react';
 import Engine from '../engine/Engine';
 import GameToolBox from '../game-toolbox/GameToolbox';
+import WorkerClass from '../test-worker-class/WorkerClass';
 
 const TestPage = () => {
     const engine = useRef<Engine>();
     const toolbox = new GameToolBox();
     const [test, setTest] = useState('Test');
-    const monWorker = useRef<Worker>();
+    const monWorker = useRef<WorkerClass>();
 
     useEffect(() => {
-        monWorker.current = new Worker('worker1.js');
+        monWorker.current = new WorkerClass();
     }, []);
     
 
@@ -32,24 +33,9 @@ const TestPage = () => {
 
     const testWorker = () => {
         if(!monWorker.current) return ;
-        let rand = Math.random()*100;
-
-        if(rand < 60){
-            console.log('Post message: Salut');
-            monWorker.current.postMessage('Salut');
-        }else{
-            console.log('Post message: Erreur');
-            monWorker.current.postMessage('Erreur');
-        }
-
-        monWorker.current.onmessage = function (e: any) {
-            console.log(e.data);
-            console.log('Réponse bien reçue !');
-        }
-
-        monWorker.current.onerror = function(e: any) {
-            console.log('Le worker a rencontré un problème');
-        }
+        monWorker.current.testWorker2().then(answer => {
+            console.log(answer);
+        })
     }
 
     const testButton = <button

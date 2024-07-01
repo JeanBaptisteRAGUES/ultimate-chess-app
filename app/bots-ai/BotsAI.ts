@@ -87,7 +87,7 @@ function selectSkillValue(eloIntervals: number[], skillMin: number, elo: number)
         console.log('diff: ' + (chances - rand)); */
         if(rand <= chances && maxDiff < (chances - rand)){
             selectedSkillValue = skillMin + i;
-            console.log('selectedSkillValue: ' + selectedSkillValue);
+            //console.log('selectedSkillValue: ' + selectedSkillValue);
             maxDiff = chances - rand;
         }
     });
@@ -484,7 +484,7 @@ class BotsAI {
             //console.log(squareInfos);
             if(squareInfos && squareInfos?.type !== 'p' && squareInfos?.color === this.#botColor) {
                 const dangerValue = this.#toolbox.getExchangeValue(gameTest.fen(), pieceMove.lan);
-                console.log(`Danger: ${pieceMove.san} -> ${dangerValue}`);
+                //console.log(`Danger: ${pieceMove.san} -> ${dangerValue}`);
 
                 if(this.#defaultBotParams.securityLvl >= 2 && dangerValue > 0){
                     dangerCases.push({
@@ -875,7 +875,7 @@ class BotsAI {
             } 
             //console.log('No more moves in the Lichess Database for ' + this.#botColor);
         }
-        console.log('human logic: 1');
+        //console.log('human logic: 1');
 
         //TODO: Cause un gros problème
         const isNearCheckmateRes = await this.#isNearCheckmate(this.#defaultBotParams.playForcedMate, game) 

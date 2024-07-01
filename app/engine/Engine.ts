@@ -46,19 +46,21 @@ function getBestMoveFromData(data: string) {
     return bestMove;
 }
 
+let stockfish: Worker;
+
 class Engine {
-    stockfish: Worker;
+    //stockfish: Worker;
     toolbox: GameToolBox;
 
     constructor() {
-        this.stockfish = new Worker('stockfish.js#stockfish.wasm');
+        stockfish = new Worker('stockfish.js#stockfish.wasm');
         this.toolbox = new GameToolBox();
     }
 
     init() {
         return new Promise((resolve, reject) => {    
-            this.stockfish.postMessage('uci');
-            this.stockfish.onmessage = function(event: any) {
+            stockfish.postMessage('uci');
+            stockfish.onmessage = function(event: any) {
                 if(event.data === 'uciok'){
                     //console.log('uciok');
                     resolve('uciok');
@@ -72,15 +74,15 @@ class Engine {
      * @param strength 
      */
     setStrength(strength: number) {
-        this.stockfish.postMessage('setoption name UCI_LimitStrength value true');
-        this.stockfish.postMessage(`setoption name UCI_Elo value ${strength}`);
+        stockfish.postMessage('setoption name UCI_LimitStrength value true');
+        stockfish.postMessage(`setoption name UCI_Elo value ${strength}`);
     }
 
     newGame() {
         return new Promise((resolve, reject) => {    
-            this.stockfish.postMessage('ucinewgame');
-            this.stockfish.postMessage('isready');
-            this.stockfish.onmessage = function(event: any) {
+            stockfish.postMessage('ucinewgame');
+            stockfish.postMessage('isready');
+            stockfish.onmessage = function(event: any) {
                 if(event.data === 'readyok'){
                     //console.log('uciok');
                     resolve('readyok');
@@ -90,16 +92,16 @@ class Engine {
     }
 
     stop() {
-        this.stockfish.postMessage('stop');
+        stockfish.postMessage('stop');
     }
 
     quit() {
         console.log('Quit Stockfish 16');
-        this.stockfish.postMessage('quit');
+        stockfish.postMessage('quit');
     }
 
     showWinDrawLose() {
-        this.stockfish.postMessage('setoption name UCI_ShowWDL value true');
+        stockfish.postMessage('setoption name UCI_ShowWDL value true');
     }
 
     /**
@@ -111,10 +113,10 @@ class Engine {
     findLimitedStrengthMove(fen: string, depth: number): Promise<string> {
         return new Promise((resolve, reject) => {
             try {
-                this.stockfish.postMessage(`position fen ${fen}`);
-                this.stockfish.postMessage(`go depth ${depth}`);
+                stockfish.postMessage(`position fen ${fen}`);
+                stockfish.postMessage(`go depth ${depth}`);
 
-                this.stockfish.onmessage = function(event: any) {
+                stockfish.onmessage = function(event: any) {
                     //console.log(event.data);
                     if((event.data.match(bestMoveRegex)) !== null){
                         const newBestMove = event.data.match(bestMoveRegex)[1];
@@ -137,12 +139,12 @@ class Engine {
     /* findBestMove(fen: string, depth: number, skillValue: number): Promise<string> {
         return new Promise((resolve, reject) => {
             try {
-                this.stockfish.postMessage(`position fen ${fen}`);
-                this.stockfish.postMessage(`setoption name Skill Level value ${skillValue}`);
-                this.stockfish.postMessage(`setoption name MultiPv value 1`);
-                this.stockfish.postMessage(`go depth ${depth}`);
+                stockfish.postMessage(`position fen ${fen}`);
+                stockfish.postMessage(`setoption name Skill Level value ${skillValue}`);
+                stockfish.postMessage(`setoption name MultiPv value 1`);
+                stockfish.postMessage(`go depth ${depth}`);
 
-                this.stockfish.onmessage = function(event: any) {
+                stockfish.onmessage = function(event: any) {
                     //console.log(event.data);
                     if((event.data.match(bestMoveRegex)) !== null){
                         const newBestMove = event.data.match(bestMoveRegex)[1];
@@ -164,12 +166,12 @@ class Engine {
     // v2
     findBestMove(fen: string, depth: number, skillValue: number): Promise<string> {
         return new Promise((resolve, reject) => {
-            this.stockfish.postMessage(`position fen ${fen}`);
-            this.stockfish.postMessage(`setoption name Skill Level value ${skillValue}`);
-            this.stockfish.postMessage(`setoption name MultiPv value 1`);
-            this.stockfish.postMessage(`go depth ${depth}`);
+            stockfish.postMessage(`position fen ${fen}`);
+            stockfish.postMessage(`setoption name Skill Level value ${skillValue}`);
+            stockfish.postMessage(`setoption name MultiPv value 1`);
+            stockfish.postMessage(`go depth ${depth}`);
 
-            this.stockfish.onmessage = function(event: any) {
+            stockfish.onmessage = function(event: any) {
                 //console.log(event.data);
                 if((event.data.match(bestMoveRegex)) !== null){
                     const newBestMove = event.data.match(bestMoveRegex)[1];
@@ -181,12 +183,29 @@ class Engine {
                 }
             }
 
-            this.stockfish.onerror = function(event: ErrorEvent) {
+            stockfish.onerror = function(event: ErrorEvent) {
                 //this = new Worker('stockfish.js#stockfish.wasm');
                 event.stopPropagation();
                 event.stopImmediatePropagation();
                 console.log('Crash de Stockfish 16: réinitialisation..');
-                resolve('a9b7'); //TODO: Test à supprimer
+                stockfish = new Worker('stockfish.js#stockfish.wasm');
+
+                stockfish.postMessage(`position fen ${fen}`);
+                stockfish.postMessage(`setoption name Skill Level value ${skillValue}`);
+                stockfish.postMessage(`setoption name MultiPv value 1`);
+                stockfish.postMessage(`go depth ${depth}`);
+
+                stockfish.onmessage = function(event: any) {
+                    //console.log(event.data);
+                    if((event.data.match(bestMoveRegex)) !== null){
+                        const newBestMove = event.data.match(bestMoveRegex)[1];
+                        if(newBestMove !== null){
+                            resolve(newBestMove);
+                        } else{
+                            reject(null);
+                        }
+                    }
+                }
             }
             
         })
@@ -202,13 +221,13 @@ class Engine {
 
         return new Promise((resolve, reject) => {
             try {
-                this.stockfish.postMessage('stop');
-                this.stockfish.postMessage(`position fen ${fen}`);
-                this.stockfish.postMessage(`setoption name Skill Level value ${skillValue}`);
-                this.stockfish.postMessage(`setoption name MultiPv value ${multiPv}`);
-                this.stockfish.postMessage(`go depth ${depth}`);
+                stockfish.postMessage('stop');
+                stockfish.postMessage(`position fen ${fen}`);
+                stockfish.postMessage(`setoption name Skill Level value ${skillValue}`);
+                stockfish.postMessage(`setoption name MultiPv value ${multiPv}`);
+                stockfish.postMessage(`go depth ${depth}`);
 
-                this.stockfish.onmessage = function(event: any) {
+                stockfish.onmessage = function(event: any) {
                     //console.log(event.data);
                     if(event.data.includes(`info depth ${depth} seldepth`)){
                         let evaluationStr: string | null = getEvalFromData(event.data, coeff);
@@ -258,11 +277,11 @@ class Engine {
         return new Promise((resolve, reject) => {
             try {
                 // On stope l'analyse au cas où la position aurait changé avant qu'une précédente analyse soit terminée
-                this.stockfish.postMessage('stop');
-                this.stockfish.postMessage(`position fen ${fen}`)
-                this.stockfish.postMessage(`go depth ${depth}`);
+                stockfish.postMessage('stop');
+                stockfish.postMessage(`position fen ${fen}`)
+                stockfish.postMessage(`go depth ${depth}`);
 
-                this.stockfish.onmessage = function(event: any) {
+                stockfish.onmessage = function(event: any) {
                     if(event.data.includes(`info depth ${depth} `) && (evalRegex.exec(event.data)) !== null){
                         const wdl = event.data.match(/wdl\s(?<wdl>\d*\s\d*\s\d*)\s/)?.groups.wdl.split(' ');
                         let evaluationStr: string | null = getEvalFromData(event.data, coeff);
@@ -298,15 +317,15 @@ class Engine {
         return new Promise((resolve, reject) => {
             try {
                 // On stope l'analyse au cas où la position aurait changé avant qu'une précédente analyse soit terminée
-                this.stockfish.postMessage('stop');
+                stockfish.postMessage('stop');
                 if(startingFen){
-                    this.stockfish.postMessage(`position fen ${startingFen} moves ${movesListUci}`);
+                    stockfish.postMessage(`position fen ${startingFen} moves ${movesListUci}`);
                 }else{
-                    this.stockfish.postMessage(`position startpos moves ${movesListUci}`);
+                    stockfish.postMessage(`position startpos moves ${movesListUci}`);
                 }
-                this.stockfish.postMessage(`go depth ${depth}`);
+                stockfish.postMessage(`go depth ${depth}`);
 
-                this.stockfish.onmessage = function(event: any) {
+                stockfish.onmessage = function(event: any) {
                     // Mate
                     if(event.data === "info depth 0 score mate 0"){
                         resolve({

@@ -497,11 +497,12 @@ const SpeedrunPage = () => {
     }
 
     async function playComputerMove() {
-      console.log('Play computer move, game active ? ' + gameActive.current);
+      //console.log('Play computer move, game active ? ' + gameActive.current);
       if(game.pgn().includes('#') || !gameActive.current) return;
       const move: Move | undefined = await botAI.current?.makeMove(game);
 
       if(move && move.type >= 0){
+        console.log(`Bot move: ${move.notation} - Game active: ${gameActive.current}`);
         gameMove(move.notation, move.type);
         return;
       } 
@@ -686,7 +687,7 @@ const SpeedrunPage = () => {
               return <div key={gameInfos.title + gameInfos.pgn} className="flex flex-col justify-start items-start">
                 <span className=" text-lg font-semibold" >{gameInfos.title}</span>
                 <span>{gameInfos.pgn.slice(0, 50)}...   {gameInfos.result}</span>
-                <span>({gameInfos.currentElo} {gameInfos.eloGain >= 0 ? <span className=" text-green-600" >+{gameInfos.eloGain}</span> : <span className=" text-red-600" >-{gameInfos.eloGain}</span>})</span>
+                <span>({gameInfos.currentElo} {gameInfos.eloGain >= 0 ? <span className=" text-green-600" >+{gameInfos.eloGain}</span> : <span className=" text-red-600" >{gameInfos.eloGain}</span>})</span>
                 <Link
                   className=" p-1 bg-fuchsia-600 text-white border rounded cursor-pointer"
                   onClick={() => clearEngines()}
@@ -759,10 +760,6 @@ const SpeedrunPage = () => {
       </div>
       :
       null
-
-    const titleComponent = <h4 className=" text-xl font-semibold text-white my-5 md:my-2" >
-      Entraînement
-    </h4>
 
     const pgnComponentDesktop =
       <div className=" text-white w-1/4 hidden h-full md:flex flex-col flex-wrap">
