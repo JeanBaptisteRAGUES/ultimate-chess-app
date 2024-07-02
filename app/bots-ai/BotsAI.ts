@@ -1369,7 +1369,7 @@ class BotsAI {
             type: -1,
         };
 
-        if(game.history().length > 20) {
+        if(game.history().length > 10) {
             return move;
         }
 
