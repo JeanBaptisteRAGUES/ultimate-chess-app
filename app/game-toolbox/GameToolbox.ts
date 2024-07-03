@@ -372,9 +372,9 @@ class GameToolBox {
             if(lastMove === undefined) throw new Error(`Erreur lors de la conversion du coup ${lanNotation} vers sa notation SAN`);
             return lastMove;
         } catch (error) {
-            /* console.log(`Erreur lors de la conversion du coup ${lanNotation} vers sa notation SAN: ${error}`);
-            return lanNotation; */
-            throw new Error(`Erreur lors de la conversion du coup ${lanNotation} vers sa notation SAN: ${error}`);
+            console.log(`Erreur lors de la conversion du coup ${lanNotation} (${fen}) vers sa notation SAN: ${error}`);
+            return lanNotation;
+            //throw new Error(`Erreur lors de la conversion du coup ${lanNotation} vers sa notation SAN: ${error}`);
         }
     }
 
@@ -418,7 +418,7 @@ class GameToolBox {
         this.game.move(sanNotation);
 
         const lastMove = this.game.history({verbose: true}).pop()?.lan;
-        if(lastMove === undefined) throw new Error(`Erreur lors de la conversion du coup ${sanNotation} vers sa notation SAN`);
+        if(lastMove === undefined) throw new Error(`Erreur lors de la conversion du coup ${sanNotation} vers sa notation LAN`);
         return lastMove;
     }
 
