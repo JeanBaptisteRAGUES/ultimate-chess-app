@@ -94,12 +94,12 @@ const GameAnalysisPage = () => {
         })
         gameHistory.current = gameHistoryChess.history({verbose: true});
         console.log(gameHistory.current);
-        /* engine.current.init().then(() => {
+        engine.current.initAnalysis().then(() => {
             console.log('Launch PGN analysis');
             launchStockfishAnalysis(pgn, depth);
-        }); */
-        console.log('Launch PGN analysis');
-        launchStockfishAnalysis(pgn, depth);
+        });
+        //console.log('Launch PGN analysis');
+        //launchStockfishAnalysis(pgn, depth);
     }, []);
     
     function evalToNumber(evalScore: string): number {

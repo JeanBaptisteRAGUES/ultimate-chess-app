@@ -49,11 +49,12 @@ function getBestMoveFromData(data: string) {
 let stockfish: Worker;
 
 class Engine {
-    //stockfish: Worker;
+    stockfishAnalysis: Worker;
     toolbox: GameToolBox;
 
     constructor() {
         stockfish = new Worker('stockfish.js#stockfish.wasm');
+        this.stockfishAnalysis = new Worker('stockfish.js#stockfish.wasm');
         this.toolbox = new GameToolBox();
     }
 
@@ -62,9 +63,23 @@ class Engine {
             console.log('Stockfish init');
             stockfish.postMessage('uci');
             stockfish.onmessage = function(event: any) {
+                //console.log(event.data);
+                if(event.data === 'uciok'){
+                    //console.log('event.data === uciok');
+                    resolve('uciok');
+                }
+            }
+        })
+    }
+
+    initAnalysis() {
+        return new Promise((resolve, reject) => {    
+            console.log('Stockfish init');
+            this.stockfishAnalysis.postMessage('uci');
+            this.stockfishAnalysis.onmessage = function(event: any) {
                 console.log(event.data);
                 if(event.data === 'uciok'){
-                    console.log('event.data === uciok');
+                    console.log('Analysis: event.data === uciok');
                     resolve('uciok');
                 }
             }
@@ -319,15 +334,15 @@ class Engine {
         return new Promise((resolve, reject) => {
             try {
                 // On stope l'analyse au cas où la position aurait changé avant qu'une précédente analyse soit terminée
-                stockfish.postMessage('stop');
+                this.stockfishAnalysis.postMessage('stop');
                 if(startingFen){
                     stockfish.postMessage(`position fen ${startingFen} moves ${movesListUci}`);
                 }else{
-                    stockfish.postMessage(`position startpos moves ${movesListUci}`);
+                    this.stockfishAnalysis.postMessage(`position startpos moves ${movesListUci}`);
                 }
-                stockfish.postMessage(`go depth ${depth}`);
+                this.stockfishAnalysis.postMessage(`go depth ${depth}`);
 
-                stockfish.onmessage = function(event: any) {
+                this.stockfishAnalysis.onmessage = function(event: any) {
                     // Mate
                     if(event.data === "info depth 0 score mate 0"){
                         resolve({
