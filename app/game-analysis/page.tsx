@@ -82,14 +82,18 @@ const GameAnalysisPage = () => {
       });
     
     useEffect(() => {
+        console.log('Use Effect');
         engine.current = new Engine();
         const gameHistoryChess = new Chess();
         gameHistoryChess.load(startingFen);
+        console.log(engine.current);
         const movesList = toolbox.convertPgnToHistory(pgn);
+        console.log('Conversion PGN vers historique: ok');
         movesList.forEach((move) => {
             gameHistoryChess.move(move);
         })
         gameHistory.current = gameHistoryChess.history({verbose: true});
+        console.log(gameHistory.current);
         engine.current.init().then(() => {
             console.log('Launch PGN analysis');
             launchStockfishAnalysis(pgn, depth);
