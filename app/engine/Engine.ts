@@ -77,7 +77,7 @@ class Engine {
             console.log('Stockfish init');
             this.stockfishAnalysis.postMessage('uci');
             this.stockfishAnalysis.onmessage = function(event: any) {
-                console.log(event.data);
+                //console.log(event.data);
                 if(event.data === 'uciok'){
                     console.log('Analysis: event.data === uciok');
                     resolve('uciok');
@@ -331,19 +331,24 @@ class Engine {
     //TODO: Faire en sorte de calculer le coeff de manière interne
     // movesList: e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 ...
     evalPositionFromMovesList(movesListUci: string, depth: number, coeff: number, startingFen?: string) {
+        //console.log("Starting fen: " + startingFen);
+        //console.log("Moves List: " + movesListUci);
         return new Promise((resolve, reject) => {
             try {
                 // On stope l'analyse au cas où la position aurait changé avant qu'une précédente analyse soit terminée
                 this.stockfishAnalysis.postMessage('stop');
                 if(startingFen){
-                    stockfish.postMessage(`position fen ${startingFen} moves ${movesListUci}`);
+                    console.log(`position fen ${startingFen} moves ${movesListUci}`);
+                    this.stockfishAnalysis.postMessage(`position fen ${startingFen} moves ${movesListUci}`);
                 }else{
+                    console.log(`position startpos moves ${movesListUci}`);
                     this.stockfishAnalysis.postMessage(`position startpos moves ${movesListUci}`);
                 }
                 this.stockfishAnalysis.postMessage(`go depth ${depth}`);
 
                 this.stockfishAnalysis.onmessage = function(event: any) {
                     // Mate
+                    //console.log(event.data);
                     if(event.data === "info depth 0 score mate 0"){
                         resolve({
                             eval: `#${-coeff}`,
@@ -495,7 +500,8 @@ class Engine {
         for(let [i, movesSet] of movesSetArray.entries()){
             //const coeff = i%2 === 0 ? 1 : -1;
             const coeff = i%2 === 0 ? coeffBase : -coeffBase;
-            const result: any = await this.evalPositionFromMovesList(movesSet, depth, coeff, fen);
+            const result: any = await this.evalPositionFromMovesList(movesSet, depth, coeff, fen); 
+            //const result: any = await this.evalPositionFromMovesList('e2e4 f7f5', depth, coeff, fen);
             const playerColor = Math.sign(coeff) === 1 ? 'w' : 'b';
             if(i < movesList_lan.length ){
                 let finalResult: EvalResult = {
