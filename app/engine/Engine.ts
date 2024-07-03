@@ -59,8 +59,10 @@ class Engine {
 
     init() {
         return new Promise((resolve, reject) => {    
+            console.log('Stockfish init');
             stockfish.postMessage('uci');
             stockfish.onmessage = function(event: any) {
+                console.log(event.data);
                 if(event.data === 'uciok'){
                     //console.log('uciok');
                     resolve('uciok');
