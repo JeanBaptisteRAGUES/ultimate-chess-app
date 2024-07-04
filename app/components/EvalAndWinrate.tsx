@@ -38,6 +38,7 @@ const EvalAndWinrate: React.FC<EvalProps> = ({game, databaseRating, winner, star
     }, []);
 
     function estimateWinrate(wdl: string[], fen: string): Winrate {
+        console.log('Estimate Winrate');
         let sfWinrate: Winrate = {white: 0, draws: 0, black: 0};
         let isWhiteTurn = fen.includes(' w ') ? 1 : -1;
         let sfWhite = isWhiteTurn > 0 ? Math.round(eval(wdl[0])/10) || 0 : Math.round(eval(wdl[2])/10);
@@ -63,18 +64,23 @@ const EvalAndWinrate: React.FC<EvalProps> = ({game, databaseRating, winner, star
         if(winner) return;
         
         getLichessWinrate(movesList, databaseRating, startingFen).then((lichessWinrate) => {
+            console.log('getLichessWinrate: ok');
             let lichessWinrateOK = false;
             if(lichessWinrate.white && (lichessWinrate.white + lichessWinrate.draws + lichessWinrate.black) > 0) {
                 lichessWinrateOK = true;
                 setWinrate(lichessWinrate);
             } 
             if(!engine.current) return;
+            console.log('engine.current: ok');
             engine.current.evalPositionFromFen(currentFen, 14).then((res: EvalResultSimplified) => {
                 setEngineEval(res.eval);
+                console.log('evalPositionFromFen: ok');
+                console.log(res);
                 if(!res.wdl) return;
+                console.log('res.wdl: ok');
                 let winrateEstimation: Winrate = estimateWinrate(res.wdl || {}, currentFen);
                 if(!lichessWinrateOK && (winrateEstimation.white + winrateEstimation.black + winrateEstimation.draws > 0)) setWinrate(winrateEstimation);
-                //console.log(winrateEstimation);
+                console.log('winrateEstimation: ' + winrateEstimation);
             }).catch((err: any) => {
                 console.log("Erreur lors de l'évaluation de la position: " + err);
             });

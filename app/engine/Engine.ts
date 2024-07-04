@@ -295,12 +295,14 @@ class Engine {
         return new Promise((resolve, reject) => {
             try {
                 // On stope l'analyse au cas où la position aurait changé avant qu'une précédente analyse soit terminée
-                stockfish.postMessage('stop');
-                stockfish.postMessage(`position fen ${fen}`)
-                stockfish.postMessage(`go depth ${depth}`);
+                this.stockfishAnalysis.postMessage('stop');
+                this.stockfishAnalysis.postMessage(`position fen ${fen}`);
+                this.stockfishAnalysis.postMessage('setoption name UCI_ShowWDL value true');
+                this.stockfishAnalysis.postMessage(`go depth ${depth}`);
 
-                stockfish.onmessage = function(event: any) {
+                this.stockfishAnalysis.onmessage = function(event: any) {
                     if(event.data.includes(`info depth ${depth} `) && (evalRegex.exec(event.data)) !== null){
+                        console.log(event.data);
                         const wdl = event.data.match(/wdl\s(?<wdl>\d*\s\d*\s\d*)\s/)?.groups.wdl.split(' ');
                         let evaluationStr: string | null = getEvalFromData(event.data, coeff);
                         let bestMove: string | null = getBestMoveFromData(event.data);
@@ -339,10 +341,10 @@ class Engine {
                 // On stope l'analyse au cas où la position aurait changé avant qu'une précédente analyse soit terminée
                 this.stockfishAnalysis.postMessage('stop');
                 if(startingFen){
-                    console.log(`position fen ${startingFen} moves ${movesListUci}`);
+                    //console.log(`position fen ${startingFen} moves ${movesListUci}`);
                     this.stockfishAnalysis.postMessage(`position fen ${startingFen} moves ${movesListUci}`);
                 }else{
-                    console.log(`position startpos moves ${movesListUci}`);
+                    //console.log(`position startpos moves ${movesListUci}`);
                     this.stockfishAnalysis.postMessage(`position startpos moves ${movesListUci}`);
                 }
                 this.stockfishAnalysis.postMessage(`go depth ${depth}`);
