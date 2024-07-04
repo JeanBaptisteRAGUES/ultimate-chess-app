@@ -496,9 +496,10 @@ const SpeedrunPage = () => {
       return randDelay;
     }
 
-    async function playComputerMove() {
+    async function playComputerMove(botID: number) {
       //console.log('Play computer move, game active ? ' + gameActive.current);
-      if(game.pgn().includes('#') || !gameActive.current) return;
+      console.log(`Bot current ID (${botAI.current?.getID()}) VS Request ID (${botID})`);
+      if(game.pgn().includes('#') || !gameActive.current || botAI.current?.getID() !== botID) return;
       const move: Move | undefined = await botAI.current?.makeMove(game);
 
       if(move && move.type >= 0){
@@ -533,6 +534,7 @@ const SpeedrunPage = () => {
   
     function onDrop(sourceSquare: Square, targetSquare: Square, piece: Piece) {
       const promotion = getPromotion(sourceSquare, piece);
+      const oldBotID = botAI.current?.getID() || Math.random();
       
       if(isVirtualMode) {
         gameVirtualMove(sourceSquare + targetSquare + promotion);
@@ -545,8 +547,9 @@ const SpeedrunPage = () => {
   
       let delay = getTimeControlDelay();
       if(botElo === 3200) delay = 0;
-      if(gameStarted){
-        const newTimeout = setTimeout(playComputerMove, delay);
+      if(gameStarted && botAI.current){
+        //TODO: Corriger cette erreur de merde
+        const newTimeout = setTimeout(() => playComputerMove(oldBotID), delay);
         setCurrentTimeout(newTimeout);
       }
       
@@ -838,8 +841,8 @@ const SpeedrunPage = () => {
           setGameStarted(true);
           gameActive.current = true;
           setShowEval(false);
-          if(game.turn() !== playerColor){
-            playComputerMove();
+          if(game.turn() !== playerColor && botAI.current){
+            playComputerMove(botAI.current.getID());
           }
         }}
         className=' h-[50px] w-[50px] flex flex-col justify-center items-center cursor-pointer hover:text-cyan-400'>

@@ -378,6 +378,10 @@ function evalMove(move: EvalResultSimplified, botColor: Color, toolbox: GameTool
     return eval(move.eval);
 }
 
+function generateBotID(): number { 
+    return Math.round(Math.random()*1000000000);
+} 
+
 function generateUsername(): string {
     const usernameNumber = Math.random() < 0.55 ? (Math.round(Math.random()*100)).toString() : (2020 - Math.round(Math.random()*70)).toString();
     const usernameSpeChar = Math.random() < 0.55 ? '' : (Math.random() < 0.7 ? '_' : '-');
@@ -385,6 +389,7 @@ function generateUsername(): string {
 }
 
 class BotsAI {
+    #botID: number;
     #engine: Engine;
     #toolbox: GameToolBox;
     #defaultBotParams: DefaultBotParams;
@@ -397,6 +402,7 @@ class BotsAI {
 
     //TODO: Prendre en entrée le classement Élo et déterminer ENSUITE le 'level'
     constructor(behaviour: Behaviour, elo: number, botColor: Color, timeControl: string) {
+        this.#botID = generateBotID();
         this.#engine = new Engine();
         this.#toolbox = new GameToolBox();
         //this.#botElo = elo;
@@ -959,7 +965,7 @@ class BotsAI {
     }
 
     async #makeHumanMove(game: Chess): Promise<Move> {
-        console.log('Bot AI: Human behaviour');
+        console.log(`Bot AI (${this.#botID}): Human behaviour`);
         //console.log('Last Random Move: ' + this.#lastRandomMove);
         let move: Move = {
             notation: '',
@@ -4746,6 +4752,10 @@ class BotsAI {
         return game.get(this.#toolbox.getMoveOrigin(move.notation) || 'a1').type;
     }
 
+    getID() {
+        return this.#botID;
+    }
+
     getUsername() {
         return this.#username;
     }
@@ -4764,16 +4774,19 @@ class BotsAI {
         this.#engine.newGame();
         //this.#engine = new Engine();
         this.#lastRandomMove = this.#botColor === 'w' ? (-1)*Math.floor(Math.random()*3) - 1 : Math.floor(Math.random()*3) + 1;
+        this.#botID = generateBotID();
         this.#botColor = newColor;
         this.#botLevel = getLevelFromElo(newElo);
         this.#behaviour = newBehaviour;
         this.#username = generateUsername();
         //this.#engine.init();
         this.#defaultBotParams = initDefaultBotParams(newElo, timeControl);
+        console.log(`New Bot (${this.#botID}): ${this.#behaviour}`);
     }
 
     reset() {
         this.#engine.newGame();
+        this.#botID = generateBotID();
         this.#lastRandomMove = this.#botColor === 'w' ? (-1)*Math.floor(Math.random()*3) - 1 : Math.floor(Math.random()*3) + 1;
     }
 
