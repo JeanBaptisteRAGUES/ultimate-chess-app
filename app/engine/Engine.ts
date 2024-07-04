@@ -66,6 +66,7 @@ class Engine {
                 //console.log(event.data);
                 if(event.data === 'uciok'){
                     //console.log('event.data === uciok');
+                    stockfish.postMessage('setoption name Hash value 100');
                     resolve('uciok');
                 }
             }

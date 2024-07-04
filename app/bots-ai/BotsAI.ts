@@ -4760,13 +4760,15 @@ class BotsAI {
     }
 
     new(newBehaviour: Behaviour, newElo: number, newColor: Color, timeControl: string) {
+        //TODO: Vérifier si ça limite les crash
         this.#engine.newGame();
+        //this.#engine = new Engine();
         this.#lastRandomMove = this.#botColor === 'w' ? (-1)*Math.floor(Math.random()*3) - 1 : Math.floor(Math.random()*3) + 1;
         this.#botColor = newColor;
         this.#botLevel = getLevelFromElo(newElo);
         this.#behaviour = newBehaviour;
         this.#username = generateUsername();
-        this.#engine.init();
+        //this.#engine.init();
         this.#defaultBotParams = initDefaultBotParams(newElo, timeControl);
     }
 
