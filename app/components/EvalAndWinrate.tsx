@@ -44,7 +44,9 @@ const EvalAndWinrate: React.FC<EvalProps> = ({game, databaseRating, winner, star
         let sfWhite = isWhiteTurn > 0 ? Math.round(eval(wdl[0])/10) || 0 : Math.round(eval(wdl[2])/10);
         let sfDraw = Math.round(eval(wdl[1])/10) || 0;
         let sfBlack = isWhiteTurn > 0 ? Math.round(eval(wdl[2])/10) || 0 : Math.round(eval(wdl[0])/10);
+        //console.log(`sfWhite: ${sfWhite}, sfDraw: ${sfDraw}, sfBlack: ${sfBlack}`);
         sfDraw = Math.round(sfDraw * 0.55);
+        //console.log(`sfWhite: ${sfWhite}, sfDraw: ${sfDraw}, sfBlack: ${sfBlack}`);
         if(sfWhite >= sfBlack) {
             sfWhite = Math.round((100-sfDraw)/2 + sfWhite);
             sfBlack = 100 - (sfWhite + sfDraw);
@@ -52,9 +54,13 @@ const EvalAndWinrate: React.FC<EvalProps> = ({game, databaseRating, winner, star
             sfBlack = Math.round((100-sfDraw)/2 + sfBlack);
             sfWhite = 100 - (sfBlack + sfDraw);
         }
+        //console.log(`sfWhite: ${sfWhite}, sfDraw: ${sfDraw}, sfBlack: ${sfBlack}`);
         
         sfWhite = Math.max(0, Math.min(100, sfWhite));
         sfBlack = Math.max(0, Math.min(100, sfBlack));
+        //console.log(`sfWhite: ${sfWhite}, sfDraw: ${sfDraw}, sfBlack: ${sfBlack}`);
+        sfDraw = 100 - (sfWhite + sfBlack);
+        //console.log(`sfWhite: ${sfWhite}, sfDraw: ${sfDraw}, sfBlack: ${sfBlack}`);
         sfWinrate = {white: sfWhite, draws: sfDraw, black: sfBlack};
         return sfWinrate;
     }

@@ -541,6 +541,7 @@ const SpeedrunPage = () => {
         return true;
       }
 
+      if(!gameStarted) return false;
       if(gameStarted && game.get(sourceSquare).color !== playerColor) return false;
 
       gameMove(sourceSquare + targetSquare + promotion, 0);
@@ -548,7 +549,6 @@ const SpeedrunPage = () => {
       let delay = getTimeControlDelay();
       if(botElo === 3200) delay = 0;
       if(gameStarted && botAI.current){
-        //TODO: Corriger cette erreur de merde
         const newTimeout = setTimeout(() => playComputerMove(oldBotID), delay);
         setCurrentTimeout(newTimeout);
       }
