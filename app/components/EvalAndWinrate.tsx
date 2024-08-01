@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { MutableRefObject, useEffect, useRef, useState } from 'react';
-import Engine, { EvalResultSimplified } from '../engine/Engine';
+import Engine, { EvalResultSimplified, FenEval } from '../engine/Engine';
 import { Winrate, fetchLichessDatabase, getLichessWinrate } from '../libs/fetchLichess';
 import GameToolBox from '../game-toolbox/GameToolbox';
 import { Chess } from 'chess.js';
@@ -11,11 +11,12 @@ interface EvalProps {
     winner: string,
     startingFen: string,
     currentFen: string,
+    fenEvalMap: Map<string, FenEval>,
     movesList: string[],
     showEval: boolean,
 }
 
-const EvalAndWinrate: React.FC<EvalProps> = ({game, databaseRating, winner, startingFen, currentFen, movesList, showEval}) => {
+const EvalAndWinrate: React.FC<EvalProps> = ({game, databaseRating, winner, startingFen, currentFen, fenEvalMap, movesList, showEval}) => {
     const engine = useRef<Engine>();
     const engineCreated = useRef<Boolean>(false);
     const toolbox = new GameToolBox();
@@ -78,18 +79,29 @@ const EvalAndWinrate: React.FC<EvalProps> = ({game, databaseRating, winner, star
             } 
             if(!engine.current) return;
             console.log('engine.current: ok');
-            engine.current.evalPositionFromFen(currentFen, 14).then((res: EvalResultSimplified) => {
-                setEngineEval(res.eval);
-                console.log('evalPositionFromFen: ok');
-                console.log(res);
-                if(!res.wdl) return;
-                console.log('res.wdl: ok');
-                let winrateEstimation: Winrate = estimateWinrate(res.wdl || {}, currentFen);
+            if(fenEvalMap.has(currentFen)){
+                console.log(`La position '${currentFen}' a déjà été analysée.`);
+                setEngineEval(fenEvalMap.get(currentFen)?.eval || '0.0');
+                let winrateEstimation: Winrate = estimateWinrate(fenEvalMap.get(currentFen)?.wdl || ['0.33', '0.33', '0.33'], currentFen);
                 if(!lichessWinrateOK && (winrateEstimation.white + winrateEstimation.black + winrateEstimation.draws > 0)) setWinrate(winrateEstimation);
-                console.log('winrateEstimation: ' + winrateEstimation);
-            }).catch((err: any) => {
-                console.log("Erreur lors de l'évaluation de la position: " + err);
-            });
+                console.log(winrateEstimation); 
+                console.info(winrateEstimation);
+                console.debug(winrateEstimation);
+            }else{
+                console.log(`La position '${currentFen}' n'a jamais été analysée.`);
+                engine.current.evalPositionFromFen(currentFen, 14).then((res: EvalResultSimplified) => {
+                    setEngineEval(res.eval);
+                    console.log('evalPositionFromFen: ok');
+                    console.log(res);
+                    if(!res.wdl) return;
+                    console.log('res.wdl: ok');
+                    let winrateEstimation: Winrate = estimateWinrate(res.wdl || {}, currentFen);
+                    if(!lichessWinrateOK && (winrateEstimation.white + winrateEstimation.black + winrateEstimation.draws > 0)) setWinrate(winrateEstimation);
+                    console.log(winrateEstimation);
+                }).catch((err: any) => {
+                    console.log("Erreur lors de l'évaluation de la position: " + err);
+                });
+            }
         })
         
     }, [currentFen]);

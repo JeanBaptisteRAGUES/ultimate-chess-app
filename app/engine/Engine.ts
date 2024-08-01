@@ -18,12 +18,20 @@ export type EvalResult = {
     quality: string,
     accuracy?: number,
     isTheory?: boolean,
+    wdl?: string[],
 }
 
 export type EvalResultSimplified = {
     bestMove: string,
     eval: string,
     wdl?: string[],
+}
+
+export type FenEval = {
+    fen: string,
+    eval: string,
+    wdl?: string[],
+    bestLines?: string
 }
 
 function getEvalFromData(data: string, coeff: number) {
@@ -333,10 +341,10 @@ class Engine {
 
     //TODO: Faire en sorte de calculer le coeff de manière interne
     // movesList: e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 ...
-    evalPositionFromMovesList(movesListUci: string, depth: number, coeff: number, startingFen?: string) {
+    evalPositionFromMovesList(movesListUci: string, depth: number, coeff: number, startingFen?: string): Promise<EvalResultSimplified> {
         //console.log("Starting fen: " + startingFen);
         //console.log("Moves List: " + movesListUci);
-        return new Promise((resolve, reject) => {
+        return new Promise<EvalResultSimplified>((resolve, reject) => {
             try {
                 // On stope l'analyse au cas où la position aurait changé avant qu'une précédente analyse soit terminée
                 this.stockfishAnalysis.postMessage('stop');
@@ -347,26 +355,32 @@ class Engine {
                     //console.log(`position startpos moves ${movesListUci}`);
                     this.stockfishAnalysis.postMessage(`position startpos moves ${movesListUci}`);
                 }
+                this.stockfishAnalysis.postMessage('setoption name UCI_ShowWDL value true');
                 this.stockfishAnalysis.postMessage(`go depth ${depth}`);
 
                 this.stockfishAnalysis.onmessage = function(event: any) {
                     // Mate
                     //console.log(event.data);
                     if(event.data === "info depth 0 score mate 0"){
+                        const wdl = event.data.match(/wdl\s(?<wdl>\d*\s\d*\s\d*)\s/)?.groups.wdl.split(' ');
                         resolve({
                             eval: `#${-coeff}`,
-                            pv: ''
+                            bestMove: '',
+                            wdl: wdl
                         });
                     }
 
                     // Draw
                     if(event.data === "info depth 0 score cp 0"){
+                        const wdl = event.data.match(/wdl\s(?<wdl>\d*\s\d*\s\d*)\s/)?.groups.wdl.split(' ');
                         resolve({
                             eval: '0',
-                            pv: ''
+                            bestMove: '',
+                            wdl: wdl
                         });
                     }
                     if(event.data.includes(`info depth ${depth} `) && (evalRegex.exec(event.data)) !== null){
+                        const wdl = event.data.match(/wdl\s(?<wdl>\d*\s\d*\s\d*)\s/)?.groups.wdl.split(' ');
                         let evaluationStr: string | null = getEvalFromData(event.data, coeff);
                         let bestMove: string | null = getBestMoveFromData(event.data);
 
@@ -377,7 +391,8 @@ class Engine {
 
                         resolve({
                             eval: evaluationStr,
-                            pv: bestMove
+                            bestMove: bestMove,
+                            wdl: wdl
                         });
                     }
                 }
@@ -503,17 +518,18 @@ class Engine {
         for(let [i, movesSet] of movesSetArray.entries()){
             //const coeff = i%2 === 0 ? 1 : -1;
             const coeff = i%2 === 0 ? coeffBase : -coeffBase;
-            const result: any = await this.evalPositionFromMovesList(movesSet, depth, coeff, fen); 
+            const result: EvalResultSimplified = await this.evalPositionFromMovesList(movesSet, depth, coeff, fen); 
             //const result: any = await this.evalPositionFromMovesList('e2e4 f7f5', depth, coeff, fen);
             const playerColor = Math.sign(coeff) === 1 ? 'w' : 'b';
             if(i < movesList_lan.length ){
                 let finalResult: EvalResult = {
                     playerColor: playerColor,
-                    bestMove: result.pv,
+                    bestMove: result.bestMove,
                     movePlayed: movesList_lan[i],
                     evalBefore: result.eval,
                     evalAfter: result.eval,
                     quality: "",
+                    wdl: result.wdl,
                 }
                 results.push(finalResult);
             }

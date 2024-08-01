@@ -2,7 +2,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from "react";
-import Engine, { EvalResult } from "../engine/Engine";
+import Engine, { EvalResult, FenEval } from "../engine/Engine";
 import GameToolBox from "../game-toolbox/GameToolbox";
 import { AnalysisChart } from "../components/AnalysisChart";
 import { Chess, Color, DEFAULT_POSITION, Move } from "chess.js";
@@ -57,6 +57,7 @@ const GameAnalysisPage = () => {
     const gameActive = useRef(true);
     const board = new Array(64).fill(0);
     const analysisResultsRef = useRef<EvalResult[]>([]);
+    const evalMapRef = useRef<Map<string,FenEval>>(new Map());
     const inaccuracyIndexRef = useRef(-1);
     const errorIndexRef = useRef(-1);
     const blunderIndexRef = useRef(-1);
@@ -96,6 +97,7 @@ const GameAnalysisPage = () => {
         console.log(gameHistory.current);
         engine.current.initAnalysis().then(() => {
             console.log('Launch PGN analysis');
+            engine.current?.showWinDrawLose();
             launchStockfishAnalysis(pgn, depth);
         });
         //console.log('Launch PGN analysis');
@@ -173,6 +175,7 @@ const GameAnalysisPage = () => {
             setShowChartHistory(true);
             analysisResultsRef.current = results;
             formatAnalyseResults(pgn, results);
+            mapAnalyseResults(results);
         });
     }
 
@@ -192,6 +195,36 @@ const GameAnalysisPage = () => {
         });
         console.log(`Durée du formatage: ${(performance.now() - timestampStart)/1000}s`);
         setFormatedResults(results);
+    } 
+
+    function mapAnalyseResults(analysisResults: EvalResult[]) {
+        console.log('Map Analyse Results');
+        const testGame = new Chess();
+        const pgnHistory = toolbox.convertPgnToHistory(pgn);
+        const testMap = new Map<string, FenEval>();
+        testGame.load(startingFen);
+
+
+        analysisResults.map((result: EvalResult, i: number) => {
+            /* evalMapRef.current?.set(testGame.fen(), {
+                fen: testGame.fen(),
+                eval: result.evalBefore,
+                wdl: result.wdl,
+            }); */
+            testMap.set(testGame.fen(), {
+                fen: testGame.fen(),
+                eval: result.evalBefore,
+                wdl: result.wdl,
+            });
+            console.log(pgnHistory[i]);
+            testGame.move(pgnHistory[i]);
+        });
+
+        evalMapRef.current = testMap;
+
+        console.log(evalMapRef.current);
+        console.log(testMap);
+        //TODO: setFormatedResults(results);
     } 
 
     const getMoveColor = (moveQuality: string, squareColor: string): string => {
@@ -611,6 +644,7 @@ const GameAnalysisPage = () => {
                 winner={''} 
                 startingFen={startingFen}
                 currentFen={currentFen} 
+                fenEvalMap={evalMapRef.current}
                 movesList={evalMovesList}
                 showEval={true} 
             />
