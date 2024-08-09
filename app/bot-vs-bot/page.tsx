@@ -409,6 +409,7 @@ const BotVsBotPage = () => {
             winner={winner} 
             startingFen={DEFAULT_POSITION}
             currentFen={currentFen} 
+            fenEvalMap={new Map()}
             movesList={toolbox.convertHistorySanToLan(toolbox.convertPgnToHistory(game.pgn()), DEFAULT_POSITION)}
             showEval={showEval} 
           />
