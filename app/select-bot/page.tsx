@@ -76,7 +76,9 @@ const botsInfo = new Map<Behaviour, BotDescription>([
     ['exchanges-hater', {name: 'Emmeline', description: "Emmeline est de nature pacifiste et évitera le plus possible les échanges de pièces"}],
     ['exchanges-lover', {name: 'Jason', description: "Jason aime l'action et cherchera le plus possible à capturer les pièces adverses."}]
 
-])
+]);
+
+const INFINITE_SYMBOL = '∞';
 
 const SelectBot = () => {
     const [elo, setElo] = useState<number>(1500);
@@ -86,7 +88,7 @@ const SelectBot = () => {
 
     const botInfosComponent = 
         <div className='flex flex-row justify-around items-center flex-wrap gap-2 py-5 w-full bg-cyan-900 sticky top-0 left-0 right-0' >
-            <p className='w-full md:w-1/2 flex justify-center items-center text-xl font-semibold text-white'>Vous allez jouer contre..</p>
+            <p className='w-full md:w-1/2 flex justify-center items-center text-xl font-semibold text-white'>Jouer en {timeControl === 'infinite' ? INFINITE_SYMBOL : timeControl} contre..</p>
             <span className=' w-full md:w-1/2 flex justify-center items-center rounded' >
                 <Image
                     src={botPP}
