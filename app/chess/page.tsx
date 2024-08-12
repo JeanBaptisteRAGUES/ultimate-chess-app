@@ -8,7 +8,7 @@ import EvalAndWinrate from "../components/EvalAndWinrate";
 import Clock from "../components/Clock";
 import Engine from "../engine/Engine";
 import Link from "next/link";
-import BotsAI, { Behaviour, Move } from "../bots-ai/BotsAI";
+import BotsAI, { Behaviour, BotDescription, Move } from "../bots-ai/BotsAI";
 import { useSearchParams } from "next/navigation";
 import GameToolBox from "../game-toolbox/GameToolbox";
 import { PiVirtualReality } from "react-icons/pi";

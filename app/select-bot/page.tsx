@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image, { StaticImageData } from 'next/image'
-import { Behaviour, BotDescription } from '../bots-ai/BotsAI';
+import { Behaviour, BotDescription, botsInfo } from '../bots-ai/BotsAI';
 import { GiBulletBill } from 'react-icons/gi';
 import { SiStackblitz } from 'react-icons/si';
 import { LuAlarmClock } from 'react-icons/lu';
@@ -13,11 +13,11 @@ import { SiLichess } from 'react-icons/si';
 //import { SiChessdotcom } from 'react-icons/si';
 import { FaChessPawn } from 'react-icons/fa';
 
-import indianKing_pp from "@/public/Bots_images/chess3d_indian-king.jpg";
+import human_pp from "@/public/Bots_images/chess3d_human.jpg";
+/* import indianKing_pp from "@/public/Bots_images/chess3d_indian-king.jpg";
 import cowLover_pp from "@/public/Bots_images/chess3d_cow-lover.jpg";
 import hippo_pp from "@/public/Bots_images/chess3d_hippo.jpg";
 import stockfishOnly_pp from "@/public/Bots_images/chess3d_stockfish-only.jpg";
-import human_pp from "@/public/Bots_images/chess3d_human.jpg";
 import pawnsPusher_pp from "@/public/Bots_images/chess3d_pawns-pusher.jpg";
 import shy_pp from "@/public/Bots_images/chess3d_shy.jpg";
 import blundering_pp from "@/public/Bots_images/chess3d_blundering.jpg";
@@ -36,7 +36,7 @@ import bongcloud_pp from "@/public/Bots_images/chess3d_bongcloud.jpg";
 import gambitFanatic_pp from "@/public/Bots_images/chess3d_gambit-fanatic.jpg";
 import stonewall_pp from "@/public/Bots_images/chess3d_stone-wall.jpg";
 import dragon_pp from "@/public/Bots_images/chess3d_dragon.jpg";
-import caroLondon_pp from "@/public/Bots_images/chess3d_caro-london.jpg";
+import caroLondon_pp from "@/public/Bots_images/chess3d_caro-london.jpg"; */
 
 
 /*TODO: Choix difficulté: [
@@ -50,14 +50,14 @@ import caroLondon_pp from "@/public/Bots_images/chess3d_caro-london.jpg";
 
 // TODO: Liste des bots
 
-const botsInfo = new Map<Behaviour, BotDescription>([
+/* const botsInfo = new Map<Behaviour, BotDescription>([
     ['human', {name: 'Judith', description: "Judith joue comme un humain et fera les mêmes erreurs qu'un humain de même Élo." }],
     ['stockfish-only', {name: 'Stockfish', description: "Stockfish s'adapte au niveau du joueur mais n'aura pas un comportement humain."}],
     ['indian-king', {name: 'Radjah', description: "Radjah joue tout le temps l'ouverture Est-Indienne, que ce soit avec les blancs ou les noirs"}],
     ['auto-didacte', {name: 'Emma', description: "Emma a toujours aimé tout apprendre par elle même. Ses connaissances dans les ouvertures sont très limitées mais elle se débrouille bien dans le milieu de jeu."}],
     ['blundering', {name: 'Worstfish', description: "Ce devait être le moteur d'échecs le plus performant au monde.. Malheureusement à cause d'une erreur de signe dans son code binaire, il ne joue que les pires coups de la position."}],
     ['bongcloud', {name: 'Hika', description: "Hika sait que dans les finales, il est important de mettre son roi au centre. Alors pourquoi perdre du temps et ne pas le faire dès l'ouverture ?"}],
-    ['botez-gambit', {name: 'Andra', description: "Andrea se considère comme une reine et n'aime pas partager sa place. C'est pour celà qu'elle aime sacrifier sa reine en début de partie car il ne peut n'y en avoir qu'une !"}],
+    ['botez-gambit', {name: 'Andrea', description: "Andrea se considère comme une reine et n'aime pas partager sa place. C'est pour celà qu'elle aime sacrifier sa reine en début de partie car il ne peut n'y en avoir qu'une !"}],
     ['caro-london', {name: 'Henry', description: "Henry aime les ouvertures solides quite à renoncer à challenger son adversaire. Il joue le système de Londres avec les blancs et la caro-kann ou la slav avec les noirs."}],
     ['castle-destroyer', {name: 'Brutus', description: "Brutus aime la bagarre et n'est pas là pour conséder la nulle ! Il n'hésitera pas à envoyer des marées de pions sur le roque adverse voir à sacrifier une pièce pour attaquer votre roi, même si le sacrifice est douteux !"}],
     ['chessable-master', {name: 'Jenna', description: "Jenna est une femme très studieuse. Elle collectionne les cours Chessable sur les ouvertures des plus grands maîtres d'échecs ! Malheureusement, une fois sortie de la théorie elle aura un peu plus de mal à trouver les bons coups."}],
@@ -76,7 +76,7 @@ const botsInfo = new Map<Behaviour, BotDescription>([
     ['exchanges-hater', {name: 'Emmeline', description: "Emmeline est de nature pacifiste et évitera le plus possible les échanges de pièces"}],
     ['exchanges-lover', {name: 'Jason', description: "Jason aime l'action et cherchera le plus possible à capturer les pièces adverses."}]
 
-]);
+]); */
 
 const INFINITE_SYMBOL = '∞';
 
@@ -84,14 +84,14 @@ const SelectBot = () => {
     const [elo, setElo] = useState<number>(1500);
     const [behaviour, setBehaviour] = useState<Behaviour>('human');
     const [timeControl, setTimeControl] = useState('10+0');
-    const [botPP, setBotPP] = useState<StaticImageData>(human_pp);
+    //const [botPP, setBotPP] = useState<StaticImageData>(human_pp);
 
     const botInfosComponent = 
         <div className='flex flex-row justify-around items-center flex-wrap gap-2 py-5 w-full bg-cyan-900 sticky top-0 left-0 right-0' >
             <p className='w-full md:w-1/2 flex justify-center items-center text-xl font-semibold text-white'>Jouer en {timeControl === 'infinite' ? INFINITE_SYMBOL : timeControl} contre..</p>
             <span className=' w-full md:w-1/2 flex justify-center items-center rounded' >
                 <Image
-                    src={botPP}
+                    src={botsInfo.get(behaviour)?.image || human_pp}
                     alt="Picture of the author"
                     width={150}
                     height={150}
@@ -133,10 +133,10 @@ const SelectBot = () => {
 
     const defaultBotsComponent =
         <div className='flex flex-row justify-center items-center flex-wrap w-full md:w-1/3 mt-2 px-2 gap-10' >
-            <div onClick={() => {setBehaviour('human'); setBotPP(human_pp)}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'human' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => {setBehaviour('human')}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'human' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center rounded' >
                     <Image
-                        src={human_pp}
+                        src={botsInfo.get('human')?.image || human_pp}
                         alt="Picture of the author"
                         width={150}
                         height={150}
@@ -145,10 +145,10 @@ const SelectBot = () => {
                     />
                 </span>
             </div>
-            <div onClick={() => {setBehaviour('stockfish-only'); setBotPP(stockfishOnly_pp)}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'stockfish-only' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => {setBehaviour('stockfish-only')}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'stockfish-only' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center rounded' >
                     <Image
-                        src={stockfishOnly_pp}
+                        src={botsInfo.get('stockfish-only')?.image || human_pp}
                         alt="Picture of the author"
                         width={150}
                         height={150}
@@ -161,10 +161,10 @@ const SelectBot = () => {
 
     const gimmickBotsComponent = 
         <div className='flex flex-row justify-center items-center flex-wrap w-full md:w-1/3 mt-2 px-2 gap-10' >
-            <div onClick={() => {setBehaviour('pawn-pusher'); setBotPP(pawnsPusher_pp)}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'pawn-pusher' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => {setBehaviour('pawn-pusher')}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'pawn-pusher' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center rounded' >
                     <Image
-                        src={pawnsPusher_pp}
+                        src={botsInfo.get('pawn-pusher')?.image || human_pp}
                         alt="Picture of the author"
                         width={150}
                         height={150}
@@ -173,10 +173,10 @@ const SelectBot = () => {
                     />
                 </span>
             </div>
-            <div onClick={() => {setBehaviour('shy'); setBotPP(shy_pp)}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center  cursor-pointer rounded border-4' style={{borderColor: behaviour === 'shy' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
+            <div onClick={() => {setBehaviour('shy')}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center  cursor-pointer rounded border-4' style={{borderColor: behaviour === 'shy' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
                 <span className=' w-full h-full flex justify-center items-center rounded' >
                     <Image
-                        src={shy_pp}
+                        src={botsInfo.get('shy')?.image || human_pp}
                         alt="Picture of the author"
                         width={150}
                         height={150}
@@ -185,10 +185,10 @@ const SelectBot = () => {
                     />
                 </span>
             </div>
-            <div onClick={() => {setBehaviour('blundering'); setBotPP(blundering_pp)}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'blundering' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
+            <div onClick={() => {setBehaviour('blundering')}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'blundering' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
                 <span className=' w-full h-full flex justify-center items-center rounded' >
                     <Image
-                        src={blundering_pp}
+                        src={botsInfo.get('blundering')?.image || human_pp}
                         alt="Picture of the author"
                         width={150}
                         height={150}
@@ -197,10 +197,10 @@ const SelectBot = () => {
                     />
                 </span>
             </div>
-            <div onClick={() => {setBehaviour('drawish'); setBotPP(drawish_pp)}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'drawish' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => {setBehaviour('drawish')}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'drawish' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center rounded' >
                     <Image
-                        src={drawish_pp}
+                        src={botsInfo.get('drawish')?.image || human_pp}
                         alt="Picture of the author"
                         width={150}
                         height={150}
@@ -209,10 +209,10 @@ const SelectBot = () => {
                     />
                 </span>
             </div>
-            <div onClick={() => {setBehaviour('exchanges-lover'); setBotPP(exchangesLover_pp)}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'exchanges-lover' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => {setBehaviour('exchanges-lover')}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'exchanges-lover' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center rounded' >
                     <Image
-                        src={exchangesLover_pp}
+                        src={botsInfo.get('exchanges-lover')?.image || human_pp}
                         alt="Picture of the author"
                         width={150}
                         height={150}
@@ -221,10 +221,10 @@ const SelectBot = () => {
                     />
                 </span>
             </div>
-            <div onClick={() => {setBehaviour('exchanges-hater'); setBotPP(exchangesHater_pp)}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'exchanges-hater' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => {setBehaviour('exchanges-hater')}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'exchanges-hater' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center rounded' >
                     <Image
-                        src={exchangesHater_pp}
+                        src={botsInfo.get('exchanges-hater')?.image || human_pp}
                         alt="Picture of the author"
                         width={150}
                         height={150}
@@ -233,10 +233,10 @@ const SelectBot = () => {
                     />
                 </span>
             </div>
-            <div onClick={() => {setBehaviour('queen-player'); setBotPP(queenPlayer_pp)}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'queen-player' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
+            <div onClick={() => {setBehaviour('queen-player')}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'queen-player' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
                 <span className=' w-full h-full flex justify-center items-center rounded' >
                     <Image
-                        src={queenPlayer_pp}
+                        src={botsInfo.get('queen-player')?.image || human_pp}
                         alt="Picture of the author"
                         width={150}
                         height={150}
@@ -245,10 +245,10 @@ const SelectBot = () => {
                     />
                 </span>
             </div>
-            <div onClick={() => {setBehaviour('castle-destroyer'); setBotPP(castleDestroyer_pp)}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'castle-destroyer' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => {setBehaviour('castle-destroyer')}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'castle-destroyer' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center rounded' >
                     <Image
-                        src={castleDestroyer_pp}
+                        src={botsInfo.get('castle-destroyer')?.image || human_pp}
                         alt="Picture of the author"
                         width={150}
                         height={150}
@@ -257,10 +257,10 @@ const SelectBot = () => {
                     />
                 </span>
             </div>
-            <div onClick={() => {setBehaviour('chessable-master'); setBotPP(chessableMaster_pp)}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'chessable-master' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => {setBehaviour('chessable-master')}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'chessable-master' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center rounded' >
                     <Image
-                        src={chessableMaster_pp}
+                        src={botsInfo.get('chessable-master')?.image || human_pp}
                         alt="Picture of the author"
                         width={150}
                         height={150}
@@ -269,10 +269,10 @@ const SelectBot = () => {
                     />
                 </span>
             </div>
-            <div onClick={() => {setBehaviour('auto-didacte'); setBotPP(autodidacte_pp)}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'auto-didacte' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => {setBehaviour('auto-didacte')}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'auto-didacte' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center rounded' >
                     <Image
-                        src={autodidacte_pp}
+                        src={botsInfo.get('auto-didacte')?.image || human_pp}
                         alt="Picture of the author"
                         width={150}
                         height={150}
@@ -281,10 +281,10 @@ const SelectBot = () => {
                     />
                 </span>
             </div>
-            <div onClick={() => {setBehaviour('random-player'); setBotPP(randomPlayer_pp)}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'random-player' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => {setBehaviour('random-player')}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'random-player' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center rounded' >
                     <Image
-                        src={randomPlayer_pp}
+                        src={botsInfo.get('random-player')?.image || human_pp}
                         alt="Picture of the author"
                         width={150}
                         height={150}
@@ -293,10 +293,10 @@ const SelectBot = () => {
                     />
                 </span>
             </div>
-            <div onClick={() => {setBehaviour('semi-random'); setBotPP(semiRandom_pp)}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'semi-random' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => {setBehaviour('semi-random')}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'semi-random' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center rounded' >
                     <Image
-                        src={semiRandom_pp}
+                        src={botsInfo.get('semi-random')?.image || human_pp}
                         alt="Picture of the author"
                         width={150}
                         height={150}
@@ -309,10 +309,10 @@ const SelectBot = () => {
 
     const openingBotsComponent = 
         <div className='flex flex-row justify-center items-center flex-wrap w-full md:w-1/3 mt-2 px-2 gap-10' >
-            <div onClick={() => {setBehaviour('fianchetto-sniper'); setBotPP(hippo_pp)}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'fianchetto-sniper' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => {setBehaviour('fianchetto-sniper')}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'fianchetto-sniper' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center rounded' >
                     <Image
-                        src={hippo_pp}
+                        src={botsInfo.get('fianchetto-sniper')?.image || human_pp}
                         alt="Picture of the author"
                         width={150}
                         height={150}
@@ -321,10 +321,10 @@ const SelectBot = () => {
                     />
                 </span>
             </div>
-            <div onClick={() => {setBehaviour('botez-gambit'); setBotPP(botezGambit_pp)}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'botez-gambit' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
+            <div onClick={() => {setBehaviour('botez-gambit')}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'botez-gambit' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
                 <span className=' w-full h-full flex justify-center items-center rounded' >
                     <Image
-                        src={botezGambit_pp}
+                        src={botsInfo.get('botez-gambit')?.image || human_pp}
                         alt="Picture of the author"
                         width={150}
                         height={150}
@@ -333,10 +333,10 @@ const SelectBot = () => {
                     />
                 </span>
             </div>
-            <div onClick={() => {setBehaviour('copycat'); setBotPP(copycat_pp)}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'copycat' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => {setBehaviour('copycat')}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'copycat' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center rounded' >
                     <Image
-                        src={copycat_pp}
+                        src={botsInfo.get('copycat')?.image || human_pp}
                         alt="Picture of the author"
                         width={150}
                         height={150}
@@ -345,10 +345,10 @@ const SelectBot = () => {
                     />
                 </span>
             </div>
-            <div onClick={() => {setBehaviour('bongcloud'); setBotPP(bongcloud_pp)}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'bongcloud' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
+            <div onClick={() => {setBehaviour('bongcloud')}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'bongcloud' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
                 <span className=' w-full h-full flex justify-center items-center rounded' >
                     <Image
-                        src={bongcloud_pp}
+                        src={botsInfo.get('bongcloud')?.image || human_pp}
                         alt="Picture of the author"
                         width={150}
                         height={150}
@@ -357,10 +357,10 @@ const SelectBot = () => {
                     />
                 </span>
             </div>
-            <div onClick={() => {setBehaviour('gambit-fanatic'); setBotPP(gambitFanatic_pp)}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'gambit-fanatic' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
+            <div onClick={() => {setBehaviour('gambit-fanatic')}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'gambit-fanatic' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
                 <span className=' w-full h-full flex justify-center items-center rounded' >
                     <Image
-                        src={gambitFanatic_pp}
+                        src={botsInfo.get('gambit-fanatic')?.image || human_pp}
                         alt="Picture of the author"
                         width={150}
                         height={150}
@@ -369,10 +369,10 @@ const SelectBot = () => {
                     />
                 </span>
             </div>
-            <div onClick={() => {setBehaviour('cow-lover'); setBotPP(cowLover_pp)}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'cow-lover' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => {setBehaviour('cow-lover')}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'cow-lover' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center rounded' >
                     <Image
-                        src={cowLover_pp}
+                        src={botsInfo.get('cow-lover')?.image || human_pp}
                         alt="Picture of the author"
                         width={150}
                         height={150}
@@ -381,10 +381,10 @@ const SelectBot = () => {
                     />
                 </span>
             </div>
-            <div onClick={() => {setBehaviour('indian-king'); setBotPP(indianKing_pp)}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'indian-king' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => {setBehaviour('indian-king')}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'indian-king' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center rounded' >
                     <Image
-                        src={indianKing_pp}
+                        src={botsInfo.get('indian-king')?.image || human_pp}
                         alt="Picture of the author"
                         width={150}
                         height={150}
@@ -393,10 +393,10 @@ const SelectBot = () => {
                     />
                 </span>
             </div>
-            <div onClick={() => {setBehaviour('stonewall'); setBotPP(stonewall_pp)}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'stonewall' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => {setBehaviour('stonewall')}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'stonewall' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center rounded' >
                     <Image
-                        src={stonewall_pp}
+                        src={botsInfo.get('stonewall')?.image || human_pp}
                         alt="Picture of the author"
                         width={150}
                         height={150}
@@ -405,10 +405,10 @@ const SelectBot = () => {
                     />
                 </span>
             </div>
-            <div onClick={() => {setBehaviour('dragon'); setBotPP(dragon_pp)}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'dragon' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => {setBehaviour('dragon')}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'dragon' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center rounded' >
                     <Image
-                        src={dragon_pp}
+                        src={botsInfo.get('dragon')?.image || human_pp}
                         alt="Picture of the author"
                         width={150}
                         height={150}
@@ -417,10 +417,10 @@ const SelectBot = () => {
                     />
                 </span>
             </div>
-            <div onClick={() => {setBehaviour('caro-london'); setBotPP(caroLondon_pp)}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'caro-london' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <div onClick={() => {setBehaviour('caro-london')}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'caro-london' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center rounded' >
                     <Image
-                        src={caroLondon_pp}
+                        src={botsInfo.get('caro-london')?.image || human_pp}
                         alt="Picture of the author"
                         width={150}
                         height={150}
