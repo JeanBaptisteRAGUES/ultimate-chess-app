@@ -64,7 +64,7 @@ const ThematicTrainingPage = () => {
         engine.current = new Engine();
         engine.current.init();
         const botColor = playerColor === 'w' ? 'b' : 'w';
-        botAI.current = new BotsAI('default', elo, botColor, timeControl);
+        botAI.current = new BotsAI('default', elo, botColor, timeControl, false);
         console.log('Starting Fen: ' + startingFen);
         console.log('Game Fen: ' + game.fen());
         console.log('Current Fen:' + currentFen);

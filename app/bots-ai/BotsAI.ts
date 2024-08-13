@@ -442,10 +442,25 @@ function generateBotID(): number {
     return Math.round(Math.random()*1000000000);
 } 
 
-function generateUsername(): string {
+function generateRandomProfile(): BotDescription {
     const usernameNumber = Math.random() < 0.55 ? (Math.round(Math.random()*100)).toString() : (2020 - Math.round(Math.random()*70)).toString();
     const usernameSpeChar = Math.random() < 0.55 ? '' : (Math.random() < 0.7 ? '_' : '-');
-    return humanNames.allRandom() + usernameSpeChar + usernameNumber;
+    //return humanNames.allRandom() + usernameSpeChar + usernameNumber;
+    const rand = Math.random()*100;
+
+    if(rand <= 50) {
+        return {
+            name: humanNames.maleRandom() + usernameSpeChar + usernameNumber,
+            description: '',
+            image: exchangesLover_pp,
+        }
+    }else {
+        return {
+            name: humanNames.femaleRandom() + usernameSpeChar + usernameNumber,
+            description: '',
+            image: exchangesHater_pp,
+        }
+    }
 }
 
 class BotsAI {
@@ -459,9 +474,10 @@ class BotsAI {
     #lastRandomMove: number;
     #botColor: Color;
     #username: string;
+    #profilePicture: StaticImageData;
 
     //TODO: Prendre en entrée le classement Élo et déterminer ENSUITE le 'level'
-    constructor(behaviour: Behaviour, elo: number, botColor: Color, timeControl: string) {
+    constructor(behaviour: Behaviour, elo: number, botColor: Color, timeControl: string, randomName: boolean) {
         this.#botID = generateBotID();
         this.#engine = new Engine();
         this.#toolbox = new GameToolBox();
@@ -472,7 +488,9 @@ class BotsAI {
         this.#botColor = botColor;
         this.#engine.init();
         this.#defaultBotParams = initDefaultBotParams(elo, timeControl);
-        this.#username = generateUsername();
+        const botInfos: BotDescription = generateRandomProfile();
+        this.#username = randomName ? botInfos.name : (botsInfo.get(behaviour)?.name || botInfos.name);
+        this.#profilePicture = randomName ? botInfos.image : (botsInfo.get(behaviour)?.image || botInfos.image);
 
         console.log(this.#username);
 
@@ -4812,15 +4830,19 @@ class BotsAI {
         return game.get(this.#toolbox.getMoveOrigin(move.notation) || 'a1').type;
     }
 
-    getID() {
+    getID(): number {
         return this.#botID;
     }
 
-    getUsername() {
+    getUsername(): string {
         return this.#username;
     }
 
-    getElo() {
+    getProfilePicture(): StaticImageData {
+        return this.#profilePicture;
+    }
+
+    getElo(): number {
         return this.#defaultBotParams.elo;
     }
 
@@ -4829,7 +4851,7 @@ class BotsAI {
         this.#lastRandomMove = this.#botColor === 'w' ? (-1)*Math.floor(Math.random()*3) - 1 : Math.floor(Math.random()*3) + 1;
     }
 
-    new(newBehaviour: Behaviour, newElo: number, newColor: Color, timeControl: string) {
+    new(newBehaviour: Behaviour, newElo: number, newColor: Color, timeControl: string, randomName: boolean) {
         //TODO: Vérifier si ça limite les crash
         this.#engine.newGame();
         //this.#engine = new Engine();
@@ -4838,7 +4860,9 @@ class BotsAI {
         this.#botColor = newColor;
         this.#botLevel = getLevelFromElo(newElo);
         this.#behaviour = newBehaviour;
-        this.#username = generateUsername();
+        const botInfos: BotDescription = generateRandomProfile();
+        this.#username = randomName ? botInfos.name : (botsInfo.get(newBehaviour)?.name || botInfos.name);
+        this.#profilePicture = randomName ? botInfos.image : (botsInfo.get(newBehaviour)?.image || botInfos.image);
         //this.#engine.init();
         this.#defaultBotParams = initDefaultBotParams(newElo, timeControl);
         console.log(`New Bot (${this.#botID}): ${this.#behaviour}`);

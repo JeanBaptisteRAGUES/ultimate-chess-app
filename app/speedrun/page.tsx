@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 'use client'
 import { useEffect, useRef, useState } from "react";
+import Image, { StaticImageData } from 'next/image';
 import {Chess, Color, DEFAULT_POSITION, PieceSymbol} from "chess.js";
 import { Chessboard } from "react-chessboard";
 import { Piece, Square } from "react-chessboard/dist/chessboard/types";
@@ -17,6 +18,8 @@ import { FaFontAwesomeFlag } from "react-icons/fa";
 import { FaRotate } from "react-icons/fa6";
 import { fetchChessDotComDB, safeFetchPlayerLichessDB } from "../libs/fetchLichess";
 import SpeedrunClock from "../components/SpeedrunClock";
+
+import stockfishOnly_pp from "@/public/Bots_images/chess3d_stockfish-only.jpg";
 
 type GameInfos = {
   title: string,
@@ -256,7 +259,7 @@ const SpeedrunPage = () => {
         const newBotElo = Math.round(Math.min(3200, Math.max(0, playerElo + (Math.random()*100 - 50))));
         //TODO: Génération aléatoire du comportement et de l'élo
         const newBotBehaviour = pickRandomBehaviour(newBotElo);
-        botAI.current = new BotsAI(newBotBehaviour, newBotElo, botColor, timeControl);
+        botAI.current = new BotsAI(newBotBehaviour, newBotElo, botColor, timeControl, true);
         setPlayerColor(newPlayerColor as Color);
         setBotElo(newBotElo);
         setBotBehaviour(newBotBehaviour);
@@ -304,7 +307,7 @@ const SpeedrunPage = () => {
         engine.current?.newGame();
         //botAI.current?.reset();
         console.log(newBotElo);
-        botAI.current?.new(newBotBehaviour, newBotElo, newBotColor, timeControl);
+        botAI.current?.new(newBotBehaviour, newBotElo, newBotColor, timeControl, true);
         gameActive.current = false;
         movesTypeRef.current = [];
         setShowGameoverWindow(0);
@@ -779,6 +782,16 @@ const SpeedrunPage = () => {
       <div className=" relative flex flex-col justify-center items-center h-fit md:h-[500px] w-[95vw] md:w-[500px] my-10" >
           <div className=" relative flex justify-start p-2 w-full h-10 font-medium bg-slate-100 rounded-t-md">
             <div className=" h-full flex justify-start items-center flex-grow-[4]" >
+              <span className=' w-9 h-9 flex justify-center items-center rounded mr-3' >
+                <Image
+                    src={botAI.current?.getProfilePicture() || stockfishOnly_pp}
+                    alt="Picture of the author"
+                    width={50}
+                    height={50}
+                    // blurDataURL="data:..." automatically provided
+                    placeholder="blur" // Optional blur-up while loading
+                />
+              </span>
               {botAI.current?.getUsername()} ({botElo}) {playerColor === 'w' ? (
                 showMaterialAdvantage('b')
               ) : (

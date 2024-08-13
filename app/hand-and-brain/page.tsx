@@ -86,8 +86,8 @@ const HandAndBrainPage = () => {
         engine.current = new Engine();
         engine.current.init();
         const opponentColor = playerColor === 'w' ? 'b' : 'w';
-        allyAI.current = new BotsAI('default', allyElo, playerColor, '10+0');
-        opponentAI.current = new BotsAI(opponentBehaviour, opponentElo, opponentColor, '10+0');
+        allyAI.current = new BotsAI('default', allyElo, playerColor, '10+0', false);
+        opponentAI.current = new BotsAI(opponentBehaviour, opponentElo, opponentColor, '10+0', false);
         console.log("Player Role: " + playerRole);
         console.log("Ally Elo: " + allyElo);
         console.log("Ally Role: " + allyRole);

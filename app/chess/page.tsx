@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 'use client'
 import { useEffect, useRef, useState } from "react";
+import Image, { StaticImageData } from 'next/image';
 import {Chess, Color, DEFAULT_POSITION, PieceSymbol} from "chess.js";
 import { Chessboard } from "react-chessboard";
 import { Piece, Square } from "react-chessboard/dist/chessboard/types";
@@ -16,6 +17,8 @@ import { FaCirclePlay } from "react-icons/fa6";
 import { FaFontAwesomeFlag } from "react-icons/fa";
 import { FaRotate } from "react-icons/fa6";
 import { fetchChessDotComDB, safeFetchPlayerLichessDB } from "../libs/fetchLichess";
+
+import stockfishOnly_pp from "@/public/Bots_images/chess3d_stockfish-only.jpg";
 
 
 const ChessPage = () => {
@@ -85,7 +88,7 @@ const ChessPage = () => {
         engine.current = new Engine();
         engine.current.init();
         const botColor = playerColor === 'w' ? 'b' : 'w';
-        botAI.current = new BotsAI(botBehaviour, botElo, botColor, timeControl);
+        botAI.current = new BotsAI(botBehaviour, botElo, botColor, timeControl, false);
         console.log("Bot Elo: " + botElo);
         console.log("Bot Behaviour: " + botBehaviour);
     }, []);
@@ -471,7 +474,17 @@ const ChessPage = () => {
       <div className=" relative flex flex-col justify-center items-center h-fit md:h-[500px] w-[95vw] md:w-[500px] my-10" >
           <div className=" relative flex justify-start p-2 w-full h-10 font-medium bg-slate-100 rounded-t-md">
             <div className=" h-full flex justify-start items-center flex-grow-[4]" >
-              {botBehaviour} ({botElo}) {playerColor === 'w' ? (
+              <span className=' w-9 h-9 flex justify-center items-center rounded mr-3' >
+                <Image
+                    src={botAI.current?.getProfilePicture() || stockfishOnly_pp}
+                    alt="Picture of the author"
+                    width={50}
+                    height={50}
+                    // blurDataURL="data:..." automatically provided
+                    placeholder="blur" // Optional blur-up while loading
+                />
+              </span>
+              {botAI.current?.getUsername()} ({botElo}) {playerColor === 'w' ? (
                 showMaterialAdvantage('b')
               ) : (
                 showMaterialAdvantage('w')
