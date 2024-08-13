@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 'use client'
 import { useEffect, useRef, useState } from "react";
+import Image, { StaticImageData } from 'next/image';
 import {Chess, Color, DEFAULT_POSITION} from "chess.js";
 import { Chessboard } from "react-chessboard";
 import { Piece, Square } from "react-chessboard/dist/chessboard/types";
@@ -13,6 +14,8 @@ import { useSearchParams } from "next/navigation";
 import GameToolBox from "../game-toolbox/GameToolbox";
 import { ImSwitch } from "react-icons/im"; // TODO: Bouton pour stopper le match
 import { FaCirclePlay, FaRotate } from "react-icons/fa6";
+
+import stockfishOnly_pp from "@/public/Bots_images/chess3d_stockfish-only.jpg";
 
 const timeControlDelays = new Map([
   ['1+0', 300],
@@ -76,8 +79,8 @@ const BotVsBotPage = () => {
     useEffect(() => {
         engine.current = new Engine();
         engine.current.init();
-        bot1_AI.current = new BotsAI(bot1_Behaviour, bot1_Elo, 'w', timeControl);
-        bot2_AI.current = new BotsAI(bot2_Behaviour, bot2_Elo, 'b', timeControl);
+        bot1_AI.current = new BotsAI(bot1_Behaviour, bot1_Elo, 'w', timeControl, false);
+        bot2_AI.current = new BotsAI(bot2_Behaviour, bot2_Elo, 'b', timeControl, false);
     }, []);
 
     const gameMove = (moveNotation: string, moveType: number) => {
@@ -334,10 +337,20 @@ const BotVsBotPage = () => {
       <div className=" flex flex-col justify-center items-center h-[300px] md:h-[500px] w-[95vw] md:w-[500px] my-16 md:my-10" >
           <div className=" relative flex justify-start p-2 w-full h-10 font-medium bg-slate-100 rounded-t-md">
             <div className=" h-full flex justify-start items-center flex-grow-[4]" >
+              <span className=' w-9 h-9 flex justify-center items-center rounded mr-3' >
+                <Image
+                    src={playerColor === 'w' ? (bot2_AI.current?.getProfilePicture() || stockfishOnly_pp) : (bot1_AI.current?.getProfilePicture() || stockfishOnly_pp)}
+                    alt="Picture of the author"
+                    width={50}
+                    height={50}
+                    // blurDataURL="data:..." automatically provided
+                    placeholder="blur" // Optional blur-up while loading
+                />
+              </span>
               {playerColor === 'w' ?  
-                  `${bot2_Behaviour} (${bot2_Elo}) ${showMaterialAdvantage('b')}` 
+                  `${bot2_AI.current?.getUsername()} (${bot2_Elo}) ${showMaterialAdvantage('b')}` 
                 : 
-                  `${bot1_Behaviour} (${bot1_Elo}) ${showMaterialAdvantage('w')}`
+                  `${bot1_AI.current?.getUsername()} (${bot1_Elo}) ${showMaterialAdvantage('w')}`
               }
             </div>
           </div>
@@ -349,10 +362,20 @@ const BotVsBotPage = () => {
           />
           <div className=" relative flex justify-start p-2 w-full h-10 font-medium bg-slate-100 rounded-b-md">
             <div className=" h-full flex justify-start items-center flex-grow-[4]" >
+              <span className=' w-9 h-9 flex justify-center items-center rounded mr-3' >
+                <Image
+                    src={playerColor === 'b' ? (bot2_AI.current?.getProfilePicture() || stockfishOnly_pp) : (bot1_AI.current?.getProfilePicture() || stockfishOnly_pp)}
+                    alt="Picture of the author"
+                    width={50}
+                    height={50}
+                    // blurDataURL="data:..." automatically provided
+                    placeholder="blur" // Optional blur-up while loading
+                />
+              </span>
               {playerColor === 'b' ?  
-                  `${bot2_Behaviour} (${bot2_Elo}) ${showMaterialAdvantage('b')}` 
+                  `${bot2_AI.current?.getUsername()} (${bot2_Elo}) ${showMaterialAdvantage('b')}` 
                 : 
-                  `${bot1_Behaviour} (${bot1_Elo}) ${showMaterialAdvantage('w')}`
+                  `${bot1_AI.current?.getUsername()} (${bot1_Elo}) ${showMaterialAdvantage('w')}`
               }
             </div>
           </div>
