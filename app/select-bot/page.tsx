@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import Image, { StaticImageData } from 'next/image'
+import Image, { StaticImageData } from 'next/image';
 import { Behaviour, BotDescription, botsInfo } from '../bots-ai/BotsAI';
 import { GiBulletBill } from 'react-icons/gi';
 import { SiStackblitz } from 'react-icons/si';
