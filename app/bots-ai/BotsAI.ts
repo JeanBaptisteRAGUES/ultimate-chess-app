@@ -33,6 +33,48 @@ import stonewall_pp from "@/public/Bots_images/chess3d_stone-wall.jpg";
 import dragon_pp from "@/public/Bots_images/chess3d_dragon.jpg";
 import caroLondon_pp from "@/public/Bots_images/chess3d_caro-london.jpg";
 
+import speedrun_male01 from "@/public/Speedrun_opponents/males/speedrun_male01.jpg";
+import speedrun_male02 from "@/public/Speedrun_opponents/males/speedrun_male02.jpg";
+import speedrun_male03 from "@/public/Speedrun_opponents/males/speedrun_male03.jpg";
+import speedrun_male04 from "@/public/Speedrun_opponents/males/speedrun_male04.jpg";
+import speedrun_male05 from "@/public/Speedrun_opponents/males/speedrun_male05.jpg";
+import speedrun_male06 from "@/public/Speedrun_opponents/males/speedrun_male06.jpg";
+import speedrun_male07 from "@/public/Speedrun_opponents/males/speedrun_male07.jpg";
+import speedrun_male08 from "@/public/Speedrun_opponents/males/speedrun_male08.jpg";
+import speedrun_male09 from "@/public/Speedrun_opponents/males/speedrun_male09.jpg";
+import speedrun_male10 from "@/public/Speedrun_opponents/males/speedrun_male10.jpg";
+import speedrun_male11 from "@/public/Speedrun_opponents/males/speedrun_male11.jpg";
+import speedrun_male12 from "@/public/Speedrun_opponents/males/speedrun_male12.jpg";
+import speedrun_male13 from "@/public/Speedrun_opponents/males/speedrun_male13.jpg";
+import speedrun_male14 from "@/public/Speedrun_opponents/males/speedrun_male14.jpg";
+import speedrun_male15 from "@/public/Speedrun_opponents/males/speedrun_male15.jpg";
+import speedrun_male16 from "@/public/Speedrun_opponents/males/speedrun_male16.jpg";
+import speedrun_male17 from "@/public/Speedrun_opponents/males/speedrun_male17.jpg";
+import speedrun_male18 from "@/public/Speedrun_opponents/males/speedrun_male18.jpg";
+import speedrun_male19 from "@/public/Speedrun_opponents/males/speedrun_male19.jpg";
+import speedrun_male20 from "@/public/Speedrun_opponents/males/speedrun_male20.jpg";
+
+import speedrun_female01 from "@/public/Speedrun_opponents/females/speedrun_female01.jpg";
+import speedrun_female02 from "@/public/Speedrun_opponents/females/speedrun_female02.jpg";
+import speedrun_female03 from "@/public/Speedrun_opponents/females/speedrun_female03.jpg";
+import speedrun_female04 from "@/public/Speedrun_opponents/females/speedrun_female04.jpg";
+import speedrun_female05 from "@/public/Speedrun_opponents/females/speedrun_female05.jpg";
+import speedrun_female06 from "@/public/Speedrun_opponents/females/speedrun_female06.jpg";
+import speedrun_female07 from "@/public/Speedrun_opponents/females/speedrun_female07.jpg";
+import speedrun_female08 from "@/public/Speedrun_opponents/females/speedrun_female08.jpg";
+import speedrun_female09 from "@/public/Speedrun_opponents/females/speedrun_female09.jpg";
+import speedrun_female10 from "@/public/Speedrun_opponents/females/speedrun_female10.jpg";
+import speedrun_female11 from "@/public/Speedrun_opponents/females/speedrun_female11.jpg";
+import speedrun_female12 from "@/public/Speedrun_opponents/females/speedrun_female12.jpg";
+import speedrun_female13 from "@/public/Speedrun_opponents/females/speedrun_female13.jpg";
+import speedrun_female14 from "@/public/Speedrun_opponents/females/speedrun_female14.jpg";
+import speedrun_female15 from "@/public/Speedrun_opponents/females/speedrun_female15.jpg";
+import speedrun_female16 from "@/public/Speedrun_opponents/females/speedrun_female16.jpg";
+import speedrun_female17 from "@/public/Speedrun_opponents/females/speedrun_female17.jpg";
+import speedrun_female18 from "@/public/Speedrun_opponents/females/speedrun_female18.jpg";
+import speedrun_female19 from "@/public/Speedrun_opponents/females/speedrun_female19.jpg";
+import speedrun_female20 from "@/public/Speedrun_opponents/females/speedrun_female20.jpg";
+
 // Bots "célébrités"
 // TODO: Jouent les coups trouvés dans la BDD de chess.com pour des joueurs connus, puis stockfish
 
@@ -94,6 +136,49 @@ export const botsInfo = new Map<Behaviour, BotDescription>([
     ['exchanges-lover', {name: 'Jason', description: "Jason aime l'action et cherchera le plus possible à capturer les pièces adverses.", image: exchangesLover_pp}]
 
 ]);
+
+const speedrun_opponents = new Map<string, StaticImageData>([
+    ['male1', speedrun_male01],
+    ['male2', speedrun_male02],
+    ['male3', speedrun_male03],
+    ['male4', speedrun_male04],
+    ['male5', speedrun_male05],
+    ['male6', speedrun_male06],
+    ['male7', speedrun_male07],
+    ['male8', speedrun_male08],
+    ['male9', speedrun_male09],
+    ['male10', speedrun_male10],
+    ['male11', speedrun_male11],
+    ['male12', speedrun_male12],
+    ['male13', speedrun_male13],
+    ['male14', speedrun_male14],
+    ['male15', speedrun_male15],
+    ['male16', speedrun_male16],
+    ['male17', speedrun_male17],
+    ['male18', speedrun_male18],
+    ['male19', speedrun_male19],
+    ['male20', speedrun_male20],
+    ['female1', speedrun_female01],
+    ['female2', speedrun_female02],
+    ['female3', speedrun_female03],
+    ['female4', speedrun_female04],
+    ['female5', speedrun_female05],
+    ['female6', speedrun_female06],
+    ['female7', speedrun_female07],
+    ['female8', speedrun_female08],
+    ['female9', speedrun_female09],
+    ['female10', speedrun_female10],
+    ['female11', speedrun_female11],
+    ['female12', speedrun_female12],
+    ['female13', speedrun_female13],
+    ['female14', speedrun_female14],
+    ['female15', speedrun_female15],
+    ['female16', speedrun_female16],
+    ['female17', speedrun_female17],
+    ['female18', speedrun_female18],
+    ['female19', speedrun_female19],
+    ['female20', speedrun_female20],
+])
 
 function getLevelFromElo(elo: number) {
     if(elo < 800) return 'Beginner';
@@ -447,18 +532,19 @@ function generateRandomProfile(): BotDescription {
     const usernameSpeChar = Math.random() < 0.55 ? '' : (Math.random() < 0.7 ? '_' : '-');
     //return humanNames.allRandom() + usernameSpeChar + usernameNumber;
     const rand = Math.random()*100;
+    const randProfilePicture = Math.round(Math.random()*20);
 
     if(rand <= 50) {
         return {
             name: humanNames.maleRandom() + usernameSpeChar + usernameNumber,
             description: '',
-            image: exchangesLover_pp,
+            image: speedrun_opponents.get(`male${randProfilePicture}`) || speedrun_male01,
         }
     }else {
         return {
             name: humanNames.femaleRandom() + usernameSpeChar + usernameNumber,
             description: '',
-            image: exchangesHater_pp,
+            image: speedrun_opponents.get(`female${randProfilePicture}`) || speedrun_female01,
         }
     }
 }
