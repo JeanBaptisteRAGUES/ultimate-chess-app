@@ -1,15 +1,21 @@
 'use client'
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import MultiRangeSlider, { ChangeResult } from "multi-range-slider-react";
 import Link from 'next/link';
 import { GiBulletBill } from 'react-icons/gi';
 import { SiStackblitz } from 'react-icons/si';
 import { LuAlarmClock } from 'react-icons/lu';
 import { IoHourglassOutline, IoInfiniteSharp } from 'react-icons/io5';
-import { Color } from 'chess.js';
+import { Chess, Color, DEFAULT_POSITION } from 'chess.js';
+import { Chessboard } from 'react-chessboard';
+import { Piece, Square } from 'react-chessboard/dist/chessboard/types';
 
 const SelectSpeedrun = () => {
+    const gameWhite = useRef<Chess>(new Chess());
+    const gameBlack = useRef<Chess>(new Chess());
+    const [currentFenWhite, setCurrentFenWhite] = useState(DEFAULT_POSITION);
+    const [currentFenBlack, setCurrentFenBlack] = useState(DEFAULT_POSITION);
     const [eloMin, setEloMin] = useState<number>(400);
     const [eloMax, setEloMax] = useState<number>(2000);
     const [eloStep, setEloStep] = useState<number>(10);
@@ -108,6 +114,68 @@ const SelectSpeedrun = () => {
                 <span className=' w-full h-full flex justify-center items-center text-4xl font-bold text-center' >Black</span>
             </div>
         </div>
+
+
+    function getPromotion(sourceSquare: Square, piece: Piece) {
+        
+        if(gameWhite.current.get(sourceSquare).type === 'p' && piece.charAt(1) !== 'P'){
+            return piece.charAt(1).toLowerCase();
+        }
+        return '';
+    }
+
+    const gameMoveWhite = (moveNotation: string) => {
+        gameWhite.current.move(moveNotation);
+        setCurrentFenWhite(gameWhite.current.fen());
+    }
+    function onDropWhite(sourceSquare: Square, targetSquare: Square, piece: Piece) {
+        const promotion = getPromotion(sourceSquare, piece);
+        console.log(gameWhite.current.fen());
+        console.log(currentFenWhite);
+
+        gameMoveWhite(sourceSquare + targetSquare + promotion);
+        console.log(gameWhite.current.fen());
+        console.log(currentFenWhite);
+        
+        return true;
+    }
+
+    const gameMoveBlack = (moveNotation: string) => {
+        gameBlack.current.move(moveNotation);
+        setCurrentFenBlack(gameBlack.current.fen());
+    }
+    function onDropBlack(sourceSquare: Square, targetSquare: Square, piece: Piece) {
+        const promotion = getPromotion(sourceSquare, piece);
+        console.log(gameBlack.current.fen());
+
+        gameMoveBlack(sourceSquare + targetSquare + promotion);
+        
+        return true;
+    }
+
+    const selectPositionWhite = 
+        <div className='flex flex-row justify-around items-center flex-wrap w-full mt-2 px-2 gap-2' >
+            <div className=' relative w-72 h-72 flex justify-center items-center'>
+                <Chessboard 
+                    id='selectPositionWhite'
+                    position={currentFenWhite}
+                    onPieceDrop={onDropWhite} 
+                    boardOrientation='white'
+                />
+            </div>
+        </div>
+
+    const selectPositionBlack = 
+        <div className='flex flex-row justify-around items-center flex-wrap w-full mt-2 px-2 gap-2' >
+            <div className=' relative w-72 h-72 flex justify-center items-center'>
+                <Chessboard 
+                    id='selectPositionBlack'
+                    position={currentFenBlack}
+                    onPieceDrop={onDropBlack} 
+                    boardOrientation='black'
+                />
+            </div>
+        </div>
     
 
 
@@ -125,6 +193,10 @@ const SelectSpeedrun = () => {
             {timeControlComponent}
             <div className=' w-full mt-20 md:ml-10 flex justify-center md:justify-start items-center text-2xl font-semibold text-white' >Couleur:</div>
             {playerColorComponent}
+            <div className=' w-full mt-20 md:ml-10 flex justify-center md:justify-start items-center text-2xl font-semibold text-white' >Position de départ (blancs):</div>
+            {selectPositionWhite}
+            <div className=' w-full mt-20 md:ml-10 flex justify-center md:justify-start items-center text-2xl font-semibold text-white' >Position de départ (noirs):</div>
+            {selectPositionBlack}
             <Link
                 className=' text-white hover:text-cyan-400 cursor-pointer text-3xl font-bold my-20 '
                 href = {{
@@ -136,6 +208,8 @@ const SelectSpeedrun = () => {
                     playerElo: eloMin,
                     timeControl: timeControl,
                     playerColor: playerColor,
+                    startingPgnWhite: gameWhite.current.pgn(),
+                    startingPgnBlack: gameBlack.current.pgn(),
                 }
                 }}
             >

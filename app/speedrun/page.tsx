@@ -32,15 +32,14 @@ type GameInfos = {
 
 const SpeedrunPage = () => {
     const searchParams = useSearchParams();
-    //const botElo: number = eval(searchParams.get('elo') || '1500');
-    //const botBehaviour: Behaviour = searchParams.get('behaviour') as Behaviour || 'default';
     const eloMin: number = eval(searchParams.get('eloMin') || '400');
     const eloMax: number = eval(searchParams.get('eloMax') || '2000');
     const eloStep: number = eval(searchParams.get('eloStep') || '10');
     const timeControl = searchParams.get('timeControl') || 'infinite';
     const playerColorBase = searchParams.get('playerColor') || 'random';
+    const startingPgnWhite: string = searchParams.get('startingPgnWhite') || '';
+    const startingPgnBlack: string = searchParams.get('startingPgnBlack') || '';
     const [playerColor, setPlayerColor] = useState<Color>('w');
-    //const playerElo: number = eval(searchParams.get('playerElo') || '400');
     const [playerElo, setPlayerElo] = useState<number>(eval(searchParams.get('playerElo') || '400'));
     const toolbox = new GameToolBox();
     const gameActive = useRef(false);
@@ -48,14 +47,10 @@ const SpeedrunPage = () => {
     const virtualGame = useRef(new Chess());
     const engine = useRef<Engine>();
     const botAI = useRef<BotsAI>();
-    //const [playerColor, setPlayerColor] = useState<Color>(Math.random() < 0.5 ? 'w' : 'b');
     const [botElo, setBotElo] = useState<number>(playerElo);
     const [botBehaviour, setBotBehaviour] = useState<Behaviour>('default');
-    //const [viewColor, setViewColor] = useState<Color>('w');
     const [gameStarted, setGameStarted] = useState(false);
     const [currentTimeout, setCurrentTimeout] = useState<NodeJS.Timeout>();
-    //const [databaseRating, setDatabaseRating] = useState('Master');
-    //const [botBehaviour, setBotBehaviour] = useState<Behaviour>('default');
     const [currentFen, setCurrentFen] = useState(DEFAULT_POSITION);
     const [virtualFen, setVirtualFen] = useState(DEFAULT_POSITION);
     const [isVirtualMode, setIsVirtualMode] = useState(false);
@@ -238,6 +233,13 @@ const SpeedrunPage = () => {
         const behaviourRand = Math.random()*100;
         let botBehaviour: Behaviour = 'default';
 
+        if(startingPgnWhite !== '' || startingPgnBlack !== '') {
+          console.log('La position de départ a été modifiée, le comportement du bot est reglé sur "humain".');
+          return botBehaviour;
+        }
+
+        console.log(behaviourRand);
+
         gimmicks.forEach(gimmick => {
           if(gimmick.min <= botElo && botElo <= gimmick.max){
             gimmick.gimmicks.forEach(behaviour => {
@@ -259,6 +261,17 @@ const SpeedrunPage = () => {
         const newBotElo = Math.round(Math.min(3200, Math.max(0, playerElo + (Math.random()*100 - 50))));
         //TODO: Génération aléatoire du comportement et de l'élo
         const newBotBehaviour = pickRandomBehaviour(newBotElo);
+        
+        const startingHistory = newPlayerColor === 'w' ? startingPgnWhite : startingPgnBlack;
+        game.loadPgn(startingHistory);
+        console.log(startingHistory);
+        console.log(startingPgnWhite);
+        console.log(game.fen());
+        console.log(game.pgn());
+        console.log(game.history());
+        setCurrentFen(game.fen());
+        setVirtualFen(game.fen());
+        
         botAI.current = new BotsAI(newBotBehaviour, newBotElo, botColor, timeControl, true);
         setPlayerColor(newPlayerColor as Color);
         setBotElo(newBotElo);
@@ -267,6 +280,7 @@ const SpeedrunPage = () => {
         console.log("Bot Elo: " + newBotElo);
         console.log("Bot Behaviour: " + newBotBehaviour);
         console.log(timeControl);
+        console.log(game.fen());
     }, []);
 
     useEffect(() => {
@@ -276,6 +290,9 @@ const SpeedrunPage = () => {
     }, [playerColor]);
 
     const gameMove = (moveNotation: string, moveType: number) => {
+      console.log('Play computer move (gameMove(moveNotation: string, moveType: number))');
+      console.log(game.fen());
+      console.log(game.moves());
       game.move(moveNotation);
       setCurrentFen(game.fen());
       setVirtualFen(game.fen());
@@ -303,8 +320,16 @@ const SpeedrunPage = () => {
         const newPlayerColor = playerColorBase === 'random' ? (Math.random() < 0.5 ? 'w' : 'b') : playerColorBase;
         const newBotColor = playerColor === 'w' ? 'b' : 'w';
         const newBotBehaviour = pickRandomBehaviour(newBotElo);
+
         game.reset();
         engine.current?.newGame();
+
+        //TODO: Faire en sorte que ça remette à 0 la position chosie par le joueur
+        const startingHistory = newPlayerColor === 'w' ? startingPgnWhite : startingPgnBlack;
+        game.loadPgn(startingHistory);
+        setCurrentFen(game.fen());
+        setVirtualFen(game.fen());
+
         //botAI.current?.reset();
         console.log(newBotElo);
         botAI.current?.new(newBotBehaviour, newBotElo, newBotColor, timeControl, true);
@@ -317,8 +342,8 @@ const SpeedrunPage = () => {
         setBotElo(newBotElo);
         setGameStarted(false);
         setIsVirtualMode(false);
-        setCurrentFen(DEFAULT_POSITION);
-        setVirtualFen(DEFAULT_POSITION);
+
+        //TODO: Peut créer des erreurs si la position de départ n'est pas DEFAULT_POSITION
         setWhiteMaterialAdvantage({
             pawn: 0,
             knight: 0,
@@ -503,6 +528,9 @@ const SpeedrunPage = () => {
       //console.log('Play computer move, game active ? ' + gameActive.current);
       console.log(`Bot current ID (${botAI.current?.getID()}) VS Request ID (${botID})`);
       if(game.pgn().includes('#') || !gameActive.current || botAI.current?.getID() !== botID) return;
+      console.log('Play computer move (playComputerMove(botID: number))');
+      console.log(game.fen());
+      console.log(game.moves());
       const move: Move | undefined = await botAI.current?.makeMove(game);
 
       if(move && move.type >= 0){
@@ -538,6 +566,7 @@ const SpeedrunPage = () => {
     function onDrop(sourceSquare: Square, targetSquare: Square, piece: Piece) {
       const promotion = getPromotion(sourceSquare, piece);
       const oldBotID = botAI.current?.getID() || Math.random();
+      console.log(game.fen());
       
       if(isVirtualMode) {
         gameVirtualMove(sourceSquare + targetSquare + promotion);
@@ -855,6 +884,9 @@ const SpeedrunPage = () => {
           gameActive.current = true;
           setShowEval(false);
           if(game.turn() !== playerColor && botAI.current){
+            console.log('Play computer move (startGameButton)');
+            console.log(game.fen());
+            console.log(game.moves());
             playComputerMove(botAI.current.getID());
           }
         }}

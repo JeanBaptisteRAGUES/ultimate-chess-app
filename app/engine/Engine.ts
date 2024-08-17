@@ -310,7 +310,7 @@ class Engine {
 
                 this.stockfishAnalysis.onmessage = function(event: any) {
                     if(event.data.includes(`info depth ${depth} `) && (evalRegex.exec(event.data)) !== null){
-                        console.log(event.data);
+                        //console.log(event.data);
                         const wdl = event.data.match(/wdl\s(?<wdl>\d*\s\d*\s\d*)\s/)?.groups.wdl.split(' ');
                         let evaluationStr: string | null = getEvalFromData(event.data, coeff);
                         let bestMove: string | null = getBestMoveFromData(event.data);

@@ -4744,6 +4744,10 @@ class BotsAI {
             type: -1,
         };
 
+        console.log('Play computer move (async makeMove(game: Chess))');
+        console.log(game.fen());
+        console.log(game.moves());
+
         switch (this.#behaviour) {
             case "default":
                 move = await this.#makeDefaultMove(game);
