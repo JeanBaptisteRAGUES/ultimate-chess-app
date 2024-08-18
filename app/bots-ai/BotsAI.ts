@@ -819,7 +819,10 @@ class BotsAI {
             ['Master', 5],
             ['Maximum', 0]
           ]).get(this.#botLevel) || 10; */
-        const forgotPieceChance = Math.max(1, (Math.round(55 - Math.sqrt(this.#defaultBotParams.elo))));
+        let forgotPieceChance = Math.max(1, (Math.round(55 - Math.sqrt(this.#defaultBotParams.elo))));
+        console.log('Forgot Piece Chances (base): ' + forgotPieceChance);
+        forgotPieceChance = forgotPieceChance*(Math.min(1.2, 0.8 + 0.01*(game.history().length/2)));
+        console.log('Forgot Piece Chances (adjusted): ' + forgotPieceChance);
         let hasForgotten = false;
         let thingsForgotten = '';
 
@@ -840,14 +843,14 @@ class BotsAI {
                         newGame.put({ type: 'p', color: opponentColor }, boardCase.square)
                     }
                     
-                    if(boardCase?.type === 'q' && rand <= forgotPieceChance) {
+                    if(boardCase?.type === 'q' && rand <= forgotPieceChanceFinal) {
                         //console.log('Oublie les déplacements en diagonale de la dame en ' + boardCase.square);
                         thingsForgotten+= ` les déplacements en diagonale de la dame en ${boardCase.square}`;
                         hasForgotten = true;
                         newGame.put({ type: 'r', color: opponentColor }, boardCase.square)
                     }
 
-                    if(boardCase?.type === 'q' && rand <= forgotPieceChanceFinal) {
+                    if(boardCase?.type === 'q' && rand <= forgotPieceChanceFinal/2) {
                         //console.log('Oublie la dame en ' + boardCase.square);
                         thingsForgotten+= ` la dame en ${boardCase.square}`;
                         hasForgotten = true;
@@ -878,7 +881,10 @@ class BotsAI {
         let fenBeforeOpponentMove = game.history({verbose: true}).pop()?.before || DEFAULT_POSITION;
         fenBeforeOpponentMove = this.#botColor === 'w' ? fenBeforeOpponentMove.replace(' b ', ' w ') : fenBeforeOpponentMove.replace(' w ', ' b ');
         const gameTest = new Chess();
-        const ignoreOpponentMoveChance = Math.max(1, (Math.round(55 - Math.pow(this.#defaultBotParams.elo, 1/1.9))));
+        let ignoreOpponentMoveChance = Math.max(1, (Math.round(55 - Math.pow(this.#defaultBotParams.elo, 1/1.9))));
+        console.log('Ignore Opponent Move Chances (base): ' + ignoreOpponentMoveChance);
+        ignoreOpponentMoveChance = ignoreOpponentMoveChance*(Math.min(1.2, 0.8 + 0.01*(game.history().length/2)));
+        console.log('Ignore Opponent Move Chances (adjusted): ' + ignoreOpponentMoveChance);
         let moveType = 5;
 
         if(Math.random()*100 > ignoreOpponentMoveChance) {
