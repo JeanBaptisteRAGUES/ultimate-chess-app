@@ -3782,7 +3782,7 @@ class BotsAI {
             type: -1,
         };
 
-        if(game.history().length > 40) {
+        if((this.#defaultBotParams.elo <= 800 && game.history().length > 24) || (this.#defaultBotParams.elo <= 1500 && game.history().length > 30) || (this.#defaultBotParams.elo <= 1800 && game.history().length > 36) || (game.history().length > 40)) {
             return move;
         }
 
