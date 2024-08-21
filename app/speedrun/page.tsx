@@ -487,26 +487,14 @@ const SpeedrunPage = () => {
       switch (winner) {
         case 'd':
           setEngineEval('1/2 - 1/2');
-          if(playerElo >= (botAI.current?.getElo() || botElo)){
-            gamesHistory.current.push({
-              title: playerColor === 'w' ? `Joueur VS ${botAI.current?.getUsername()}` : `${botAI.current?.getUsername()} VS Joueur`,
-              pgn: game.pgn(),
-              result: '1/2 - 1/2',
-              currentElo: playerElo,
-              eloGain: eloStep/2,
-            });
-            newPlayerElo+= eloStep/2;
-          }else{
-            gamesHistory.current.push({
-              title: playerColor === 'w' ? `Joueur VS ${botAI.current?.getUsername()}` : `${botAI.current?.getUsername()} VS Joueur`,
-              pgn: game.pgn(),
-              result: '1/2 - 1/2',
-              currentElo: playerElo,
-              eloGain: -eloStep/2,
-            });
-            newPlayerElo-= eloStep/2;
-          }
-          setPlayerElo(Math.max(0, newPlayerElo));
+          gamesHistory.current.push({
+            title: playerColor === 'w' ? `Joueur VS ${botAI.current?.getUsername()}` : `${botAI.current?.getUsername()} VS Joueur`,
+            pgn: game.pgn(),
+            result: '1/2 - 1/2',
+            currentElo: playerElo,
+            eloGain: 0,
+          });
+          setPlayerElo(Math.max(0, playerElo));
           break;
         case 'w':
           setEngineEval('1 - 0');
