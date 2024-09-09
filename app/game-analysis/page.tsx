@@ -215,6 +215,7 @@ const GameAnalysisPage = () => {
                 fen: testGame.fen(),
                 eval: result.evalBefore,
                 wdl: result.wdl,
+                bestLines: [result.bestLine || ''],
             });
             console.log(pgnHistory[i]);
             testGame.move(pgnHistory[i]);

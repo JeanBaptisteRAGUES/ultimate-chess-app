@@ -4,6 +4,7 @@ import GameToolBox from "../game-toolbox/GameToolbox";
 
 export const bestMoveRegex = /bestmove\s(\w*)/;
 export const pvMoveRegex = /\spv\s\w*/;
+export const pvLineRegex = /\spv(?<bestLine>[\s\w*]*)/;
 export const evalRegex = /cp\s-?[0-9]*|mate\s-?[0-9]*/; 
 export const cpRegex = /cp\s-?[0-9]*/;
 export const mateRegex = /mate\s-?[0-9]*/; 
@@ -16,6 +17,7 @@ export type EvalResult = {
     evalBefore: string,
     evalAfter: string,
     quality: string,
+    bestLine?: string,
     accuracy?: number,
     isTheory?: boolean,
     wdl?: string[],
@@ -24,6 +26,7 @@ export type EvalResult = {
 export type EvalResultSimplified = {
     bestMove: string,
     eval: string,
+    bestLine?: string,
     wdl?: string[],
 }
 
@@ -31,7 +34,7 @@ export type FenEval = {
     fen: string,
     eval: string,
     wdl?: string[],
-    bestLines?: string
+    bestLines?: string[],
 }
 
 function getEvalFromData(data: string, coeff: number) {
@@ -52,6 +55,15 @@ function getBestMoveFromData(data: string) {
     const bestMoveArr = bestMove.trim().split(' ');
     bestMove = bestMoveArr[1];
     return bestMove;
+}
+
+function getBestLineFromData(data: string) {
+    let bestLine = pvLineRegex.exec(data)?.groups?.bestLine || '';
+    bestLine = bestLine.trim();
+    if(bestLine.length < 4) return '';
+
+    
+    return bestLine;
 }
 
 let stockfish: Worker;
@@ -314,6 +326,7 @@ class Engine {
                         const wdl = event.data.match(/wdl\s(?<wdl>\d*\s\d*\s\d*)\s/)?.groups.wdl.split(' ');
                         let evaluationStr: string | null = getEvalFromData(event.data, coeff);
                         let bestMove: string | null = getBestMoveFromData(event.data);
+                        let bestLine: string | null = getBestLineFromData(event.data);
                         //console.log(wdl);
 
                         if(!evaluationStr || !bestMove || !event.data.match(firstEvalMoveRegex)){
@@ -324,6 +337,7 @@ class Engine {
                         resolve({
                             eval: evaluationStr,
                             bestMove: bestMove,
+                            bestLine: bestLine,
                             wdl: wdl,
                         });
                     }
@@ -333,6 +347,7 @@ class Engine {
                 resolve({
                     eval: '???',
                     bestMove: '????',
+                    bestLine: '????',
                     wdl: ['??', '??', '??'],
                 });
             }
@@ -383,6 +398,8 @@ class Engine {
                         const wdl = event.data.match(/wdl\s(?<wdl>\d*\s\d*\s\d*)\s/)?.groups.wdl.split(' ');
                         let evaluationStr: string | null = getEvalFromData(event.data, coeff);
                         let bestMove: string | null = getBestMoveFromData(event.data);
+                        let bestLine: string | null = getBestLineFromData(event.data);
+                        console.log(event.data);
 
                         if(!evaluationStr || !bestMove || !event.data.match(firstEvalMoveRegex)){
                             reject("Erreur lors de l'évaluation");
@@ -392,6 +409,7 @@ class Engine {
                         resolve({
                             eval: evaluationStr,
                             bestMove: bestMove,
+                            bestLine: bestLine,
                             wdl: wdl
                         });
                     }
@@ -525,6 +543,7 @@ class Engine {
                 let finalResult: EvalResult = {
                     playerColor: playerColor,
                     bestMove: result.bestMove,
+                    bestLine: result.bestLine,
                     movePlayed: movesList_lan[i],
                     evalBefore: result.eval,
                     evalAfter: result.eval,

@@ -21,6 +21,7 @@ const EvalAndWinrate: React.FC<EvalProps> = ({game, databaseRating, winner, star
     const engineCreated = useRef<Boolean>(false);
     const toolbox = new GameToolBox();
     const [engineEval, setEngineEval] = useState('0.3');
+    const [bestLine, setBestLine] = useState('');
     const [winrate, setWinrate] = useState<Winrate>({
         white: 50,
         draws: 0,
@@ -66,6 +67,37 @@ const EvalAndWinrate: React.FC<EvalProps> = ({game, databaseRating, winner, star
         return sfWinrate;
     }
 
+    function formateBestLine(bestLine: string) {
+        //setBestLine(fenEvalMap.get(currentFen)?.bestLines?.pop() || '');
+        let bestLineMoves = bestLine.split(' ');
+        let newGame = new Chess();
+        newGame.load(game.fen());
+
+        console.log(bestLineMoves);
+
+        bestLineMoves.forEach(blm => {
+            if(blm === '') return;
+            try {
+                newGame.move(blm);
+            } catch (error) {
+                return;
+            }
+        });
+
+        console.log(newGame.history());
+        console.log(newGame.pgn().replaceAll(/\[.*\]/g, '').replaceAll(/\.\s/g, '.'));
+
+        let bestLineFormated = newGame.pgn().replaceAll(/\[.*\]/g, '').replaceAll(/\.\s/g, '.').replaceAll('....', '...').split(' ').slice(0, 10);
+
+        /* return newGame.history().map((bml, i) => {
+            return <span id={bml} key={i}>{bml}</span>
+        }) */
+
+        return bestLineFormated.map((bmfMove, i) => {
+            return <span id={bmfMove} key={i}>{bmfMove}</span>
+        });
+    }
+
 
     useEffect(() => {
         if(winner) return;
@@ -82,6 +114,8 @@ const EvalAndWinrate: React.FC<EvalProps> = ({game, databaseRating, winner, star
             if(fenEvalMap.has(currentFen)){
                 console.log(`La position '${currentFen}' a déjà été analysée.`);
                 setEngineEval(fenEvalMap.get(currentFen)?.eval || '0.0');
+                //TODO: Modifier si plusieurs lignes
+                setBestLine(fenEvalMap.get(currentFen)?.bestLines?.findLast(e => true) || '');
                 let winrateEstimation: Winrate = estimateWinrate(fenEvalMap.get(currentFen)?.wdl || ['0.33', '0.33', '0.33'], currentFen);
                 if(!lichessWinrateOK && (winrateEstimation.white + winrateEstimation.black + winrateEstimation.draws > 0)) setWinrate(winrateEstimation);
                 console.log(winrateEstimation); 
@@ -90,7 +124,9 @@ const EvalAndWinrate: React.FC<EvalProps> = ({game, databaseRating, winner, star
             }else{
                 console.log(`La position '${currentFen}' n'a jamais été analysée.`);
                 engine.current.evalPositionFromFen(currentFen, 14).then((res: EvalResultSimplified) => {
+                    console.log(res);
                     setEngineEval(res.eval);
+                    setBestLine(res.bestLine || '');
                     console.log('evalPositionFromFen: ok');
                     console.log(res);
                     if(!res.wdl) return;
@@ -121,6 +157,9 @@ const EvalAndWinrate: React.FC<EvalProps> = ({game, databaseRating, winner, star
                 <div className="bg-black text-white h-5 flex justify-center" style={{width: `${winrate.black}%`}} >{
                 winrate.black >= 10 ? `${winrate.black}%` : "" 
                 }</div>
+            </div>
+            <div className=" flex justify-center items-center gap-x-2 gap-y-1 flex-wrap text-white pt-2" >
+                {formateBestLine(bestLine)}
             </div>
         </div>
     )
