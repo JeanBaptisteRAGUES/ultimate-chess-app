@@ -1304,7 +1304,8 @@ class BotsAI {
             notation: '',
             type: -1,
         };
-        const kingRank = this.#toolbox.getKingSquare(game.fen(), this.#botColor).charCodeAt(1) - '0'.charCodeAt(0);
+        let kingRank = this.#toolbox.getKingSquare(game.fen(), this.#botColor).charCodeAt(1) - '0'.charCodeAt(0);
+        kingRank = Math.min(7, Math.max(1, kingRank));
 
         if(game.history().length > 20) {
             return move;
