@@ -819,7 +819,7 @@ class BotsAI {
             ['Master', 5],
             ['Maximum', 0]
           ]).get(this.#botLevel) || 10; */
-        let forgotPieceChance = Math.max(1, (Math.round(55 - Math.sqrt(this.#defaultBotParams.elo))));
+        let forgotPieceChance = Math.max(1, (Math.round(50 - Math.sqrt(this.#defaultBotParams.elo))));
         console.log('Forgot Piece Chances (base): ' + forgotPieceChance);
         forgotPieceChance = forgotPieceChance*(Math.min(1.2, 0.8 + 0.01*(game.history().length/2)));
         console.log('Forgot Piece Chances (adjusted): ' + forgotPieceChance);
@@ -1304,6 +1304,7 @@ class BotsAI {
             notation: '',
             type: -1,
         };
+        const kingRank = this.#toolbox.getKingSquare(game.fen(), this.#botColor).charCodeAt(1) - '0'.charCodeAt(0);
 
         if(game.history().length > 20) {
             return move;
@@ -1319,8 +1320,9 @@ class BotsAI {
         let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, skillValue, 50, false);
 
         stockfishMoves = stockfishMoves.map((evalRes) => {
-            const moveDistance = this.#toolbox.getMoveDistance(evalRes.bestMove);
-            let randBonus = Math.max(0.5, Math.random());
+            const moveDistance = Math.abs((evalRes.bestMove.charCodeAt(3) - '0'.charCodeAt(0)) - kingRank);
+            console.log(`King Rank (${kingRank}), Move (${evalRes.bestMove}), Distance: ${moveDistance}`);
+            let randBonus = Math.max(0.5, 0.2 + Math.random()); 
             randBonus = -randBonus*moveDistance;
 
             evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + randBonus).toString();
