@@ -36,7 +36,7 @@ const SelectBotVsBotPage = () => {
     const botsInfosComponent = 
         <div className='flex flex-row justify-around items-center flex-wrap gap-2 py-5 w-full bg-cyan-900 sticky top-0 left-0 right-0' >
             <p className='w-full md:w-1/2 flex justify-center items-center text-xl font-semibold text-white'>{botsInfo.get(bot1_Behaviour)?.name} contre {botsInfo.get(bot2_Behaviour)?.name} en {timeControl}</p>
-            <div className=' w-full flex justify-around items-center' >
+            <div className=' w-full flex justify-around items-start' >
                 <div className=' w-1/2 flex flex-col justify-center items-center'>
                     <span className=' w-full md:w-1/2 flex justify-center items-center rounded' >
                         <Image
@@ -49,7 +49,7 @@ const SelectBotVsBotPage = () => {
                         />
                     </span>
                     <p className='w-full md:w-1/2 flex justify-center items-center text-lg font-semibold text-white'>{botsInfo.get(bot1_Behaviour)?.name + ' (' + bot1_Elo + ')'}</p>
-                    <p className='w-full md:w-1/2 flex justify-center items-center mx-5 text-md font-normal text-white'>{botsInfo.get(bot1_Behaviour)?.description}</p>
+                    <p className='w-full md:w-1/2 flex justify-center items-center px-2 text-md font-normal text-white'>{botsInfo.get(bot1_Behaviour)?.description}</p>
                 </div>
                 <div className=' w-1/2 flex flex-col justify-center items-center'>
                     <span className=' w-full md:w-1/2 flex justify-center items-center rounded' >
@@ -63,7 +63,7 @@ const SelectBotVsBotPage = () => {
                         />
                     </span>
                     <p className='w-full md:w-1/2 flex justify-center items-center text-lg font-semibold text-white'>{botsInfo.get(bot2_Behaviour)?.name + ' (' + bot2_Elo + ')'}</p>
-                    <p className='w-full md:w-1/2 flex justify-center items-center mx-5 text-md font-normal text-white'>{botsInfo.get(bot2_Behaviour)?.description}</p>
+                    <p className='w-full md:w-1/2 flex justify-center items-center px-2 text-md font-normal text-white'>{botsInfo.get(bot2_Behaviour)?.description}</p>
                 </div>
             </div>
         </div>
