@@ -24,6 +24,7 @@ const SelectGameModePage = () => {
             <Link className=' text-white hover:text-cyan-300 cursor-pointer flex justify-center items-center' href={{pathname: '/select-hand-and-brain'}} >Hand & Brain</Link>
             <Link className=' text-white hover:text-cyan-300 cursor-pointer flex flex-wrap gap-2 justify-center items-center' href={{pathname: '/select-thematic-training'}} ><span>Entraînement </span> <span>Thématique</span></Link>
             <Link className=' text-white hover:text-cyan-300 cursor-pointer flex justify-center items-center' href={{pathname: '/select-bot-vs-bot'}} >Bot VS Bot</Link>
+            <Link className=' text-white hover:text-cyan-300 cursor-pointer flex justify-center items-center' href={{pathname: '/select-test-ai'}} >Tester l'IA des bots</Link>
         </div>
     )
 }

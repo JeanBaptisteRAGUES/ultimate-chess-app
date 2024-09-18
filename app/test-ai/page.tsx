@@ -7,9 +7,9 @@ import { Chessboard } from "react-chessboard";
 import { Piece, Square } from "react-chessboard/dist/chessboard/types";
 import EvalAndWinrate from "../components/EvalAndWinrate";
 import Clock from "../components/Clock";
-import Engine, { EvalResultSimplified } from "../engine/Engine";
+import Engine from "../engine/Engine";
 import Link from "next/link";
-import BotsAI, { Behaviour, Move } from "../bots-ai/BotsAI";
+import BotsAI, { Behaviour, BotDescription, Move } from "../bots-ai/BotsAI";
 import { useSearchParams } from "next/navigation";
 import GameToolBox from "../game-toolbox/GameToolbox";
 import { PiVirtualReality } from "react-icons/pi";
@@ -17,50 +17,36 @@ import { FaCirclePlay } from "react-icons/fa6";
 import { FaFontAwesomeFlag } from "react-icons/fa";
 import { FaRotate } from "react-icons/fa6";
 import { fetchChessDotComDB, safeFetchPlayerLichessDB } from "../libs/fetchLichess";
-import SpeedrunClock from "../components/SpeedrunClock";
 
 import stockfishOnly_pp from "@/public/Bots_images/chess3d_stockfish-only.jpg";
 
-type GameInfos = {
-  title: string,
-  pgn: string,
-  result: string,
-  currentElo: number,
-  eloGain: number,
-}
 
-
-const SpeedrunPage = () => {
+const TestAI = () => {
     const searchParams = useSearchParams();
-    const eloMin: number = eval(searchParams.get('eloMin') || '400');
-    const eloMax: number = eval(searchParams.get('eloMax') || '2000');
-    const eloStep: number = eval(searchParams.get('eloStep') || '10');
+    const botElo: number = eval(searchParams.get('elo') || '1500');
+    const botBehaviour: Behaviour = searchParams.get('behaviour') as Behaviour || 'default';
     const timeControl = searchParams.get('timeControl') || 'infinite';
-    const playerColorBase = searchParams.get('playerColor') || 'random';
-    const startingPgnWhite: string = searchParams.get('startingPgnWhite') || '';
-    const startingPgnBlack: string = searchParams.get('startingPgnBlack') || '';
-    const [playerColor, setPlayerColor] = useState<Color>('w');
-    const [playerElo, setPlayerElo] = useState<number>(eval(searchParams.get('playerElo') || '400'));
     const toolbox = new GameToolBox();
     const gameActive = useRef(false);
     const [game, setGame] = useState(new Chess());
     const virtualGame = useRef(new Chess());
     const engine = useRef<Engine>();
     const botAI = useRef<BotsAI>();
-    const [botElo, setBotElo] = useState<number>(playerElo);
-    const [botBehaviour, setBotBehaviour] = useState<Behaviour>('default');
+    const [playerColor, setPlayerColor] = useState<Color>('w');
+    //const [viewColor, setViewColor] = useState<Color>('w');
     const [gameStarted, setGameStarted] = useState(false);
     const [currentTimeout, setCurrentTimeout] = useState<NodeJS.Timeout>();
+    //const [databaseRating, setDatabaseRating] = useState('Master');
+    //const [botBehaviour, setBotBehaviour] = useState<Behaviour>('default');
     const [currentFen, setCurrentFen] = useState(DEFAULT_POSITION);
     const [virtualFen, setVirtualFen] = useState(DEFAULT_POSITION);
     const [isVirtualMode, setIsVirtualMode] = useState(false);
     const [engineEval, setEngineEval] = useState('0.3');
     const [showEval, setShowEval] = useState(true);
-    const gamesHistory = useRef<GameInfos[]>(new Array());
+    const scoreHistory = useRef(new Array());
     const movesTypeRef = useRef(new Array()); // -1: erreur, 0(blanc): joueur, 1(jaune): lichess, 2(vert clair): stockfish, 3(vert foncé): stockfish forcé, 4(rouge): random, 5(rose): human
-    const [showGameoverWindow, setShowGameoverWindow] = useState(0); // 0: Rien, 1: Adversaire suivant, 2: Bilan Speedrun
+    const [showGameoverWindow, setShowGameoverWindow] = useState(false);
     const [winner, setWinner] = useState(''); // 'w' -> blancs gagnent, 'b' -> noirs gagnent, 'd' -> draw
-    const [speedrunTime, setSpeedrunTime] = useState('00:00:00');
     const whiteTimeControl = useRef({
       startingTime: 600,
       increment: 0,
@@ -98,295 +84,13 @@ const SpeedrunPage = () => {
       points: 0,
     });
 
-    const gimmicks: {min: number, max: number, gimmicks: {gimmick: Behaviour, chance: number}[]}[] = [
-      {
-        min: 0,
-        max: 99,
-        gimmicks: [
-          {
-            gimmick: 'semi-random',
-            chance: 60,
-          },
-          {
-            gimmick: 'botez-gambit',
-            chance: 90
-          },
-          {
-            gimmick: 'blundering',
-            chance: 100
-          }
-        ]
-      },
-      {
-        min: 100,
-        max: 499,
-        gimmicks: [
-          {
-            gimmick: 'human',
-            chance: 70,
-          },
-          {
-            gimmick: 'queen-player',
-            chance: 90
-          },
-          {
-            gimmick: 'pawn-pusher',
-            chance: 100
-          }
-        ]
-      },
-      {
-        min: 500,
-        max: 999,
-        gimmicks: [
-          {
-            gimmick: 'human',
-            chance: 70,
-          },
-          {
-            gimmick: 'caro-london',
-            chance: 75
-          },
-          {
-            gimmick: 'copycat',
-            chance: 80
-          },
-          {
-            gimmick: 'fianchetto-sniper',
-            chance: 85
-          },
-          {
-            gimmick: 'bongcloud',
-            chance: 90
-          },
-          {
-            gimmick: 'stonewall',
-            chance: 100
-          },
-        ]
-      },
-      {
-        min: 1000,
-        max: 1499,
-        gimmicks: [
-          {
-            gimmick: 'human',
-            chance: 70,
-          },
-          {
-            gimmick: 'caro-london',
-            chance: 80
-          },
-          {
-            gimmick: 'gambit-fanatic',
-            chance: 90
-          },
-          {
-            gimmick: 'fianchetto-sniper',
-            chance: 95
-          },
-          {
-            gimmick: 'cow-lover',
-            chance: 100
-          },
-        ]
-      },
-      {
-        min: 1500,
-        max: 2999,
-        gimmicks: [
-          {
-            gimmick: 'human',
-            chance: 75,
-          },
-          {
-            gimmick: 'indian-king',
-            chance: 80
-          },
-          {
-            gimmick: 'gambit-fanatic',
-            chance: 90
-          },
-          {
-            gimmick: 'dragon',
-            chance: 100
-          },
-        ]
-      },
-      {
-        min: 3000,
-        max: 3200,
-        gimmicks: [
-          {
-            gimmick: 'stockfish-only',
-            chance: 75,
-          },
-          {
-            gimmick: 'dragon',
-            chance: 100,
-          },
-        ]
-      },
-    ];
-
-    const gimmicksNoOpenings: {min: number, max: number, gimmicks: {gimmick: Behaviour, chance: number}[]}[] = [
-      {
-        min: 0,
-        max: 99,
-        gimmicks: [
-          {
-            gimmick: 'semi-random',
-            chance: 60,
-          },
-          {
-            gimmick: 'random-player',
-            chance: 90
-          },
-          {
-            gimmick: 'blundering',
-            chance: 100
-          }
-        ]
-      },
-      {
-        min: 100,
-        max: 499,
-        gimmicks: [
-          {
-            gimmick: 'human',
-            chance: 80,
-          },
-          {
-            gimmick: 'pawn-pusher',
-            chance: 100
-          }
-        ]
-      },
-      {
-        min: 500,
-        max: 999,
-        gimmicks: [
-          {
-            gimmick: 'human',
-            chance: 85,
-          },
-          {
-            gimmick: 'gambit-fanatic',
-            chance: 90
-          },
-          {
-            gimmick: 'castle-destroyer',
-            chance: 100
-          },
-        ]
-      },
-      {
-        min: 1000,
-        max: 1499,
-        gimmicks: [
-          {
-            gimmick: 'human',
-            chance: 80,
-          },
-          {
-            gimmick: 'gambit-fanatic',
-            chance: 90
-          },
-          {
-            gimmick: 'castle-destroyer',
-            chance: 100
-          },
-        ]
-      },
-      {
-        min: 1500,
-        max: 2999,
-        gimmicks: [
-          {
-            gimmick: 'human',
-            chance: 80,
-          },
-          {
-            gimmick: 'gambit-fanatic',
-            chance: 90
-          },
-          {
-            gimmick: 'castle-destroyer',
-            chance: 100
-          },
-        ]
-      },
-      {
-        min: 3000,
-        max: 3200,
-        gimmicks: [
-          {
-            gimmick: 'stockfish-only',
-            chance: 95,
-          },
-          {
-            gimmick: 'human',
-            chance: 100
-          },
-        ]
-      },
-    ];
-
-    function pickRandomBehaviour(botElo: number): Behaviour{
-        const behaviourRand = Math.random()*100;
-        let botBehaviour: Behaviour = 'default';
-        //console.log(behaviourRand);
-
-        if(startingPgnWhite === '' && startingPgnBlack === '') {
-          gimmicks.forEach(gimmick => {
-            if(gimmick.min <= botElo && botElo <= gimmick.max){
-              gimmick.gimmicks.forEach(behaviour => {
-                if(botBehaviour === 'default' && behaviourRand <= behaviour.chance) botBehaviour = behaviour.gimmick;
-              })
-            }
-          });
-        }else{
-          gimmicksNoOpenings.forEach(gimmick => {
-            if(gimmick.min <= botElo && botElo <= gimmick.max){
-              gimmick.gimmicks.forEach(behaviour => {
-                if(botBehaviour === 'default' && behaviourRand <= behaviour.chance) botBehaviour = behaviour.gimmick;
-              })
-            }
-          });
-        }
-        console.log('Selected bot behaviour: ' + botBehaviour);
-
-        return botBehaviour;
-    }
-
     useEffect(() => {
         engine.current = new Engine();
         engine.current.init();
-        const newPlayerColor = playerColorBase === 'random' ? (Math.random() < 0.5 ? 'w' : 'b') : playerColorBase;
         const botColor = playerColor === 'w' ? 'b' : 'w';
-        const newBotElo = Math.round(Math.min(3200, Math.max(0, playerElo + (Math.random()*100 - 50))));
-        //TODO: Génération aléatoire du comportement et de l'élo
-        const newBotBehaviour = pickRandomBehaviour(newBotElo);
-        
-        const startingHistory = newPlayerColor === 'w' ? startingPgnWhite : startingPgnBlack;
-        game.loadPgn(startingHistory);
-        console.log(startingHistory);
-        console.log(startingPgnWhite);
-        console.log(game.fen());
-        console.log(game.pgn());
-        console.log(game.history());
-        setCurrentFen(game.fen());
-        setVirtualFen(game.fen());
-        
-        botAI.current = new BotsAI(newBotBehaviour, newBotElo, botColor, timeControl, true);
-        setPlayerColor(newPlayerColor as Color);
-        setBotElo(newBotElo);
-        setBotBehaviour(newBotBehaviour);
-        console.log('Player Color: ' + newPlayerColor);
-        console.log("Bot Elo: " + newBotElo);
-        console.log("Bot Behaviour: " + newBotBehaviour);
-        console.log(timeControl);
-        console.log(game.fen());
+        botAI.current = new BotsAI(botBehaviour, botElo, botColor, timeControl, false);
+        console.log("Bot Elo: " + botElo);
+        console.log("Bot Behaviour: " + botBehaviour);
     }, []);
 
     useEffect(() => {
@@ -396,9 +100,6 @@ const SpeedrunPage = () => {
     }, [playerColor]);
 
     const gameMove = (moveNotation: string, moveType: number) => {
-      console.log('Play computer move (gameMove(moveNotation: string, moveType: number))');
-      console.log(game.fen());
-      console.log(game.moves());
       game.move(moveNotation);
       setCurrentFen(game.fen());
       setVirtualFen(game.fen());
@@ -422,57 +123,35 @@ const SpeedrunPage = () => {
     }
 
     function resetGame() {
-        const newBotElo = Math.round(Math.min(3200, Math.max(0, playerElo + (Math.random()*100 - 50))));
-        const newPlayerColor = playerColorBase === 'random' ? (playerColor === 'w' ? 'b' : 'w') : playerColorBase;
-        const newBotColor = playerColor === 'w' ? 'b' : 'w';
-        const newBotBehaviour = pickRandomBehaviour(newBotElo);
-
-        game.reset();
-        engine.current?.newGame();
-
-        //TODO: Faire en sorte que ça remette à 0 la position chosie par le joueur
-        const startingHistory = newPlayerColor === 'w' ? startingPgnWhite : startingPgnBlack;
-        game.loadPgn(startingHistory);
-        setCurrentFen(game.fen());
-        setVirtualFen(game.fen());
-
-        //botAI.current?.reset();
-        console.log(newBotElo);
-        botAI.current?.new(newBotBehaviour, newBotElo, newBotColor, timeControl, true);
-        gameActive.current = false;
-        movesTypeRef.current = [];
-        setShowGameoverWindow(0);
-        setWinner('');
-        setPlayerColor(newPlayerColor as Color);
-        setBotBehaviour(newBotBehaviour);
-        setBotElo(newBotElo);
-        setGameStarted(false);
-        setIsVirtualMode(false);
-
-        //TODO: Peut créer des erreurs si la position de départ n'est pas DEFAULT_POSITION
-        setWhiteMaterialAdvantage({
-            pawn: 0,
-            knight: 0,
-            bishop: 0,
-            rook: 0,
-            queen: 0,
-            points: 0,
-        });
-        setBlackMaterialAdvantage({
-            pawn: 0,
-            knight: 0,
-            bishop: 0,
-            rook: 0,
-            queen: 0,
-            points: 0,
-        });
+      game.reset();
+      engine.current?.newGame();
+      botAI.current?.reset();
+      gameActive.current = false;
+      movesTypeRef.current = [];
+      setShowGameoverWindow(false);
+      setWinner('');
+      setGameStarted(false);
+      setIsVirtualMode(false);
+      setCurrentFen(DEFAULT_POSITION);
+      setVirtualFen(DEFAULT_POSITION);
+      setWhiteMaterialAdvantage({
+        pawn: 0,
+        knight: 0,
+        bishop: 0,
+        rook: 0,
+        queen: 0,
+        points: 0,
+      });
+      setBlackMaterialAdvantage({
+        pawn: 0,
+        knight: 0,
+        bishop: 0,
+        rook: 0,
+        queen: 0,
+        points: 0,
+      });
     }
-
-    function stopSpeedrun() {
-      //console.log('Stop Speedrun (TODO:)');
-      setShowGameoverWindow(2);
-    }
-
+  
     function gameOver(winner: string) {
       console.log('Game Over !');
       console.log(game.pgn());
@@ -482,75 +161,22 @@ const SpeedrunPage = () => {
       engine.current?.stop();
       botAI.current?.pause();
       setWinner(winner);
-      let newPlayerElo = playerElo;
       
       switch (winner) {
         case 'd':
           setEngineEval('1/2 - 1/2');
-          gamesHistory.current.push({
-            title: playerColor === 'w' ? `Joueur VS ${botAI.current?.getUsername()}` : `${botAI.current?.getUsername()} VS Joueur`,
-            pgn: game.pgn(),
-            result: '1/2 - 1/2',
-            currentElo: playerElo,
-            eloGain: 0,
-          });
-          setPlayerElo(Math.max(0, playerElo));
           break;
         case 'w':
           setEngineEval('1 - 0');
-          if(playerColor === 'w'){
-            gamesHistory.current.push({
-              title: `Joueur VS ${botAI.current?.getUsername()}`,
-              pgn: game.pgn(),
-              result: '1 - 0',
-              currentElo: playerElo,
-              eloGain: eloStep,
-            });
-            newPlayerElo+= eloStep;
-          }else{
-            gamesHistory.current.push({
-              title: `${botAI.current?.getUsername()} VS Joueur`,
-              pgn: game.pgn(),
-              result: '1 - 0',
-              currentElo: playerElo,
-              eloGain: -eloStep,
-            });
-            newPlayerElo-= eloStep;
-          }
-          setPlayerElo(Math.max(0, newPlayerElo));
           break;
         case 'b':
           setEngineEval('0 - 1');
-          if(playerColor === 'b'){
-            gamesHistory.current.push({
-              title: `${botAI.current?.getUsername()} VS Joueur`,
-              pgn: game.pgn(),
-              result: '0 - 1',
-              currentElo: playerElo,
-              eloGain: eloStep,
-            });
-            newPlayerElo+= eloStep;
-          }else{
-            gamesHistory.current.push({
-              title: `Joueur VS ${botAI.current?.getUsername()}`,
-              pgn: game.pgn(),
-              result: '0 - 1',
-              currentElo: playerElo,
-              eloGain: -eloStep,
-            });
-            newPlayerElo-= eloStep;
-          }
-          setPlayerElo(Math.max(0, newPlayerElo));
           break;
         default:
           break;
       }
       
-      if(newPlayerElo >= eloMax) {
-        setShowGameoverWindow(2);
-      }else{
-        setShowGameoverWindow(1);
-      }
+      setShowGameoverWindow(true);
     }
     
     function checkGameOver() {
@@ -622,13 +248,10 @@ const SpeedrunPage = () => {
       //console.log('Play computer move, game active ? ' + gameActive.current);
       console.log(`Bot current ID (${botAI.current?.getID()}) VS Request ID (${botID})`);
       if(game.pgn().includes('#') || !gameActive.current || botAI.current?.getID() !== botID) return;
-      console.log('Play computer move (playComputerMove(botID: number))');
-      console.log(game.fen());
-      console.log(game.moves());
+      if(game.pgn().includes('#') || !gameActive.current) return;
       const move: Move | undefined = await botAI.current?.makeMove(game);
 
       if(move && move.type >= 0){
-        console.log(`Bot move: ${move.notation} - Game active: ${gameActive.current}`);
         gameMove(move.notation, move.type);
         return;
       } 
@@ -656,18 +279,16 @@ const SpeedrunPage = () => {
       }
       return '';
     }
-  
+
     function onDrop(sourceSquare: Square, targetSquare: Square, piece: Piece) {
       const promotion = getPromotion(sourceSquare, piece);
       const oldBotID = botAI.current?.getID() || Math.random();
-      console.log(game.fen());
       
       if(isVirtualMode) {
         gameVirtualMove(sourceSquare + targetSquare + promotion);
         return true;
       }
 
-      if(!gameStarted) return false;
       if(gameStarted && game.get(sourceSquare).color !== playerColor) return false;
 
       gameMove(sourceSquare + targetSquare + promotion, 0);
@@ -675,6 +296,7 @@ const SpeedrunPage = () => {
       let delay = getTimeControlDelay();
       if(botElo === 3200) delay = 0;
       if(gameStarted && botAI.current){
+        //TODO: Corriger cette erreur de merde
         const newTimeout = setTimeout(() => playComputerMove(oldBotID), delay);
         setCurrentTimeout(newTimeout);
       }
@@ -783,60 +405,30 @@ const SpeedrunPage = () => {
       await fetchChessDotComDB();
     }
 
-    async function test() {
-      console.log('Test engine.findBestMoves()');
-      const stockfishBestMoves: EvalResultSimplified[] = await engine.current?.findBestMoves(game.fen(), 10, 20, 3, false) || [];
-
-      console.log(game.fen());
-      console.log(stockfishBestMoves);
-    }
-
-    const speedrunMenu_1 =
+    const analysisMenu =
       <div className=" flex flex-col justify-center items-center gap-5">
-        <div
+        <Link
           className=" m-4 p-1 bg-fuchsia-600 text-white border rounded cursor-pointer"
-          onClick={() => stopSpeedrun()}
+          onClick={() => clearEngines()}
+          href = {{
+            pathname: '/game-analysis',
+            query: {
+              pgn: game.pgn(),
+              depth: 12
+            }
+          }}
         >
-          Arrêter le speedrun
-        </div>
+          Analyse rapide
+        </Link>
         <div
           className=" m-4 p-1 bg-fuchsia-600 text-white border rounded cursor-pointer"
           onClick={() => resetGame()}
         >
-          Adversaire suivant
+          Nouvelle partie
         </div>
       </div>
 
-    const speedrunMenu_2 =
-      <div className=" flex flex-col justify-start items-start gap-5">
-        <div className=" flex flex-col justify-start items-center text-3xl font-bold w-full">{speedrunTime}</div>
-        <div className=" flex flex-col justify-start items-start gap-5">
-          {
-            gamesHistory.current.map(gameInfos => {
-              return <div key={gameInfos.title + gameInfos.pgn} className="flex flex-col justify-start items-start">
-                <span className=" text-lg font-semibold" >{gameInfos.title}</span>
-                <span>{gameInfos.pgn.slice(0, 50)}...   {gameInfos.result}</span>
-                <span>({gameInfos.currentElo} {gameInfos.eloGain >= 0 ? <span className=" text-green-600" >+{gameInfos.eloGain}</span> : <span className=" text-red-600" >{gameInfos.eloGain}</span>})</span>
-                <Link
-                  className=" p-1 bg-fuchsia-600 text-white border rounded cursor-pointer"
-                  onClick={() => clearEngines()}
-                  href = {{
-                    pathname: '/game-analysis',
-                    query: {
-                      pgn: gameInfos.pgn,
-                      depth: 12
-                    }
-                  }}
-                >
-                  Analyser
-                </Link>
-              </div>
-            })
-          }
-        </div>
-      </div>
-
-    const gameOverWindow_1 = showGameoverWindow === 1 ? 
+    const gameOverWindow = showGameoverWindow ? 
       <div className=" flex justify-center items-center w-full h-full absolute top-0 left-0" >
         <div className=" flex flex-col justify-start items-center w-3/4 h-2/3 md:w-1/2 md:h-1/2 bg-gray-200 rounded" >
           <div className=" relative flex justify-center items-center w-full h-1/4 bg-fuchsia-600 text-white rounded-t" >
@@ -851,44 +443,21 @@ const SpeedrunPage = () => {
                 )
               }
             </h1>
-            <button className=" text-white font-extrabold absolute top-5 left-5" onClick={() => setShowGameoverWindow(0)}>
+            <button className=" text-white font-extrabold absolute top-5 left-5" onClick={() => setShowGameoverWindow(false)}>
               X
             </button>
           </div>
           <div className="flex justify-center items-center h-full w-full">
-            {speedrunMenu_1}
+            {analysisMenu}
           </div>
         </div>
       </div>
       :
       null
 
-    const gameOverWindow_2 = showGameoverWindow === 2 ? 
-      <div className=" flex justify-center items-center w-full h-full absolute top-0 left-0" >
-        <div className=" flex flex-col justify-start items-center w-3/4 h-2/3 md:w-1/2 md:h-1/2 bg-gray-200 rounded" >
-          <div className=" relative flex justify-center items-center w-full h-1/4 bg-fuchsia-600 text-white rounded-t" >
-            <h1 className=" text-white font-bold flex justify-center items-center">
-              {
-                winner === 'w' ? 'Les blancs gagnent la partie !'
-                :
-                (
-                  winner === 'b' ? 'Les noirs gagnent la partie !'
-                  :
-                  'Match nul'
-                )
-              }
-            </h1>
-            <button className=" text-white font-extrabold absolute top-5 left-5" onClick={() => setShowGameoverWindow(0)}>
-              X
-            </button>
-          </div>
-          <div className="flex flex-col justify-start items-center h-full w-full p-2 overflow-y-auto">
-            {speedrunMenu_2}
-          </div>
-        </div>
-      </div>
-      :
-      null
+    const titleComponent = <h4 className=" text-xl font-semibold text-white my-5 md:my-2" >
+      Entraînement
+    </h4>
 
     const pgnComponentDesktop =
       <div className=" text-white w-1/4 hidden h-full md:flex flex-col flex-wrap">
@@ -940,7 +509,7 @@ const SpeedrunPage = () => {
           />
           <div className=" relative flex justify-around p-2 w-full h-10 font-medium rounded-b-md bg-slate-100">
             <div className=" h-full flex justify-start items-center flex-grow-[4]" >
-              Joueur ({playerElo}) {playerColor === 'w' ? (
+              Joueur {playerColor === 'w' ? (
                 showMaterialAdvantage('w')
               ) : (
                 showMaterialAdvantage('b')
@@ -966,10 +535,10 @@ const SpeedrunPage = () => {
           }
       </div>
 
-    const testButton =
-      <button onClick={() => test()}>
-        Stockfish
-      </button>
+    /* const testButton =
+    <button onClick={() => fetchPlayerDB()}>
+      Hippo31 Lichess DB
+    </button> */
 
     const startGameButton = !gameStarted ? 
       <div 
@@ -977,10 +546,7 @@ const SpeedrunPage = () => {
           setGameStarted(true);
           gameActive.current = true;
           setShowEval(false);
-          if(game.turn() !== playerColor && botAI.current){
-            console.log('Play computer move (startGameButton)');
-            console.log(game.fen());
-            console.log(game.moves());
+          if(game.turn() !== playerColor  && botAI.current){
             playComputerMove(botAI.current.getID());
           }
         }}
@@ -992,14 +558,32 @@ const SpeedrunPage = () => {
         <FaFontAwesomeFlag size={40} />
       </div>
 
+    const changeColor = () => {
+      if(gameActive.current) return;
+      playerColor === 'w' ? setPlayerColor('b') : setPlayerColor('w');
+    }
+    
+    const switchButton = 
+      <div 
+        onClick={() => changeColor()} 
+        className=' h-[50px] w-[50px] flex flex-col justify-center items-center cursor-pointer hover:text-cyan-400'>
+          <FaRotate size={40} />
+    </div>
+
+    const virtualModeButton = <div onClick={() => switchMode()} className=' h-[50px] w-[50px] flex flex-col justify-start items-start cursor-pointer hover:text-cyan-400' style={{color: isVirtualMode ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+        <PiVirtualReality size={50} />
+    </div>
+
     const buttonsComponent =
       <div className="flex justify-center mt-5 pt-2 md:mt-0 items-center gap-5 w-full h-fit" >
+        {virtualModeButton}
         {startGameButton}
+        {switchButton}
       </div>
 
     const gameComponent = 
       <div className="flex flex-col justify-start items-center h-full">
-        <SpeedrunClock gameActive={gameActive.current} setSpeedrunTime={setSpeedrunTime}/>
+        {titleComponent}
         {boardComponent}
         {buttonsComponent}
       </div>
@@ -1013,11 +597,10 @@ const SpeedrunPage = () => {
       <div className="flex flex-col md:flex-row justify-start md:justify-stretch items-center md:items-start bg-cyan-900 h-[95vh] w-full overflow-auto" >
           {pgnComponentDesktop}
           {gameContainer}
-          {gameOverWindow_1}
-          {gameOverWindow_2}
+          {gameOverWindow}
           {pgnComponentSmartphone}
       </div>
     )
 }
 
-export default SpeedrunPage;
+export default TestAI;

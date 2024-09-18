@@ -7,6 +7,7 @@ import { GiBulletBill } from 'react-icons/gi';
 import { SiStackblitz } from 'react-icons/si';
 import { LuAlarmClock } from 'react-icons/lu';
 import { IoHourglassOutline, IoInfiniteSharp } from 'react-icons/io5';
+import { FaRegTrashAlt } from 'react-icons/fa'
 import { Chess, Color, DEFAULT_POSITION } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
 import { Piece, Square } from 'react-chessboard/dist/chessboard/types';
@@ -154,7 +155,7 @@ const SelectSpeedrun = () => {
     }
 
     const selectPositionWhite = 
-        <div className='flex flex-row justify-around items-center flex-wrap w-full mt-2 px-2 gap-2' >
+        <div className='flex flex-col justify-around items-center flex-wrap w-full mt-2 px-2 gap-2' >
             <div className=' relative w-72 h-72 flex justify-center items-center'>
                 <Chessboard 
                     id='selectPositionWhite'
@@ -163,10 +164,11 @@ const SelectSpeedrun = () => {
                     boardOrientation='white'
                 />
             </div>
+            <FaRegTrashAlt size={25} className=' text-cyan-400 cursor-pointer' onClick={() => {setCurrentFenWhite(DEFAULT_POSITION); gameWhite.current.load(DEFAULT_POSITION);}} />
         </div>
 
     const selectPositionBlack = 
-        <div className='flex flex-row justify-around items-center flex-wrap w-full mt-2 px-2 gap-2' >
+        <div className='flex flex-col justify-around items-center flex-wrap w-full mt-2 px-2 gap-2' >
             <div className=' relative w-72 h-72 flex justify-center items-center'>
                 <Chessboard 
                     id='selectPositionBlack'
@@ -175,6 +177,7 @@ const SelectSpeedrun = () => {
                     boardOrientation='black'
                 />
             </div>
+            <FaRegTrashAlt size={25} className=' text-cyan-400 cursor-pointer' onClick={() => {setCurrentFenBlack(DEFAULT_POSITION); gameBlack.current.load(DEFAULT_POSITION);}} />
         </div>
     
 

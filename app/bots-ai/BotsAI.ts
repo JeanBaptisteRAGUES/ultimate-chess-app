@@ -84,7 +84,8 @@ import speedrun_female20 from "@/public/Speedrun_opponents/females/speedrun_fema
 
 export type Move = {
     notation: string,
-    type: number
+    type: number,
+    moveInfos?: string,
 }
 
 export type BotDescription  = {
@@ -471,6 +472,7 @@ async function makeStockfishMove(botParams: DefaultBotParams, game: Chess, engin
     const stockfishRes = await engine.findBestMove(game.fen(), botParams.depth, skillValue);
     stockfishMove.notation = stockfishRes;
     stockfishMove.type = 2;
+    stockfishMove.moveInfos = `Coup proposé par stockfish 16 à une profondeur de ${botParams.depth} et une force de ${skillValue}.`;
 
     return stockfishMove;
 }
@@ -503,6 +505,7 @@ async function makeLichessMove(movesList: string[], botElo: number, fen: string,
     lichessResult = await fetchLichessDatabase(movesList, botElo, fen);
 
     lichessMove.notation = lichessResult.uci;
+    lichessMove.moveInfos = `Lichess a trouvé le coup ${lichessResult.san} dans sa base de données.`;
 
     if(lichessMove.notation !== "" && lichessMove.notation !== undefined){
         lichessMove.type = 1;
@@ -611,7 +614,9 @@ class BotsAI {
 
         return {
             notation: finalMovesList[randomIndex],
-            type: 4
+            type: 4,
+            moveInfos: `Le coup aléatoire ${finalMovesList[randomIndex]} a été choisi parmis la liste de coups possibles
+            disponibles au niveau de sécurité ${securityLvl}: ${JSON.stringify(finalMovesList)}`,
         }
     }
 
@@ -620,17 +625,19 @@ class BotsAI {
     //SL 1 -> Danger qu'après une capture
     //SL 2 -> Danger si capture ou attaque avec une pièce de moindre valeur
     //TODO: SL 3 -> Danger si capture, attaque pièce de moindre valeur ou attaque pièce non protégée 
-    #isLastMoveDangerous(game: Chess): {danger: boolean, dangerCases: {dangerCase: string, dangerValue: number}[] } {
+    #isLastMoveDangerous(game: Chess): {danger: boolean, dangerCases: {dangerCase: string, dangerValue: number}[], moveInfos: string } {
         //console.log("Is last move dangerous ?");
         const history = JSON.parse(JSON.stringify(game.history({verbose: true})));
         const lastMove = history.pop();
         const gameTest = new Chess();
+        let moveInfos = '';
 
         //console.log('Security Level: ' + securityLvl);
     
         if(this.#defaultBotParams.securityLvl === 0 || lastMove === null || lastMove === undefined) return {
             danger: false,
-            dangerCases: []
+            dangerCases: [],
+            moveInfos: `Le bot ne considère pas le dernier coup comme dangereux (security level: ${this.#defaultBotParams.securityLvl})`,
         };
     
         
@@ -668,16 +675,22 @@ class BotsAI {
     
         //console.log(`Is last move \x1B[34m(${lastMove.san})\x1B[0m dangerous: \x1B[31m` + danger);
 
-        const ignoreDanger = Math.max(1, 50 - Math.pow(this.#defaultBotParams.elo, 1/1.8));
+        const ignoreDangerChances = Math.max(1, 50 - Math.pow(this.#defaultBotParams.elo, 1/1.8));
+        let ignoreDanger = Math.random()*100;
 
-        if(danger && Math.random()*100 < ignoreDanger){
+        if(danger) moveInfos = `Le bot considère le dernier coup comme dangereux (security level: ${this.#defaultBotParams.securityLvl})`;
+        if(danger) moveInfos = `Le bot ne considère pas le dernier coup comme dangereux (security level: ${this.#defaultBotParams.securityLvl})`;
+
+        if(danger && ignoreDanger < ignoreDangerChances){
             danger = false;
             console.log(`${this.#username} ignore le danger !`);
+            moveInfos = `Le dernier coup était dangereux (security level: ${this.#defaultBotParams.securityLvl}) mais le bot l'ignore (${ignoreDanger} < ${ignoreDangerChances})`;
         }
     
         return {
             danger: danger,
-            dangerCases: dangerCases
+            dangerCases: dangerCases,
+            moveInfos: moveInfos,
         };
     }
     
@@ -694,13 +707,15 @@ class BotsAI {
         const botColor = game.turn() === 'w' ? 'b' : 'w';
         let stockfishMove: Move = {
             notation: '',
-            type: -1
+            type: -1,
+            moveInfos: '',
         } 
     
         console.log(`${botColor} is forced to Checkmate`);
         const stockfishRes = await this.#engine.findBestMove(game.fen(), 20, 20);
         stockfishMove.notation = stockfishRes;
         stockfishMove.type = 3;
+        stockfishMove.moveInfos = "Le bot est forcé de jouer le meilleur coup pour mater l'adversaire";
         //console.log(stockfishRes);
         return stockfishMove;
     }
