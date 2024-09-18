@@ -164,7 +164,12 @@ const SelectSpeedrun = () => {
                     boardOrientation='white'
                 />
             </div>
-            <FaRegTrashAlt size={25} className=' text-cyan-400 cursor-pointer' onClick={() => {setCurrentFenWhite(DEFAULT_POSITION); gameWhite.current.load(DEFAULT_POSITION);}} />
+            {
+                currentFenBlack === DEFAULT_POSITION ?
+                <FaRegTrashAlt size={25} className=' text-white' />
+                :
+                <FaRegTrashAlt size={25} className=' text-cyan-400 cursor-pointer' onClick={() => {setCurrentFenWhite(DEFAULT_POSITION); gameWhite.current.load(DEFAULT_POSITION);}} />
+            }
         </div>
 
     const selectPositionBlack = 
@@ -177,7 +182,12 @@ const SelectSpeedrun = () => {
                     boardOrientation='black'
                 />
             </div>
-            <FaRegTrashAlt size={25} className=' text-cyan-400 cursor-pointer' onClick={() => {setCurrentFenBlack(DEFAULT_POSITION); gameBlack.current.load(DEFAULT_POSITION);}} />
+            {
+                currentFenBlack === DEFAULT_POSITION ?
+                <FaRegTrashAlt size={25} className=' text-white' />
+                :
+                <FaRegTrashAlt size={25} className=' text-cyan-400 cursor-pointer' onClick={() => {setCurrentFenBlack(DEFAULT_POSITION); gameBlack.current.load(DEFAULT_POSITION);}} />
+            }
         </div>
     
 
