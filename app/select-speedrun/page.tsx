@@ -165,7 +165,7 @@ const SelectSpeedrun = () => {
                 />
             </div>
             {
-                currentFenBlack === DEFAULT_POSITION ?
+                currentFenWhite === DEFAULT_POSITION ?
                 <FaRegTrashAlt size={25} className=' text-white' />
                 :
                 <FaRegTrashAlt size={25} className=' text-cyan-400 cursor-pointer' onClick={() => {setCurrentFenWhite(DEFAULT_POSITION); gameWhite.current.load(DEFAULT_POSITION);}} />
