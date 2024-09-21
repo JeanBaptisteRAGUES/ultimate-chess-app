@@ -815,7 +815,7 @@ const SpeedrunPage = () => {
             gamesHistory.current.map(gameInfos => {
               return <div key={gameInfos.title + gameInfos.pgn} className="flex flex-col justify-start items-start">
                 <span className=" text-lg font-semibold" >{gameInfos.title}</span>
-                <span>{gameInfos.pgn.slice(0, 50)}...   {gameInfos.result}</span>
+                <span>{gameInfos.pgn.replaceAll('. ', '.').trim().slice(0, 50).replaceAll(/\d?\.?[a-hA-H]+$|\d.$|\s\d$|\d\.O-O-$|\d\.O-$|O-O-$|O-$/gm, '')}...   {gameInfos.result}</span>
                 <span>({gameInfos.currentElo} {gameInfos.eloGain >= 0 ? <span className=" text-green-600" >+{gameInfos.eloGain}</span> : <span className=" text-red-600" >{gameInfos.eloGain}</span>})</span>
                 <Link
                   className=" p-1 bg-fuchsia-600 text-white border rounded cursor-pointer"
