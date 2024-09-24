@@ -747,6 +747,7 @@ class BotsAI {
                     move.notation = moveLan;
                     move.type = 5
                     hasForcedExchange = true; 
+                    move.moveInfos = `Le bot est forcé de capturer en ${this.#toolbox.getMoveDestination(move.notation)} (${rand} <= ${captureChance})`;
                 }
             }
         });
@@ -818,6 +819,7 @@ class BotsAI {
 
         if(stockfishMove.type >= 0) {
             console.log('Le bot réagit mal à la menace et doit bouger sa pièce en ' + this.#toolbox.getMoveDestination(stockfishMove.notation))
+            stockfishMove.moveInfos = `Le bot réagit mal à la menace et doit bouger sa pièce en ${this.#toolbox.getMoveDestination(stockfishMove.notation)}`;
         }
 
         return stockfishMove
@@ -886,6 +888,7 @@ class BotsAI {
 
         if(stockfishMove.type === 5) {
             console.log(`Le bot ${this.#username} oublie:${thingsForgotten}`);
+            stockfishMove.moveInfos = `Le bot ${this.#username} oublie:${thingsForgotten}`;
         }
 
         return stockfishMove;
@@ -901,8 +904,9 @@ class BotsAI {
         ignoreOpponentMoveChance = ignoreOpponentMoveChance*(Math.min(1.2, 0.8 + 0.01*(game.history().length/2)));
         console.log('Ignore Opponent Move Chances (adjusted): ' + ignoreOpponentMoveChance);
         let moveType = 5;
+        let ignoreLastMoveRand = Math.fround(Math.random()*100 );
 
-        if(Math.random()*100 > ignoreOpponentMoveChance) {
+        if(ignoreLastMoveRand > ignoreOpponentMoveChance) {
             return {
                 notation: '',
                 type: -1,
@@ -924,6 +928,7 @@ class BotsAI {
 
             if(stockfishMove.type >= 0) {
                 console.log(`Le bot ${this.#username} ignore le dernier coup de l'adversaire`);
+                stockfishMove.moveInfos = `Le bot ${this.#username} ignore le dernier coup de l'adversaire (${ignoreLastMoveRand} <= ${ignoreOpponentMoveChance})`
             }
     
             return stockfishMove; 
@@ -2816,7 +2821,94 @@ class BotsAI {
 
             // Scotch
             case '1.e4 e5 2.Nf3 Nc6 3.d4':
+                move.notation = 'e5d4';
+                move.type = 2;
+                return move;
+
+            // Scotch Game
+            case '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Nxd4':
+                move.notation = 'd8h4';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Nxd4 Qh4 5.Nxc6':
+                move.notation = 'h4e4';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Nxd4 Qh4 5.Nc3':
+                move.notation = 'f8b4';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Nxd4 Qh4 5.Nc3 Bb4 6.Nxc6':
+                move.notation = 'h4e4';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Nxd4 Qh4 5.Nc3 Bb4 6.Nxc6 Qxe4+ 7.Qe2':
+                move.notation = 'e4e2';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Nxd4 Qh4 5.Nc3 Bb4 6.Nxc6 Qxe4+ 7.Qe2 Qxe2 8.Bxe2':
+                move.notation = 'd7c6';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Nxd4 Qh4 5.Nc3 Bb4 6.Nxc6 Qxe4+ 7.Be3':
+                move.notation = 'b4c3';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Nxd4 Qh4 5.Nc3 Bb4 6.Nxc6 Qxe4+ 7.Be3 Bxc3+ 8.bxc3':
+                move.notation = 'd7c6';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Nxd4 Qh4 5.Nc3 Bb4 6.Qd3':
+                move.notation = 'g8f6';
+                move.type = 2;
+                return move;
+
+            // Scotch Gambit
+            case '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Bc4':
+                move.notation = 'f8b4';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Bc4 Bc4+ 5.Bd2':
+                move.notation = 'c4d2';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Bc4 Bc4+ 5.Bd2 Bxd2+ 6.Qxd2':
+                move.notation = 'g8f6';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Bc4 Bc4+ 5.c3':
+                move.notation = 'd4c3';
+                move.type = 2;
+                return move;
+            
+            case '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Bc4 Bc4+ 5.c3 dxc3 6.Bxc3':
+                move.notation = 'b4a5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Bc4 Bc4+ 5.c3 dxc3 6.O-O':
+                move.notation = 'g8f6';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Bc4 Bc4+ 5.c3 dxc3 6.O-O Nf6 7.e5':
                 move.notation = 'd7d5';
+                move.type = 2;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Bc4 Bc4+ 5.c3 dxc3 6.O-O Nf6 7.bxc3':
+                move.notation = 'b4c5';
                 move.type = 2;
                 return move;
 
