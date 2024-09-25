@@ -2877,37 +2877,37 @@ class BotsAI {
                 move.type = 2;
                 return move;
 
-            case '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Bc4 Bc4+ 5.Bd2':
+            case '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Bc4 Bb4+ 5.Bd2':
                 move.notation = 'c4d2';
                 move.type = 2;
                 return move;
 
-            case '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Bc4 Bc4+ 5.Bd2 Bxd2+ 6.Qxd2':
+            case '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Bc4 Bb4+ 5.Bd2 Bxd2+ 6.Qxd2':
                 move.notation = 'g8f6';
                 move.type = 2;
                 return move;
 
-            case '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Bc4 Bc4+ 5.c3':
+            case '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Bc4 Bb4+ 5.c3':
                 move.notation = 'd4c3';
                 move.type = 2;
                 return move;
             
-            case '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Bc4 Bc4+ 5.c3 dxc3 6.Bxc3':
+            case '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Bc4 Bb4+ 5.c3 dxc3 6.Bxc3':
                 move.notation = 'b4a5';
                 move.type = 2;
                 return move;
 
-            case '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Bc4 Bc4+ 5.c3 dxc3 6.O-O':
+            case '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Bc4 Bb4+ 5.c3 dxc3 6.O-O':
                 move.notation = 'g8f6';
                 move.type = 2;
                 return move;
 
-            case '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Bc4 Bc4+ 5.c3 dxc3 6.O-O Nf6 7.e5':
+            case '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Bc4 Bb4+ 5.c3 dxc3 6.O-O Nf6 7.e5':
                 move.notation = 'd7d5';
                 move.type = 2;
                 return move;
 
-            case '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Bc4 Bc4+ 5.c3 dxc3 6.O-O Nf6 7.bxc3':
+            case '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Bc4 Bb4+ 5.c3 dxc3 6.O-O Nf6 7.bxc3':
                 move.notation = 'b4c5';
                 move.type = 2;
                 return move;
