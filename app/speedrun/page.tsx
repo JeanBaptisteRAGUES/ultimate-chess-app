@@ -629,6 +629,7 @@ const SpeedrunPage = () => {
 
       if(move && move.type >= 0){
         console.log(`Bot move: ${move.notation} - Game active: ${gameActive.current}`);
+        console.log(move.moveInfos);
         gameMove(move.notation, move.type);
         return;
       } 

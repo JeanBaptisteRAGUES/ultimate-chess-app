@@ -41,6 +41,7 @@ const TestAI = () => {
     const [currentFen, setCurrentFen] = useState(DEFAULT_POSITION);
     const [virtualFen, setVirtualFen] = useState(DEFAULT_POSITION);
     const [isVirtualMode, setIsVirtualMode] = useState(false);
+    const [moveInfos, setMoveInfos] = useState('');
     const [engineEval, setEngineEval] = useState('0.3');
     const [showEval, setShowEval] = useState(true);
     const scoreHistory = useRef(new Array());
@@ -253,6 +254,7 @@ const TestAI = () => {
 
       if(move && move.type >= 0){
         gameMove(move.notation, move.type);
+        setMoveInfos(move?.moveInfos || '');
         return;
       } 
       console.log("Erreur lors de la génération d'un coup par l'ordinateur");
@@ -460,18 +462,18 @@ const TestAI = () => {
     </h4>
 
     const pgnComponentDesktop =
-      <div className=" text-white w-1/4 hidden h-full md:flex flex-col flex-wrap">
+      <div className=" text-white w-1/3 hidden h-full md:flex flex-col flex-wrap">
         {gamePGN()}
       </div>
     
     const pgnComponentSmartphone =
-      <div className=" text-white overflow-y-auto w-full md:hidden h-full flex flex-col flex-wrap mt-10">
+      <div className=" text-white overflow-y-auto w-full md:hidden h-1/5 flex flex-col gap-5 flex-wrap mt-2">
         {gamePGN()}
       </div>
 
     // TODO: Problème d'horloge lorsqu'on switch de position, le temps défile pour le mauvais joueur
     const boardComponent =
-      <div className=" relative flex flex-col justify-center items-center h-fit md:h-[500px] w-[95vw] md:w-[500px] my-10" >
+      <div className=" relative flex flex-col justify-center items-center h-min md:h-[500px] w-[95vw] md:w-[500px] mt-5 md:my-10" >
           <div className=" relative flex justify-start p-2 w-full h-10 font-medium bg-slate-100 rounded-t-md">
             <div className=" h-full flex justify-start items-center flex-grow-[4]" >
               <span className=' w-9 h-9 flex justify-center items-center rounded mr-3' >
@@ -575,7 +577,7 @@ const TestAI = () => {
     </div>
 
     const buttonsComponent =
-      <div className="flex justify-center mt-5 pt-2 md:mt-0 items-center gap-5 w-full h-fit" >
+      <div className="flex justify-center pt-2 items-center gap-5 w-full h-fit" >
         {virtualModeButton}
         {startGameButton}
         {switchButton}
@@ -583,22 +585,29 @@ const TestAI = () => {
 
     const gameComponent = 
       <div className="flex flex-col justify-start items-center h-full">
-        {titleComponent}
         {boardComponent}
         {buttonsComponent}
       </div>
 
     const gameContainer =
-      <div className="flex flex-row justify-center items-center w-full md:w-1/2 h-full md:pl-5" >
+      <div className="flex flex-row justify-center items-start md:items-center w-full md:w-2/3 h-fit md:h-full md:py-5" >
         {gameComponent}
       </div>
 
     return (
-      <div className="flex flex-col md:flex-row justify-start md:justify-stretch items-center md:items-start bg-cyan-900 h-[95vh] w-full overflow-auto" >
+      <div className="flex flex-col md:flex-row justify-start md:justify-center items-center md:items-center bg-cyan-900 h-[95vh] w-full overflow-auto" >
+        <div className=" flex flex-col md:flex-row justify-start md:justify-center items-center md:items-center h-4/5 md:h-full w-full md:w-2/3">
           {pgnComponentDesktop}
           {gameContainer}
           {gameOverWindow}
           {pgnComponentSmartphone}
+        </div>
+        <div className="flex flex-col justify-start items-center text-xs md:text-base text-white overflow-y-auto pr-2 h-full w-full md:w-1/3">
+          <p className="flex flex-row justify-start items-center text-cyan-400 text-sm md:text-xl font-semibold w-full" >Informations sur le dernier coup du bot:</p>
+          <text className="flex flex-col justify-start items-start flex-wrap whitespace-pre-line" >
+            {moveInfos}
+          </text>
+        </div>
       </div>
     )
 }
