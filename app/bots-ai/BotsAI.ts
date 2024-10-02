@@ -347,12 +347,12 @@ function initDefaultBotParams(elo: number, timeControl: string): DefaultBotParam
     let eloRange = [1200, 1800];
 
     /*
-        0-250 -> securityLvl = 0
-        250-600 -> securityLvl = 1
-        600-1295 -> securityLvl = 2
-        1295- 2400 -> securityLvl = 3
+        0-325 -> securityLvl = 0
+        325-755 -> securityLvl = 1
+        755-1525 -> securityLvl = 2
+        1525- 2770 -> securityLvl = 3
     */
-    const securityLvl = Math.round(Math.max(0, Math.pow(elo, 1/4) - 3.5));
+    const securityLvl = Math.round(Math.max(0, Math.pow(elo, 1/4) - 3.75));
 
     // Empeche d'avoir un deuxième coup aléatoire avant le Xème coup
     let randMoveInterval = 5;
@@ -624,9 +624,8 @@ class BotsAI {
 
     //Suivant le security level, ne prendre en compte que certaines attaques
     //SL 0 -> Ne détecte jamais le danger
-    //SL 1 -> Danger qu'après une capture
-    //SL 2 -> Danger si capture ou attaque avec une pièce de moindre valeur
-    //TODO: SL 3 -> Danger si capture, attaque pièce de moindre valeur ou attaque pièce non protégée 
+    //SL 1 & 2 -> Danger si capture, ou attaque avec une pièce de moindre valeur (chances d'ignorer basses)
+    //TODO: SL 3 -> +Regarder les coups de toutes les pièces (ex: en cas de découverte, chances d'ignorer importantes) 
     #isLastMoveDangerous(game: Chess): {danger: boolean, dangerCases: {dangerCase: string, dangerValue: number}[], dangerousMoveInfos: string } {
         //console.log("Is last move dangerous ?");
         const history = JSON.parse(JSON.stringify(game.history({verbose: true})));
@@ -643,19 +642,27 @@ class BotsAI {
         };
     
         
-        const previousFen = lastMove.before;
+        /* const previousFen = lastMove.before;
         
         gameTest.load(previousFen);
         gameTest.remove(lastMove.from);
-        gameTest.put({type: lastMove.piece, color: lastMove.color}, lastMove.to);
+        gameTest.put({type: lastMove.piece, color: lastMove.color}, lastMove.to); */
+
+        // On modifie la fen pour que l'adversaire puisse virtuellement jouer deux fois d'affilé
+        console.log(`Game Fen: ${game.fen()}`);
+        const testFen = game.fen().includes(' b ') ? game.fen().replace(' b ', ' w ') : game.fen().replace(' w ', ' b ');
+        console.log(`Test Fen: ${testFen}`);
+        gameTest.load(testFen);
+
         const pieceMoves = gameTest.moves({square: lastMove.to, verbose: true});
         
         let danger = false;
         const dangerCases: {dangerCase: string, dangerValue: number}[] = [];
     
         // Si le dernier coup est une capture, il faut obligatoirement réagir
-        if(lastMove.san.match(/[x]/gm)) danger = true;
+        if(lastMove.san.match(/[x|+]/gm)) danger = true;
     
+        // On ne regarde que les attaques de la pièce déplacée et pas les découvertes
         pieceMoves.forEach(pieceMove => {
             const attackedCase = pieceMove.to;
             const squareInfos = gameTest.get(attackedCase);
@@ -664,6 +671,14 @@ class BotsAI {
             if(squareInfos && squareInfos?.type !== 'p' && squareInfos?.color === this.#botColor) {
                 const dangerValue = this.#toolbox.getExchangeValue(gameTest.fen(), pieceMove.lan);
                 //console.log(`Danger: ${pieceMove.san} -> ${dangerValue}`);
+
+                if(dangerValue >= 1){
+                    dangerCases.push({
+                        dangerCase: attackedCase,
+                        dangerValue: dangerValue
+                    })
+                    danger = true;
+                }
 
                 if(this.#defaultBotParams.securityLvl >= 2 && dangerValue > 0){
                     dangerCases.push({
@@ -677,18 +692,59 @@ class BotsAI {
     
         //console.log(`Is last move \x1B[34m(${lastMove.san})\x1B[0m dangerous: \x1B[31m` + danger);
 
-        const ignoreDangerChances = Math.max(1, 50 - Math.pow(this.#defaultBotParams.elo, 1/1.8));
-        let ignoreDanger = Math.random()*100;
+        const ignoreDirectAttackChances = Math.max(1, 50 - Math.pow(this.#defaultBotParams.elo, 1/1.8));
+        let ignoreDirectAttack = Math.random()*100;
 
-        if(danger) dangerousMoveInfos = `Is Last Move Dangerous: Le bot considère le dernier coup comme dangereux (security level: ${this.#defaultBotParams.securityLvl}).\n\n`;
-        if(!danger) dangerousMoveInfos = `Is Last Move Dangerous: Le bot ne considère pas le dernier coup comme dangereux (security level: ${this.#defaultBotParams.securityLvl}).\n\n`;
+        if(danger) dangerousMoveInfos = `Is Last Move Dangerous: Le bot considère le dernier coup comme une attaque directe dangereuse (security level: ${this.#defaultBotParams.securityLvl}).\n\n`;
+        if(!danger) dangerousMoveInfos = `Is Last Move Dangerous: Le bot ne considère pas le dernier coup comme une attaque directe dangereuse (security level: ${this.#defaultBotParams.securityLvl}).\n\n`;
 
-        if(danger && ignoreDanger < ignoreDangerChances){
+        if(danger && ignoreDirectAttack < ignoreDirectAttackChances){
             danger = false;
             console.log(`${this.#username} ignore le danger !`);
-            dangerousMoveInfos = `Ignore Danger: Le dernier coup était dangereux (security level: ${this.#defaultBotParams.securityLvl}) mais le bot l'ignore (${Math.round(ignoreDanger)} < ${ignoreDangerChances}).\n\n`;
+            dangerousMoveInfos = `Ignore Danger: Le dernier coup était une attaque directe dangereuse (security level: ${this.#defaultBotParams.securityLvl}) mais le bot l'ignore (${Math.round(ignoreDirectAttack)} < ${ignoreDirectAttackChances}).\n\n`;
         }
     
+        if(danger || this.#defaultBotParams.securityLvl < 3) {
+            if(!danger) dangerousMoveInfos += `Is Last Move Dangerous: Le bot ne regarde pas s'il y a des attaques à la découverte (security level: ${this.#defaultBotParams.securityLvl}).\n\n`;
+            return {
+                danger: danger,
+                dangerCases: dangerCases,
+                dangerousMoveInfos: dangerousMoveInfos,
+            };
+        } 
+
+        // On regarde les déplacements de toutes les pièces adverses (attaque à la découverte par exemple)
+        gameTest.moves({verbose: true}).forEach(pieceMove => {
+            const attackedCase = pieceMove.to;
+            const squareInfos = gameTest.get(attackedCase);
+    
+            console.log(squareInfos);
+            if(squareInfos && squareInfos?.type !== 'p' && squareInfos?.color === this.#botColor) {
+                const dangerValue = this.#toolbox.getExchangeValue(gameTest.fen(), pieceMove.lan);
+                console.log(`Danger: ${pieceMove.san} -> ${dangerValue}`);
+
+                if(dangerValue >= 1){
+                    dangerCases.push({
+                        dangerCase: attackedCase,
+                        dangerValue: dangerValue
+                    })
+                    danger = true;
+                }
+            }
+        });
+
+        const ignoreDiscoveryAttackChances = Math.max(1, 50 - Math.pow(this.#defaultBotParams.elo - 1500, 1/1.6));
+        let ignoreDiscoveryAttack = Math.random()*100;
+
+        if(danger) dangerousMoveInfos += `Is Last Move Dangerous: Le bot considère le dernier coup comme une attaque à la découverte dangereuse (security level: ${this.#defaultBotParams.securityLvl}).\n\n`;
+        if(!danger) dangerousMoveInfos += `Is Last Move Dangerous: Le bot ne considère pas le dernier coup comme une attaque à la découverte dangereuse (security level: ${this.#defaultBotParams.securityLvl}).\n\n`;
+
+        if(danger && ignoreDiscoveryAttack < ignoreDiscoveryAttackChances){
+            danger = false;
+            console.log(`${this.#username} ignore le danger !`);
+            dangerousMoveInfos += `Ignore Danger: Le dernier coup était une attaque à la découverte dangereuse (security level: ${this.#defaultBotParams.securityLvl}) mais le bot l'ignore (${Math.round(ignoreDiscoveryAttack)} < ${ignoreDiscoveryAttackChances}).\n\n`;
+        }
+
         return {
             danger: danger,
             dangerCases: dangerCases,
