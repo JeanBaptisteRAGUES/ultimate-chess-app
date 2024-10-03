@@ -915,7 +915,7 @@ const SpeedrunPage = () => {
 
     // TODO: Problème d'horloge lorsqu'on switch de position, le temps défile pour le mauvais joueur
     const boardComponent =
-      <div className=" relative flex flex-col justify-center items-center h-fit md:h-[500px] w-[95vw] md:w-[500px] mt-5 md:my-10" >
+      <div className=" relative flex flex-col justify-center items-center h-min md:h-[500px] w-[95vw] md:w-[500px] mt-5 md:my-10" >
           <div className=" relative flex justify-start p-2 w-full h-10 font-medium bg-slate-100 rounded-t-md">
             <div className=" h-full flex justify-start items-center flex-grow-[4]" >
               <span className=' w-9 h-9 flex justify-center items-center rounded mr-3' >
@@ -1006,7 +1006,7 @@ const SpeedrunPage = () => {
       </div>
 
     const buttonsComponent =
-      <div className="flex justify-center mt-5 pt-2 md:mt-0 items-center gap-5 w-full h-fit" >
+      <div className="flex justify-center pt-2 items-center gap-5 w-full h-fit" >
         {startGameButton}
       </div>
 
@@ -1036,7 +1036,7 @@ const SpeedrunPage = () => {
       </div>
     ) */
    return (
-      <div className="flex flex-col md:flex-row justify-start md:justify-center items-center md:items-center bg-cyan-900 h-[95vh] w-full overflow-auto" >
+    <div className="flex flex-col md:flex-row justify-start md:justify-center items-center md:items-center bg-cyan-900 h-[95vh] w-full overflow-auto" >
         <div className=" flex flex-col md:flex-row justify-start md:justify-center items-center md:items-center h-4/5 md:h-full w-full md:w-2/3">
           {pgnComponentDesktop}
           {gameContainer}
