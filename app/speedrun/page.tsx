@@ -124,11 +124,11 @@ const SpeedrunPage = () => {
         gimmicks: [
           {
             gimmick: 'human',
-            chance: 70,
+            chance: 90,
           },
           {
             gimmick: 'queen-player',
-            chance: 90
+            chance: 95
           },
           {
             gimmick: 'pawn-pusher',
@@ -142,23 +142,23 @@ const SpeedrunPage = () => {
         gimmicks: [
           {
             gimmick: 'human',
-            chance: 70,
+            chance: 90,
           },
           {
             gimmick: 'caro-london',
-            chance: 75
+            chance: 92
           },
           {
             gimmick: 'copycat',
-            chance: 80
+            chance: 94
           },
           {
             gimmick: 'fianchetto-sniper',
-            chance: 85
+            chance: 97
           },
           {
             gimmick: 'bongcloud',
-            chance: 90
+            chance: 98
           },
           {
             gimmick: 'stonewall',
@@ -172,19 +172,15 @@ const SpeedrunPage = () => {
         gimmicks: [
           {
             gimmick: 'human',
-            chance: 70,
-          },
-          {
-            gimmick: 'caro-london',
-            chance: 80
+            chance: 85,
           },
           {
             gimmick: 'gambit-fanatic',
-            chance: 90
+            chance: 95
           },
           {
             gimmick: 'fianchetto-sniper',
-            chance: 95
+            chance: 97
           },
           {
             gimmick: 'cow-lover',
@@ -198,15 +194,15 @@ const SpeedrunPage = () => {
         gimmicks: [
           {
             gimmick: 'human',
-            chance: 75,
+            chance: 85,
           },
           {
             gimmick: 'indian-king',
-            chance: 80
+            chance: 87
           },
           {
             gimmick: 'gambit-fanatic',
-            chance: 90
+            chance: 95
           },
           {
             gimmick: 'dragon',
@@ -223,7 +219,7 @@ const SpeedrunPage = () => {
             chance: 75,
           },
           {
-            gimmick: 'dragon',
+            gimmick: 'gambit-fanatic',
             chance: 100,
           },
         ]
@@ -255,7 +251,7 @@ const SpeedrunPage = () => {
         gimmicks: [
           {
             gimmick: 'human',
-            chance: 80,
+            chance: 90,
           },
           {
             gimmick: 'pawn-pusher',
@@ -287,11 +283,11 @@ const SpeedrunPage = () => {
         gimmicks: [
           {
             gimmick: 'human',
-            chance: 80,
+            chance: 90,
           },
           {
             gimmick: 'gambit-fanatic',
-            chance: 90
+            chance: 95
           },
           {
             gimmick: 'castle-destroyer',
@@ -305,11 +301,11 @@ const SpeedrunPage = () => {
         gimmicks: [
           {
             gimmick: 'human',
-            chance: 80,
+            chance: 90,
           },
           {
             gimmick: 'gambit-fanatic',
-            chance: 90
+            chance: 95
           },
           {
             gimmick: 'castle-destroyer',
