@@ -782,7 +782,7 @@ class BotsAI {
         let move: Move = {
             notation: '',
             type: -1,
-            moveInfos: `Make Forced Exchange: Il n'y a aucun un danger mais le bot n'a pas trouvé d'échange assez intéressant pour être forcé.\n\n`,
+            moveInfos: `Make Forced Exchange: Le bot ${this.#username} n'a pas trouvé d'échange assez intéressant pour être forcé.\n\n`,
         };
 
         const forceExchangeChance = new Map([
@@ -801,19 +801,15 @@ class BotsAI {
                 const rand = Math.round(Math.random()*100);
                 const captureValue = this.#toolbox.getExchangeValue(game.fen(), moveLan);
                 const captureChance = Math.min(captureValue*forceExchangeChance, 90)
-                //console.log(`Move: ${possibleMove} (value: ${captureValue}, capture chances: ${captureChance}, rand: ${rand})`);
+                console.log(`Move: ${possibleMove} (value: ${captureValue}, capture chances: ${captureChance}, rand: ${rand})`);
                 if(rand <= captureChance){
                     move.notation = moveLan;
                     move.type = 5
                     hasForcedExchange = true; 
-                    move.moveInfos = `Make Forced Exchange: Le bot est forcé de capturer en ${this.#toolbox.getMoveDestination(move.notation)} (${Math.round(rand)} <= ${captureChance}).\n\n`;
+                    move.moveInfos = `Make Forced Exchange: Le bot ${this.#username} est forcé de capturer en ${this.#toolbox.getMoveDestination(move.notation)} (${Math.round(rand)} <= ${captureChance}).\n\n`;
                 }
             }
         });
-
-        if(move.type > 0) {
-            console.log('Le bot est forcé de capturer en ' + this.#toolbox.getMoveDestination(move.notation));
-        }
 
         return move;
     }
@@ -951,7 +947,7 @@ class BotsAI {
 
             if(stockfishMove.type === 5) {
                 console.log(`Le bot ${this.#username} oublie:${thingsForgotten}`);
-                stockfishMove.moveInfos = `Make Tunel Vision Move: Le bot ${this.#username} oublie:\n${thingsForgotten}.\n\n`;
+                stockfishMove.moveInfos = `Make Tunel Vision Move: Le bot ${this.#username} oublie:\n${thingsForgotten}\n\n`;
             }else{
                 stockfishMove.moveInfos = `Make Tunel Vision Move: Le bot ${this.#username} avait oublié une ou des pièces mais le coup résultant n'était pas valide (forgot piece chance: ${Math.round(forgotPieceChance)} * inactivity (0.1 - 1.5)).\n\n`;
             }
@@ -1180,18 +1176,12 @@ class BotsAI {
 
         //console.log("Le dernier coup est dangereux: " + danger);
 
-        //TODO: Vérifier si on peut le faire même quand y'a du danger car certaines fois le coup de base de stockfish ne recapture pas
-        //la pièce en prise..
-        if(!danger) {
-            const forcedExchangeMove = this.#makeForcedExchange(game);
-            moveInfos += forcedExchangeMove.moveInfos;
-            if(forcedExchangeMove.type >= 0){
-                this.#lastRandomMove = this.#lastRandomMove-1;
-                forcedExchangeMove.moveInfos = moveInfos;
-                return forcedExchangeMove;
-            }
-        }else {
-            moveInfos += `Make Forced Exchange Move: Il y a un danger donc le bot ne cherche pas forcément à échanger de pièce.\n\n`;
+        const forcedExchangeMove = this.#makeForcedExchange(game);
+        moveInfos += forcedExchangeMove.moveInfos;
+        if(forcedExchangeMove.type >= 0){
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            forcedExchangeMove.moveInfos = moveInfos;
+            return forcedExchangeMove;
         }
         //console.log('human logic: 3');
     
@@ -1232,14 +1222,19 @@ class BotsAI {
         }
         //console.log('human logic: 7');
 
-        const noOpponentMove = await this.#ignoreOpponentMove(game);
-        moveInfos += noOpponentMove.moveInfos;
+        if(!danger) {
+            const noOpponentMove = await this.#ignoreOpponentMove(game);
+            moveInfos += noOpponentMove.moveInfos;
 
-        if(noOpponentMove.type === 5) {
-            this.#lastRandomMove = this.#lastRandomMove-1;
-            noOpponentMove.moveInfos = moveInfos; 
-            return noOpponentMove;
+            if(noOpponentMove.type === 5) {
+                this.#lastRandomMove = this.#lastRandomMove-1;
+                noOpponentMove.moveInfos = moveInfos; 
+                return noOpponentMove;
+            }
+        } else{
+            moveInfos += `Le bot ${this.#username} considère le dernier coup comme dangereux donc il ne peut pas l'ignorer.\n\n`;
         }
+        
         //console.log('human logic: 8');
 
         // TODO: Faire en sorte que les débutant favorisent les coups vers l'avant et les échecs

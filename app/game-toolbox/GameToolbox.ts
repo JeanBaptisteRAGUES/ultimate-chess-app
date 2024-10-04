@@ -188,6 +188,19 @@ class GameToolBox {
     }
 
     /**
+     * Indique si la pièce est défendue par un pion ou une autre pièce
+     * @param fen 
+     * @param pieceCase 
+     * @returns Retourne un booléen pour savoir si la pièce est défendue ou non
+     */
+    isDefended(fen: string, pieceSquare: Square): Boolean {
+        this.game.load(fen);
+        const pieceColor = this.game.get(pieceSquare).color;
+
+        return this.game.isAttacked(pieceSquare, pieceColor);
+    }
+
+    /**
      * Renvoie vrai si le coup en paramètre est une capture, faux sinon.
      * @param fen string
      * @param move string
@@ -206,10 +219,21 @@ class GameToolBox {
      */
     getExchangeValue(fen: string, move: string): number {
       this.game.load(fen);
-      const attackingPieceValue = pieceValues.get(this.game.get(this.getMoveOrigin(move)).type) || 0;
-      const attackedPieceValue = pieceValues.get(this.game.get(this.getMoveDestination(move)).type) || 0;
+      const attackingPieceSquare = this.getMoveOrigin(move);
+      const attackedPieceSquare = this.getMoveDestination(move);
+      const attackingPieceValue = pieceValues.get(this.game.get(attackingPieceSquare).type) || 0;
+      const attackedPieceValue = pieceValues.get(this.game.get(attackedPieceSquare).type) || 0;
 
-      return attackedPieceValue - attackingPieceValue;
+      // Voir si la pièce est défendue
+      if(this.isDefended(fen, attackedPieceSquare)) {
+        console.log(`${attackedPieceSquare} est défendue: V(exchange) = ${attackedPieceValue} - ${attackingPieceValue}`);
+        return attackedPieceValue - attackingPieceValue;
+      } else {
+        console.log(`${attackedPieceSquare} n'est pas défendue: V(exchange) = ${attackedPieceValue}`);
+        return attackedPieceValue;
+      }
+
+      
     }
 
     filterMoves(movesList: string[], filterLevel: number) {
