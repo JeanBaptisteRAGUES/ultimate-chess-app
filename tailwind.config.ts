@@ -12,6 +12,8 @@ const config: Config = {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-conic':
           'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+        'landing-desktop': "url('../public/LandingPage_BG/landingpage_bg_desktop.jpg')",
+        'landing-smartphone': "url('../public/LandingPage_BG/landingpage_bg_smartphone.jpg')",
       },
     },
   },
