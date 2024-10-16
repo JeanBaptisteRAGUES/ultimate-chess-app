@@ -101,7 +101,7 @@ const SelectGameModePage = () => {
                 <div className='flex flex-col justify-start items-start px-3 md:pt-5 gap-2'>
                     <p className=' text-xl md:text-3xl text-cyan-300' >Hand & Brain</p>
                     <p className=' text-sm md:text-base overflow-y-auto no-scrollbar' >
-                        Le "cerveau" choisi la pièce sans donner le coup exact et la "main" doit trouver le meilleur coup avec la pièce donnée.
+                        Le "cerveau" choisi la pièce et la "main" doit trouver le meilleur coup avec la pièce donnée.
                     </p>
                 </div>
             </Link>
@@ -178,7 +178,7 @@ const SelectGameModePage = () => {
                     className='flex md:hidden rounded'
                 />
                 <div className='flex flex-col justify-start items-start px-3 md:pt-5 gap-2'>
-                    <p className=' text-xl md:text-3xl text-cyan-300' >Tester l'IA des bots</p>
+                    <p className=' text-xl md:text-3xl text-cyan-300' >IA Lab</p>
                     <p className=' text-sm md:text-base overflow-y-auto no-scrollbar' >
                         Mode pour comprendre comment l'IA du bot fait pour trouver le prochain coup.
                     </p>
