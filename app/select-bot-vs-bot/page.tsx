@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react';
-import Image, { StaticImageData } from 'next/image';
+import Image from 'next/image';
 import { Behaviour, botsInfo } from '../bots-ai/BotsAI';
 import Link from 'next/link';
 import { GiBulletBill } from 'react-icons/gi';

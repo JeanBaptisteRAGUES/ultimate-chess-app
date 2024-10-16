@@ -1,7 +1,15 @@
-'use client'
+'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
+
+import modeClassicalImg from "@/public/GameModes_icons/gamemode_classical.jpg";
+import modeSpeedrunImg from "@/public/GameModes_icons/gamemode_speedrun.jpg";
+import modeThematicImg from "@/public/GameModes_icons/gamemode_thematic-training.jpg";
+import modeHandBrainImg from "@/public/GameModes_icons/gamemode_hand-and-brain.jpg";
+import modeBotVsBotImg from "@/public/GameModes_icons/gamemode_bot-vs-bot.jpg";
+import modeTestAiImg from "@/public/GameModes_icons/gamemode_test-ai.jpg";
 
 /*TODO: Choix difficulté: [
     'Beginner': pawnIcon, 
@@ -18,13 +26,164 @@ const SelectGameModePage = () => {
 
 
     return (
-        <div className="flex flex-col justify-center items-center text-3xl font-semibold bg-cyan-900 h-[95vh] w-full flex-wrap overflow-auto gap-10" >
-            <Link className=' text-white hover:text-cyan-300 cursor-pointer flex justify-center items-center' href={{pathname: '/select-bot'}} >Classique</Link>
-            <Link className=' text-white hover:text-cyan-300 cursor-pointer flex justify-center items-center' href={{pathname: '/select-speedrun'}} >Speedrun</Link>
-            <Link className=' text-white hover:text-cyan-300 cursor-pointer flex justify-center items-center' href={{pathname: '/select-hand-and-brain'}} >Hand & Brain</Link>
-            <Link className=' text-white hover:text-cyan-300 cursor-pointer flex flex-wrap gap-2 justify-center items-center' href={{pathname: '/select-thematic-training'}} ><span>Entraînement </span> <span>Thématique</span></Link>
-            <Link className=' text-white hover:text-cyan-300 cursor-pointer flex justify-center items-center' href={{pathname: '/select-bot-vs-bot'}} >Bot VS Bot</Link>
-            <Link className=' text-white hover:text-cyan-300 cursor-pointer flex justify-center items-center' href={{pathname: '/select-test-ai'}} >Tester l'IA des bots</Link>
+        <div className="flex flex-row justify-around items-center text-3xl font-semibold bg-slate-800 h-[95vh] w-full flex-wrap overflow-auto gap-10 p-5" >
+            <Link className=' text-white h-24 md:h-40 w-full md:w-2/5 overflow-hidden hover:border-cyan-400 hover:shadow-[0_0_2px_#fff,inset_0_0_2px_#fff,0_0_5px_#08f,0_0_15px_#08f,0_0_30px_#08f] cursor-pointer flex justify-start items-start' href={{pathname: '/select-bot'}} >
+                <Image
+                    src={modeClassicalImg}
+                    alt="Classical chess mode icon"
+                    width={160}
+                    height={160}
+                    // blurDataURL="data:..." automatically provided
+                    placeholder="blur" // Optional blur-up while loading
+                    className='hidden md:flex rounded'
+                />
+                <Image
+                    src={modeClassicalImg}
+                    alt="Classical chess mode icon"
+                    width={95}
+                    height={95}
+                    // blurDataURL="data:..." automatically provided
+                    placeholder="blur" // Optional blur-up while loading
+                    className='flex md:hidden rounded'
+                />
+                <div className='flex flex-col justify-start items-start px-3 md:pt-5 gap-2'>
+                    <p className=' text-xl md:text-3xl text-cyan-300' >Classique</p>
+                    <p className=' text-sm md:text-base overflow-y-auto no-scrollbar' >
+                        Jouez une partie contre un bot de votre choix.
+                    </p>
+                </div>
+            </Link>
+            <Link className=' text-white h-24 md:h-40 w-full md:w-2/5 overflow-hidden hover:border-cyan-400 hover:shadow-[0_0_2px_#fff,inset_0_0_2px_#fff,0_0_5px_#08f,0_0_15px_#08f,0_0_30px_#08f] cursor-pointer flex justify-start items-start' href={{pathname: '/select-speedrun'}} >
+                <Image
+                    src={modeSpeedrunImg}
+                    alt="Speedrun chess mode icon"
+                    width={160}
+                    height={160}
+                    // blurDataURL="data:..." automatically provided
+                    placeholder="blur" // Optional blur-up while loading
+                    className='hidden md:flex rounded'
+                />
+                <Image
+                    src={modeSpeedrunImg}
+                    alt="Speedrun chess mode icon"
+                    width={95}
+                    height={95}
+                    // blurDataURL="data:..." automatically provided
+                    placeholder="blur" // Optional blur-up while loading
+                    className='flex md:hidden rounded'
+                />
+                <div className='flex flex-col justify-start items-start px-3 md:pt-5 gap-2'>
+                    <p className=' text-xl md:text-3xl text-cyan-300' >Speedrun</p>
+                    <p className=' text-sm md:text-base overflow-y-auto no-scrollbar' >
+                        Enchainez les parties contre des bots aléatoires dans un intervalle Élo choisi.
+                    </p>
+                </div>
+            </Link>
+            <Link className=' text-white h-24 md:h-40 w-full md:w-2/5 overflow-hidden hover:border-cyan-400 hover:shadow-[0_0_2px_#fff,inset_0_0_2px_#fff,0_0_5px_#08f,0_0_15px_#08f,0_0_30px_#08f] cursor-pointer flex justify-start items-start' href={{pathname: '/select-hand-and-brain'}} >
+                <Image
+                    src={modeHandBrainImg}
+                    alt="Classical chess mode icon"
+                    width={160}
+                    height={160}
+                    // blurDataURL="data:..." automatically provided
+                    placeholder="blur" // Optional blur-up while loading
+                    className='hidden md:flex rounded'
+                />
+                <Image
+                    src={modeHandBrainImg}
+                    alt="Speedrun chess mode icon"
+                    width={95}
+                    height={95}
+                    // blurDataURL="data:..." automatically provided
+                    placeholder="blur" // Optional blur-up while loading
+                    className='flex md:hidden rounded'
+                />
+                <div className='flex flex-col justify-start items-start px-3 md:pt-5 gap-2'>
+                    <p className=' text-xl md:text-3xl text-cyan-300' >Hand & Brain</p>
+                    <p className=' text-sm md:text-base overflow-y-auto no-scrollbar' >
+                        Le "cerveau" choisi la pièce sans donner le coup exact et la "main" doit trouver le meilleur coup avec la pièce donnée.
+                    </p>
+                </div>
+            </Link>
+            <Link className=' text-white h-24 md:h-40 w-full md:w-2/5 overflow-hidden hover:border-cyan-400 hover:shadow-[0_0_2px_#fff,inset_0_0_2px_#fff,0_0_5px_#08f,0_0_15px_#08f,0_0_30px_#08f] cursor-pointer flex justify-start items-start' href={{pathname: '/select-thematic-training'}} >
+                <Image
+                    src={modeThematicImg}
+                    alt="Classical chess mode icon"
+                    width={160}
+                    height={160}
+                    // blurDataURL="data:..." automatically provided
+                    placeholder="blur" // Optional blur-up while loading
+                    className='hidden md:flex rounded'
+                />
+                <Image
+                    src={modeThematicImg}
+                    alt="Speedrun chess mode icon"
+                    width={95}
+                    height={95}
+                    // blurDataURL="data:..." automatically provided
+                    placeholder="blur" // Optional blur-up while loading
+                    className='flex md:hidden rounded'
+                />
+                <div className='flex flex-col justify-start items-start h-full px-3 md:pt-5 gap-2'>
+                    <p className=' text-base md:text-3xl text-cyan-300' >Entraînement Thématique</p>
+                    <p className=' text-sm md:text-base overflow-y-auto no-scrollbar' >
+                        {`Jouez contre Stockfish 16 des positions prédéfinies selon 3 thèmes:\n\n
+                        Attaque, Défense, Finales`}
+                    </p>
+                </div>
+            </Link>
+            <Link className=' text-white h-24 md:h-40 w-full md:w-2/5 overflow-hidden hover:border-cyan-400 hover:shadow-[0_0_2px_#fff,inset_0_0_2px_#fff,0_0_5px_#08f,0_0_15px_#08f,0_0_30px_#08f] cursor-pointer flex justify-start items-start' href={{pathname: '/select-bot-vs-bot'}} >
+                <Image
+                    src={modeBotVsBotImg}
+                    alt="Classical chess mode icon"
+                    width={160}
+                    height={160}
+                    // blurDataURL="data:..." automatically provided
+                    placeholder="blur" // Optional blur-up while loading
+                    className='hidden md:flex rounded'
+                />
+                <Image
+                    src={modeBotVsBotImg}
+                    alt="Speedrun chess mode icon"
+                    width={95}
+                    height={95}
+                    // blurDataURL="data:..." automatically provided
+                    placeholder="blur" // Optional blur-up while loading
+                    className='flex md:hidden rounded'
+                />
+                <div className='flex flex-col justify-start items-start px-3 md:pt-5 gap-2'>
+                    <p className=' text-xl md:text-3xl text-cyan-300' >Bot VS Bot</p>
+                    <p className=' text-sm md:text-base overflow-y-auto no-scrollbar' >
+                        Faites se combattre deux bots de votre choix l'un contre l'autre.
+                    </p>
+                </div>
+            </Link>
+            <Link className=' text-white h-24 md:h-40 w-full md:w-2/5 overflow-hidden hover:border-cyan-400 hover:shadow-[0_0_2px_#fff,inset_0_0_2px_#fff,0_0_5px_#08f,0_0_15px_#08f,0_0_30px_#08f] cursor-pointer flex justify-start items-start' href={{pathname: '/select-test-ai'}} >
+                <Image
+                    src={modeTestAiImg}
+                    alt="Classical chess mode icon"
+                    width={160}
+                    height={160}
+                    // blurDataURL="data:..." automatically provided
+                    placeholder="blur" // Optional blur-up while loading
+                    className='hidden md:flex rounded'
+                />
+                <Image
+                    src={modeTestAiImg}
+                    alt="Speedrun chess mode icon"
+                    width={95}
+                    height={95}
+                    // blurDataURL="data:..." automatically provided
+                    placeholder="blur" // Optional blur-up while loading
+                    className='flex md:hidden rounded'
+                />
+                <div className='flex flex-col justify-start items-start px-3 md:pt-5 gap-2'>
+                    <p className=' text-xl md:text-3xl text-cyan-300' >Tester l'IA des bots</p>
+                    <p className=' text-sm md:text-base overflow-y-auto no-scrollbar' >
+                        Mode pour comprendre comment l'IA du bot fait pour trouver le prochain coup.
+                    </p>
+                </div>
+            </Link>
         </div>
     )
 }
