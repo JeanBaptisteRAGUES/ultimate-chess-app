@@ -193,7 +193,7 @@ const SelectSpeedrun = () => {
 
 
     return (
-        <div className="flex flex-col justify-start items-center bg-cyan-900 h-[95vh] w-full overflow-auto" >
+        <div className="flex flex-col justify-start items-center bg-slate-800 h-[95vh] w-full overflow-auto" >
             <div className=' w-full md:ml-10 flex justify-center md:justify-start items-center text-2xl font-semibold text-white mt-5 mb-2' >Interval Élo:</div>
             <div className=' w-full md:ml-10 flex justify-center md:justify-start items-center gap-5 text-xl font-semibold text-white mt-2 mb-2' >
                 <span>Min: {eloMin}</span>  

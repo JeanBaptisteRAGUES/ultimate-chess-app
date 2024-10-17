@@ -13,18 +13,7 @@ import { SiLichess } from 'react-icons/si';
 import { FaChessPawn } from 'react-icons/fa';
 
 import stockfishOnly_pp from "@/public/Bots_images/chess3d_stockfish-only.jpg";
-import human_pp from "@/public/Bots_images/chess3d_human.jpg"; 
-
-/*TODO: Choix difficulté: [
-    'Beginner': pawnIcon, 
-    'Casual': knightIcon, 
-    'Intermediate': bishopIcon,
-    'Advanced': rookIcon,
-    'Master': queenIcon,
-    'Maximum': kingIcon,
-    ] */
-
-// TODO: Liste des bots
+import human_pp from "@/public/Bots_images/chess3d_human.jpg";
 
 const SelectBotVsBotPage = () => {
     const [timeControl, setTimeControl] = useState('3+0');
@@ -34,7 +23,7 @@ const SelectBotVsBotPage = () => {
     const [bot2_Behaviour, setBot2_Behaviour] = useState<Behaviour>('stockfish-only');
 
     const botsInfosComponent = 
-        <div className='flex flex-row justify-around items-center flex-wrap gap-2 py-5 w-full bg-cyan-900 sticky top-0 left-0 right-0' >
+        <div className='flex flex-row justify-around items-center flex-wrap gap-2 py-5 w-full bg-slate-800 sticky top-0 left-0 right-0' >
             <p className='w-full md:w-1/2 flex justify-center items-center text-xl font-semibold text-white'>{botsInfo.get(bot1_Behaviour)?.name} contre {botsInfo.get(bot2_Behaviour)?.name} en {timeControl}</p>
             <div className=' w-full flex justify-around items-start' >
                 <div className=' w-1/2 flex flex-col justify-center items-center'>
@@ -730,7 +719,7 @@ const bot2_BehaviourComponent =
 
 
     return (
-        <div className="flex flex-col justify-start items-center bg-cyan-900 h-[95vh] w-full overflow-auto" >
+        <div className="flex flex-col justify-start items-center bg-slate-800 h-[95vh] w-full overflow-auto" >
             {botsInfosComponent}
             <div className=' w-full mt-10 mb-2 md:pl-10 flex justify-center md:justify-start items-center text-2xl font-semibold text-white' >Cadence:</div>
             {timeControlComponent}

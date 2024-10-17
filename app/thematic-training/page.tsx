@@ -370,7 +370,7 @@ const ThematicTrainingPage = () => {
       </div>
 
     return (
-      <div className="flex flex-col md:flex-row justify-start md:justify-stretch items-center md:items-start bg-cyan-900 h-[95vh] w-full overflow-auto" >
+      <div className="flex flex-col md:flex-row justify-start md:justify-stretch items-center md:items-start bg-slate-800 h-[95vh] w-full overflow-auto" >
           {gameContainer}
           {gameOverWindow}
       </div>

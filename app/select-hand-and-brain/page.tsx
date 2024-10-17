@@ -30,7 +30,7 @@ const SelectHandAndBrainPage = () => {
     const [behaviour, setBehaviour] = useState<Behaviour>('stockfish-only');
 
     const botInfosComponent = 
-        <div className='flex flex-row justify-around items-center flex-wrap gap-2 py-5 w-full bg-cyan-900 sticky top-0 left-0 right-0' >
+        <div className='flex flex-row justify-around items-center flex-wrap gap-2 py-5 w-full bg-slate-800 sticky top-0 left-0 right-0' >
             <p className='w-full md:w-1/2 flex justify-center items-center text-xl font-semibold text-white'>Jouer avec un alié de {allyElo} Élo contre..</p>
             <span className=' w-full md:w-1/2 flex justify-center items-center rounded' >
                 <Image
@@ -138,7 +138,7 @@ const SelectHandAndBrainPage = () => {
 
 
     return (
-        <div className="flex flex-col justify-start items-center bg-cyan-900 h-[95vh] w-full overflow-auto" >
+        <div className="flex flex-col justify-start items-center bg-slate-800 h-[95vh] w-full overflow-auto" >
             {botInfosComponent}
             <div className=' w-full mt-5 mb-2 md:ml-10 flex justify-center md:justify-start items-center text-2xl font-semibold text-white' >Jouer en tant que:</div>
             {playerRoleComponent}

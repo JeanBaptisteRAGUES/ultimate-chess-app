@@ -372,7 +372,7 @@ const SelectThematicTrainingPage = () => {
         null
 
     return (
-        <div className="flex flex-col justify-around items-center bg-cyan-900 h-[95vh] w-full overflow-auto" >
+        <div className="flex flex-col justify-around items-center bg-slate-800 h-[95vh] w-full overflow-auto" >
             <div className=' w-full mt-10 md:ml-10 flex justify-center md:justify-start items-center text-2xl font-semibold text-white' >Difficulté:</div>
             {difficultyComponent}
             <div className=' w-full mt-20 md:ml-10 flex justify-center md:justify-start items-center text-2xl font-semibold text-white' >Thèmes:</div>

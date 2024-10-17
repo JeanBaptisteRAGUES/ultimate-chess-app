@@ -47,7 +47,7 @@ const TestPage = () => {
     
     
     return (
-        <div className="flex flex-col gap-5 justify-center items-center bg-cyan-900 h-screen w-full overflow-auto" >
+        <div className="flex flex-col gap-5 justify-center items-center bg-slate-800 h-screen w-full overflow-auto" >
             <div className=" text-white font-bold" >{test}</div>
             {testButton}
         </div>

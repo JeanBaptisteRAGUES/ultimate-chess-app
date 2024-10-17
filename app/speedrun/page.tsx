@@ -1032,7 +1032,7 @@ const SpeedrunPage = () => {
       </div>
     ) */
    return (
-    <div className="flex flex-col md:flex-row justify-start md:justify-center items-center md:items-center bg-cyan-900 h-[95vh] w-full overflow-auto" >
+    <div className="flex flex-col md:flex-row justify-start md:justify-center items-center md:items-center bg-slate-800 h-[95vh] w-full overflow-auto" >
         <div className=" flex flex-col md:flex-row justify-start md:justify-center items-center md:items-center h-4/5 md:h-full w-full md:w-2/3">
           {pgnComponentDesktop}
           {gameContainer}
