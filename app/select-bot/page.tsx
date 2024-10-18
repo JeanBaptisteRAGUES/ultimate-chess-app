@@ -68,8 +68,8 @@ const SelectBot = () => {
             </div>
         </div>
 
-    const defaultBotsComponent =
-        <div className='flex flex-row justify-center items-center flex-wrap w-full md:w-1/3 mt-2 px-2 gap-10' >
+    const BotsBehavioursComponent =
+        <div className='flex flex-row justify-center items-center flex-wrap w-full mt-5 px-2 gap-5' >
             <div onClick={() => {setBehaviour('human')}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'human' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center rounded' >
                     <Image
@@ -94,10 +94,6 @@ const SelectBot = () => {
                     />
                 </span>
             </div>
-        </div>
-
-    const gimmickBotsComponent = 
-        <div className='flex flex-row justify-center items-center flex-wrap w-full md:w-1/3 mt-2 px-2 gap-10' >
             <div onClick={() => {setBehaviour('pawn-pusher')}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'pawn-pusher' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center rounded' >
                     <Image
@@ -107,7 +103,7 @@ const SelectBot = () => {
                         height={150}
                         // blurDataURL="data:..." automatically provided
                         placeholder="blur" // Optional blur-up while loading
-                    />
+                        />
                 </span>
             </div>
             <div onClick={() => {setBehaviour('shy')}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center  cursor-pointer rounded border-4' style={{borderColor: behaviour === 'shy' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
@@ -119,7 +115,7 @@ const SelectBot = () => {
                         height={150}
                         // blurDataURL="data:..." automatically provided
                         placeholder="blur" // Optional blur-up while loading
-                    />
+                        />
                 </span>
             </div>
             <div onClick={() => {setBehaviour('blundering')}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'blundering' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
@@ -215,7 +211,7 @@ const SelectBot = () => {
                         height={150}
                         // blurDataURL="data:..." automatically provided
                         placeholder="blur" // Optional blur-up while loading
-                    />
+                        />
                 </span>
             </div>
             <div onClick={() => {setBehaviour('random-player')}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'random-player' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
@@ -239,13 +235,9 @@ const SelectBot = () => {
                         height={150}
                         // blurDataURL="data:..." automatically provided
                         placeholder="blur" // Optional blur-up while loading
-                    />
+                        />
                 </span>
             </div>
-        </div>
-
-    const openingBotsComponent = 
-        <div className='flex flex-row justify-center items-center flex-wrap w-full md:w-1/3 mt-2 px-2 gap-10' >
             <div onClick={() => {setBehaviour('fianchetto-sniper')}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'fianchetto-sniper' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center rounded' >
                     <Image
@@ -415,24 +407,13 @@ const SelectBot = () => {
     return (
         <div className="flex flex-col justify-start items-center bg-slate-800 h-[95vh] w-full overflow-auto" >
             {botInfosComponent}
-            <div className=' w-full md:pl-10 flex justify-center md:justify-center items-center text-2xl font-semibold text-white mt-5 mb-2' >Difficulté:</div>
+            {BotsBehavioursComponent}
+            <div className=' w-full md:pl-10 flex justify-center md:justify-start items-center text-2xl font-semibold text-white mt-20 mb-2' >Difficulté:</div>
             {difficultyComponent}
-            <div className=' w-full mt-20 md:pl-10 flex flex-col justify-center md:justify-center items-center font-semibold text-white'>
-                <div className=' w-full flex justify-center md:justify-center items-center text-2xl mb-5' >Default Bots:</div>
-            </div >
-            {defaultBotsComponent}
-            <div className=' w-full mt-20 md:pl-10 flex flex-col justify-center md:justify-center items-center font-semibold text-white'>
-                <div className=' w-full flex justify-center md:justify-center items-center text-2xl  mb-5' >Gimmick Bots:</div>
-            </div >
-            {gimmickBotsComponent}
-            <div className=' w-full mt-20 md:pl-10 flex flex-col justify-center md:justify-center items-center font-semibold text-white'>
-                <div className=' w-full flex justify-center md:justify-center items-center text-2xl  mb-5' >Openings Bots:</div>
-            </div >
-            {openingBotsComponent}
-            <div className=' w-full mt-20 md:pl-10 flex justify-center md:justify-center items-center text-2xl font-semibold text-white' >Cadence:</div>
+            <div className=' w-full mt-20 md:pl-10 flex justify-center md:justify-start items-center text-2xl font-semibold text-white' >Cadence:</div>
             {timeControlComponent}
             <Link
-                className=' text-white hover:text-cyan-400 cursor-pointer text-3xl font-bold my-20 '
+                className=' w-28 p-3 animate-pulse hover:animate-none hover:bg-cyan-200 flex justify-center items-center text-cyan-300 hover:text-cyan-400 text-3xl font-bold border-2 rounded-lg border-cyan-400 shadow-[0_0_2px_#fff,inset_0_0_2px_#fff,0_0_5px_#08f,0_0_15px_#08f,0_0_30px_#08f] cursor-pointer my-20 '
                 href = {{
                 pathname: '/chess',
                 query: {
