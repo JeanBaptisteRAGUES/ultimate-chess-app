@@ -147,7 +147,7 @@ const EvalAndWinrate: React.FC<EvalProps> = ({game, databaseRating, winner, star
             <div className=" text-white" >
                 {showEval ? engineEval : '???'}
             </div>
-            <div className=" h-5 w-52 flex flex-row">
+            {/* <div className=" h-5 w-52 flex flex-row">
                 <div className="bg-white h-5 flex justify-center" style={{width: `${winrate.white}%`}} >{
                 winrate.white >= 10 ? `${winrate.white}%` : "" 
                 }</div>
@@ -157,8 +157,8 @@ const EvalAndWinrate: React.FC<EvalProps> = ({game, databaseRating, winner, star
                 <div className="bg-black text-white h-5 flex justify-center" style={{width: `${winrate.black}%`}} >{
                 winrate.black >= 10 ? `${winrate.black}%` : "" 
                 }</div>
-            </div>
-            <div className=" flex justify-center items-center gap-x-2 gap-y-1 flex-wrap text-white pt-2" >
+            </div> */}
+            <div className=" flex justify-center items-center gap-x-2 gap-y-1 flex-wrap text-white pt-1" >
                 {formateBestLine(bestLine)}
             </div>
         </div>

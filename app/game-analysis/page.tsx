@@ -46,6 +46,9 @@ const GameAnalysisPage = () => {
     const [formatedResults, setFormatedResults] = useState<EvalResultFormated[]>([]);
     const [playerColor, setPlayerColor] = useState('w');
     const boardOrientationRef = useRef<Color>('w');
+    /* const previousMoveKeyRef = useRef(null);
+    const nextMoveKeyRef = useRef(HTMLButtonElement); */
+    //const documentRef = useRef(window.document);
     const [winrate, setWinrate] = useState({
         white: 50,
         draws: 0,
@@ -71,16 +74,70 @@ const GameAnalysisPage = () => {
         rook: 0,
         queen: 0,
         points: 0,
-      });
-  
-      const [blackMaterialAdvantage, setBlackMaterialAdvantage] = useState({
+    });
+
+    const [blackMaterialAdvantage, setBlackMaterialAdvantage] = useState({
         pawn: 0,
         knight: 0,
         bishop: 0,
         rook: 0,
         queen: 0,
         points: 0,
-      });
+    });
+
+    
+
+    useEffect(() => {
+        /* //@ts-expect-error
+        if(previousMoveKeyRef.current) previousMoveKeyRef.current.addEventListener('keydown', (e) => {
+            console.log(e.key);
+        });
+
+        //@ts-expect-error
+        if(nextMoveKeyRef.current) nextMoveKeyRef.current.addEventListener('keydown', (e) => {
+            console.log(e.key);
+        }) */
+
+        function testLeft() {
+            console.log(`Test Left: ${currentIndex}`);
+            setCurrentIndex((currentIndex) => currentIndex-1);
+        }
+
+        function testRight() {
+            console.log(`Test Right: ${currentIndex}`);
+            setCurrentIndex((currentIndex) => currentIndex+1);
+        }
+
+        function testLeft2() {
+            console.log(`Test Left 2: ${currentIndex}`);
+            previousMove();
+        }
+
+        function testRight2() {
+            console.log(`Test Right 2: ${currentIndex}`);
+            nextMove();
+        }
+
+        const onKeyDown = (e: KeyboardEvent) => {
+            console.log(e.key);
+
+            if(e.key === 'ArrowLeft') {
+                testLeft();
+                //testLeft2();
+            } 
+
+            if(e.key === 'ArrowRight') {
+                testRight();
+                //testRight2();
+            } 
+        }
+
+        window.addEventListener('keydown', onKeyDown);
+
+        return () => {
+            window.removeEventListener('keydown', onKeyDown);
+        }
+    }, []);
     
     useEffect(() => {
         console.log('Use Effect');
@@ -367,7 +424,8 @@ const GameAnalysisPage = () => {
         return materialAdvantage + ` +${blackMaterialAdvantage.points}`;
       }
 
-    const previousMove = (moveIndex: number) => {
+    function previousMove(){
+        let moveIndex = currentIndex;
         if(moveIndex < 0) {
             console.log('Impossible de revenir plus en arrière !');
             return;
@@ -391,13 +449,14 @@ const GameAnalysisPage = () => {
         setEvalMovesList(newEvalMovesList);
         if(bestMoveOrigin !== '' && bestMoveDestination !== '') setCustomArrows([[bestMoveOrigin, bestMoveDestination]]);
         setCurrentFen(newGame.fen());
-        setCurrentIndex(moveIndex-1);
+        setCurrentIndex((moveIndex) => moveIndex-1);
         setGame(newGame);
         console.log('Changement de position');
         console.log('Best Move: ' + formatedResults[moveIndex].bestMove);
     }
 
-    const nextMove = (moveIndex: number) => {
+    function nextMove(){
+        let moveIndex = currentIndex;
         if(moveIndex + 2 > formatedResults.length) {
             console.log("Impossible d'avancer plus dans la partie !");
             return;
@@ -422,7 +481,7 @@ const GameAnalysisPage = () => {
         setEvalMovesList(newEvalMovesList);
         if(bestMoveOrigin !== '' && bestMoveDestination !== '') setCustomArrows([[bestMoveOrigin, bestMoveDestination]]);
         setCurrentFen(newGame.fen());
-        setCurrentIndex(moveIndex+1);
+        setCurrentIndex((moveIndex) => moveIndex+1);
         setGame(newGame);
         console.log('Changement de position');
         console.log('Best Move: ' + formatedResults[moveIndex+1].bestMove);
@@ -536,8 +595,10 @@ const GameAnalysisPage = () => {
             </div>
             :
             <div className=" flex justify-center items-center w-1/2 h-full">
-                <div className=" bg-fuchsia-600 text-white h-5 flex justify-center items-center rounded" style={{width: `${Math.round(analysisProgress*100)}%`}} >
-                    {(analysisProgress*100) > 3 ? Math.round(analysisProgress*100) + '%' : ''}
+                <div className=" bg-cyan-300 text-white h-5 md:mx-5 flex justify-center items-center rounded" style={{width: `${Math.round(analysisProgress*100)}%`}} >
+                    <div className=" w-full h-full flex justify-center items-center rounded animate-pulse border-cyan-400 shadow-[0_0_2px_#fff,inset_0_0_2px_#fff,0_0_5px_#08f,0_0_15px_#08f,0_0_30px_#08f]" >
+                        {(analysisProgress*100) > 3 ? Math.round(analysisProgress*100) + '%' : ''}
+                    </div>
                 </div>
             </div>
 
@@ -556,14 +617,14 @@ const GameAnalysisPage = () => {
     const previousButton = currentIndex >= 0 ?
         <button
             className=" bg-white border rounded cursor-pointer w-10"
-            onClick={() => previousMove(currentIndex)}
+            onClick={() => previousMove()}
         >
             {'<'}
         </button>
         :
         <button
             className=" bg-white border rounded w-10 opacity-50"
-            onClick={() => previousMove(currentIndex)}
+            onClick={() => previousMove()}
             disabled
         >
             {'<'}
@@ -572,14 +633,14 @@ const GameAnalysisPage = () => {
     const nextButton = currentIndex + 2 <= formatedResults.length ?
         <button
             className=" bg-white border rounded cursor-pointer w-10"
-            onClick={() => nextMove(currentIndex)}
+            onClick={() => nextMove()}
         >
             {'>'}
         </button>
         :
         <button
             className=" bg-white border rounded w-10 opacity-50"
-            onClick={() => nextMove(currentIndex)}
+            onClick={() => nextMove()}
             disabled
         >
             {'>'}
