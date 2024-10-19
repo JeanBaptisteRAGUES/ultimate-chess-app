@@ -10,6 +10,7 @@ import modeThematicImg from "@/public/GameModes_icons/gamemode_thematic-training
 import modeHandBrainImg from "@/public/GameModes_icons/gamemode_hand-and-brain.jpg";
 import modeBotVsBotImg from "@/public/GameModes_icons/gamemode_bot-vs-bot.jpg";
 import modeTestAiImg from "@/public/GameModes_icons/gamemode_test-ai.jpg";
+import modeAnalysisImg from "@/public/GameModes_icons/gamemode_analysis.jpg";
 
 /*TODO: Choix difficulté: [
     'Beginner': pawnIcon, 
@@ -82,7 +83,7 @@ const SelectGameModePage = () => {
             <Link className=' text-white h-24 md:h-40 w-full md:w-2/5 overflow-hidden hover:border-cyan-400 hover:shadow-[0_0_2px_#fff,inset_0_0_2px_#fff,0_0_5px_#08f,0_0_15px_#08f,0_0_30px_#08f] cursor-pointer flex justify-start items-start' href={{pathname: '/select-hand-and-brain'}} >
                 <Image
                     src={modeHandBrainImg}
-                    alt="Classical chess mode icon"
+                    alt="Hand & Brain chess mode icon"
                     width={160}
                     height={160}
                     // blurDataURL="data:..." automatically provided
@@ -91,7 +92,7 @@ const SelectGameModePage = () => {
                 />
                 <Image
                     src={modeHandBrainImg}
-                    alt="Speedrun chess mode icon"
+                    alt="Hand & Brain chess mode icon"
                     width={95}
                     height={95}
                     // blurDataURL="data:..." automatically provided
@@ -108,7 +109,7 @@ const SelectGameModePage = () => {
             <Link className=' text-white h-24 md:h-40 w-full md:w-2/5 overflow-hidden hover:border-cyan-400 hover:shadow-[0_0_2px_#fff,inset_0_0_2px_#fff,0_0_5px_#08f,0_0_15px_#08f,0_0_30px_#08f] cursor-pointer flex justify-start items-start' href={{pathname: '/select-thematic-training'}} >
                 <Image
                     src={modeThematicImg}
-                    alt="Classical chess mode icon"
+                    alt="Thematic Training chess mode icon"
                     width={160}
                     height={160}
                     // blurDataURL="data:..." automatically provided
@@ -117,7 +118,7 @@ const SelectGameModePage = () => {
                 />
                 <Image
                     src={modeThematicImg}
-                    alt="Speedrun chess mode icon"
+                    alt="Thematic Training chess mode icon"
                     width={95}
                     height={95}
                     // blurDataURL="data:..." automatically provided
@@ -135,7 +136,7 @@ const SelectGameModePage = () => {
             <Link className=' text-white h-24 md:h-40 w-full md:w-2/5 overflow-hidden hover:border-cyan-400 hover:shadow-[0_0_2px_#fff,inset_0_0_2px_#fff,0_0_5px_#08f,0_0_15px_#08f,0_0_30px_#08f] cursor-pointer flex justify-start items-start' href={{pathname: '/select-bot-vs-bot'}} >
                 <Image
                     src={modeBotVsBotImg}
-                    alt="Classical chess mode icon"
+                    alt="Bot VS Bot chess mode icon"
                     width={160}
                     height={160}
                     // blurDataURL="data:..." automatically provided
@@ -144,7 +145,7 @@ const SelectGameModePage = () => {
                 />
                 <Image
                     src={modeBotVsBotImg}
-                    alt="Speedrun chess mode icon"
+                    alt="Bot VS Bot chess mode icon"
                     width={95}
                     height={95}
                     // blurDataURL="data:..." automatically provided
@@ -158,10 +159,10 @@ const SelectGameModePage = () => {
                     </p>
                 </div>
             </Link>
-            <Link className=' text-white h-24 md:h-40 w-full md:w-2/5 overflow-hidden hover:border-cyan-400 hover:shadow-[0_0_2px_#fff,inset_0_0_2px_#fff,0_0_5px_#08f,0_0_15px_#08f,0_0_30px_#08f] cursor-pointer flex justify-start items-start' href={{pathname: '/select-test-ai'}} >
+            {/* <Link className=' text-white h-24 md:h-40 w-full md:w-2/5 overflow-hidden hover:border-cyan-400 hover:shadow-[0_0_2px_#fff,inset_0_0_2px_#fff,0_0_5px_#08f,0_0_15px_#08f,0_0_30px_#08f] cursor-pointer flex justify-start items-start' href={{pathname: '/select-test-ai'}} >
                 <Image
                     src={modeTestAiImg}
-                    alt="Classical chess mode icon"
+                    alt="IA Lab chess mode icon"
                     width={160}
                     height={160}
                     // blurDataURL="data:..." automatically provided
@@ -170,7 +171,7 @@ const SelectGameModePage = () => {
                 />
                 <Image
                     src={modeTestAiImg}
-                    alt="Speedrun chess mode icon"
+                    alt="IA Lab chess mode icon"
                     width={95}
                     height={95}
                     // blurDataURL="data:..." automatically provided
@@ -181,6 +182,32 @@ const SelectGameModePage = () => {
                     <p className=' text-xl md:text-3xl text-cyan-300' >IA Lab</p>
                     <p className=' text-sm md:text-base overflow-y-auto no-scrollbar' >
                         Mode pour comprendre comment l'IA du bot fait pour trouver le prochain coup.
+                    </p>
+                </div>
+            </Link> */}
+            <Link className=' text-white h-24 md:h-40 w-full md:w-2/5 overflow-hidden hover:border-cyan-400 hover:shadow-[0_0_2px_#fff,inset_0_0_2px_#fff,0_0_5px_#08f,0_0_15px_#08f,0_0_30px_#08f] cursor-pointer flex justify-start items-start' href={{pathname: '/select-analysis'}} >
+                <Image
+                    src={modeAnalysisImg}
+                    alt="Analysis chess mode icon"
+                    width={160}
+                    height={160}
+                    // blurDataURL="data:..." automatically provided
+                    placeholder="blur" // Optional blur-up while loading
+                    className='hidden md:flex rounded'
+                />
+                <Image
+                    src={modeAnalysisImg}
+                    alt="Analysis chess mode icon"
+                    width={95}
+                    height={95}
+                    // blurDataURL="data:..." automatically provided
+                    placeholder="blur" // Optional blur-up while loading
+                    className='flex md:hidden rounded'
+                />
+                <div className='flex flex-col justify-start items-start px-3 md:pt-5 gap-2'>
+                    <p className=' text-xl md:text-3xl text-cyan-300' >Analyse de partie</p>
+                    <p className=' text-sm md:text-base overflow-y-auto no-scrollbar' >
+                        Analysez vos parties, trouvez vos erreurs et regardez quels auraient étés les meilleurs coups.
                     </p>
                 </div>
             </Link>
