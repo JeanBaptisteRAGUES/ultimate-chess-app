@@ -68,7 +68,7 @@ const SelectBot = () => {
             </div>
         </div>
 
-    const BotsBehavioursComponent =
+    const botsBehavioursComponent =
         <div className='flex flex-row justify-center items-center flex-wrap w-full mt-5 px-2 gap-5' >
             <div onClick={() => {setBehaviour('human')}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'human' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center rounded' >
@@ -407,7 +407,7 @@ const SelectBot = () => {
     return (
         <div className="flex flex-col justify-start items-center bg-slate-800 h-[95vh] w-full overflow-auto" >
             {botInfosComponent}
-            {BotsBehavioursComponent}
+            {botsBehavioursComponent}
             <div className=' w-full md:pl-10 flex justify-center md:justify-start items-center text-2xl font-semibold text-white mt-20 mb-2' >Difficulté:</div>
             {difficultyComponent}
             <div className=' w-full mt-20 md:pl-10 flex justify-center md:justify-start items-center text-2xl font-semibold text-white' >Cadence:</div>

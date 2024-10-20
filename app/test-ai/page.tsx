@@ -26,6 +26,7 @@ const TestAI = () => {
     const botElo: number = eval(searchParams.get('elo') || '1500');
     const botBehaviour: Behaviour = searchParams.get('behaviour') as Behaviour || 'default';
     const timeControl = searchParams.get('timeControl') || 'infinite';
+    const startingFen: string = searchParams.get('startingFen') || DEFAULT_POSITION;
     const toolbox = new GameToolBox();
     const gameActive = useRef(false);
     const [game, setGame] = useState(new Chess());
@@ -86,12 +87,15 @@ const TestAI = () => {
     });
 
     useEffect(() => {
-        engine.current = new Engine();
-        engine.current.init();
-        const botColor = playerColor === 'w' ? 'b' : 'w';
-        botAI.current = new BotsAI(botBehaviour, botElo, botColor, timeControl, false);
-        console.log("Bot Elo: " + botElo);
-        console.log("Bot Behaviour: " + botBehaviour);
+      game.load(startingFen);
+      engine.current = new Engine();
+      engine.current.init();
+      const botColor = playerColor === 'w' ? 'b' : 'w';
+      botAI.current = new BotsAI(botBehaviour, botElo, botColor, timeControl, false);
+      console.log("Bot Elo: " + botElo);
+      console.log("Bot Behaviour: " + botBehaviour);
+      setCurrentFen(startingFen);
+      setVirtualFen(startingFen);
     }, []);
 
     useEffect(() => {

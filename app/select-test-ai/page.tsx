@@ -14,6 +14,7 @@ import { SiLichess } from 'react-icons/si';
 import { FaChessPawn } from 'react-icons/fa';
 
 import human_pp from "@/public/Bots_images/chess3d_human.jpg";
+import { DEFAULT_POSITION } from 'chess.js';
 
 const INFINITE_SYMBOL = '∞';
 
@@ -21,6 +22,7 @@ const SelectTestAI = () => {
     const [elo, setElo] = useState<number>(1500);
     const [behaviour, setBehaviour] = useState<Behaviour>('human');
     const [timeControl, setTimeControl] = useState('10+0');
+    const [startingFen, setStartingFen] = useState<string>(DEFAULT_POSITION);
     //const [botPP, setBotPP] = useState<StaticImageData>(human_pp);
 
     const botInfosComponent = 
@@ -45,8 +47,8 @@ const SelectTestAI = () => {
             <input className=' bg-slate-600 text-white' type='number' placeholder='Bot Élo' onChange={(e) => setElo(e.target.value as any as number)}/>
         </div>
 
-    const defaultBotsComponent =
-        <div className='flex flex-row justify-center items-center flex-wrap w-full md:w-1/3 mt-2 px-2 gap-10' >
+    const botsBehavioursComponent =
+        <div className='flex flex-row justify-center items-center flex-wrap w-full mt-5 px-2 gap-5' >
             <div onClick={() => {setBehaviour('human')}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'human' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center rounded' >
                     <Image
@@ -71,10 +73,6 @@ const SelectTestAI = () => {
                     />
                 </span>
             </div>
-        </div>
-
-    const gimmickBotsComponent = 
-        <div className='flex flex-row justify-center items-center flex-wrap w-full md:w-1/3 mt-2 px-2 gap-10' >
             <div onClick={() => {setBehaviour('pawn-pusher')}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'pawn-pusher' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center rounded' >
                     <Image
@@ -84,7 +82,7 @@ const SelectTestAI = () => {
                         height={150}
                         // blurDataURL="data:..." automatically provided
                         placeholder="blur" // Optional blur-up while loading
-                    />
+                        />
                 </span>
             </div>
             <div onClick={() => {setBehaviour('shy')}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center  cursor-pointer rounded border-4' style={{borderColor: behaviour === 'shy' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
@@ -96,7 +94,7 @@ const SelectTestAI = () => {
                         height={150}
                         // blurDataURL="data:..." automatically provided
                         placeholder="blur" // Optional blur-up while loading
-                    />
+                        />
                 </span>
             </div>
             <div onClick={() => {setBehaviour('blundering')}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'blundering' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }} >
@@ -192,7 +190,7 @@ const SelectTestAI = () => {
                         height={150}
                         // blurDataURL="data:..." automatically provided
                         placeholder="blur" // Optional blur-up while loading
-                    />
+                        />
                 </span>
             </div>
             <div onClick={() => {setBehaviour('random-player')}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'random-player' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
@@ -216,13 +214,9 @@ const SelectTestAI = () => {
                         height={150}
                         // blurDataURL="data:..." automatically provided
                         placeholder="blur" // Optional blur-up while loading
-                    />
+                        />
                 </span>
             </div>
-        </div>
-
-    const openingBotsComponent = 
-        <div className='flex flex-row justify-center items-center flex-wrap w-full md:w-1/3 mt-2 px-2 gap-10' >
             <div onClick={() => {setBehaviour('fianchetto-sniper')}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'fianchetto-sniper' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center rounded' >
                     <Image
@@ -345,13 +339,6 @@ const SelectTestAI = () => {
             </div>
         </div>
 
-/*     ['1+0', {startingTime: 60, increment: 0}],
-    ['3+0', {startingTime: 180, increment: 0}],
-    ['3+2', {startingTime: 180, increment: 2}],
-    ['10+0', {startingTime: 600, increment: 0}],
-    ['15+10', {startingTime: 900, increment: 10}],
-    ['30+20', {startingTime: 1800, increment: 20}],
-    ['90+30', {startingTime: 5400, increment: 30}], */
     const timeControlComponent =
         <div className='flex mt-10 flex-row justify-around items-center flex-wrap w-full' >
             <div onClick={() => setTimeControl('1+0')} className=' h-[150px] md:h-[110px] w-[150px] md:w-[110px] flex flex-col justify-center items-center cursor-pointer' style={{color: timeControl === '1+0' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
@@ -388,26 +375,22 @@ const SelectTestAI = () => {
             </div>
         </div>
 
+    const fenComponent =
+        <div className='flex mt-10 flex-row justify-around items-center flex-wrap w-full' >
+            <input className='w-4/5 md:w-1/2' type='text' placeholder='fen de la position de départ' value={startingFen} onChange={(e) => setStartingFen(e.target.value)} />
+        </div>
+
 
     return (
         <div className="flex flex-col justify-start items-center bg-slate-800 h-[95vh] w-full overflow-auto" >
             {botInfosComponent}
-            <div className=' w-full md:pl-10 flex justify-center md:justify-center items-center text-2xl font-semibold text-white mt-5 mb-2' >Difficulté:</div>
+            {botsBehavioursComponent}
+            <div className=' w-full md:pl-10 flex justify-center md:justify-start items-center text-2xl font-semibold text-white mt-5 mb-2' >Difficulté:</div>
             {difficultyComponent}
-            <div className=' w-full mt-20 md:pl-10 flex flex-col justify-center md:justify-center items-center font-semibold text-white'>
-                <div className=' w-full flex justify-center md:justify-center items-center text-2xl mb-5' >Default Bots:</div>
-            </div >
-            {defaultBotsComponent}
-            <div className=' w-full mt-20 md:pl-10 flex flex-col justify-center md:justify-center items-center font-semibold text-white'>
-                <div className=' w-full flex justify-center md:justify-center items-center text-2xl  mb-5' >Gimmick Bots:</div>
-            </div >
-            {gimmickBotsComponent}
-            <div className=' w-full mt-20 md:pl-10 flex flex-col justify-center md:justify-center items-center font-semibold text-white'>
-                <div className=' w-full flex justify-center md:justify-center items-center text-2xl  mb-5' >Openings Bots:</div>
-            </div >
-            {openingBotsComponent}
-            <div className=' w-full mt-20 md:pl-10 flex justify-center md:justify-center items-center text-2xl font-semibold text-white' >Cadence:</div>
+            <div className=' w-full mt-20 md:pl-10 flex justify-center md:justify-start items-center text-2xl font-semibold text-white' >Cadence:</div>
             {timeControlComponent}
+            <div className=' w-full mt-20 md:pl-10 flex justify-center md:justify-start items-center text-2xl font-semibold text-white' >Position de départ:</div>
+            {fenComponent}
             <Link
                 className=' text-white hover:text-cyan-400 cursor-pointer text-3xl font-bold my-20 '
                 href = {{
@@ -416,6 +399,7 @@ const SelectTestAI = () => {
                     elo: elo,
                     behaviour: behaviour,
                     timeControl: timeControl,
+                    startingFen: startingFen,
                 }
                 }}
             >

@@ -196,6 +196,10 @@ const HandAndBrainPage = () => {
           rawDelay/=2;
           console.log("Les blancs ont 10% ou moins de leur temps initial !");
         }
+        if((whiteTimeControl.current.startingTime - whiteTimeControl.current.timeElapsed) < 20000){
+          rawDelay = 300;
+          console.log("Les blancs ont moins de 20 secondes pour jouer !");
+        }
       }else{
         if((blackTimeControl.current.startingTime - blackTimeControl.current.timeElapsed) < blackTimeControl.current.startingTime*0.2){
           rawDelay/=2;
@@ -204,6 +208,10 @@ const HandAndBrainPage = () => {
         if((blackTimeControl.current.startingTime - blackTimeControl.current.timeElapsed) < blackTimeControl.current.startingTime*0.1){
           rawDelay/=2;
           console.log("Les noirs ont 10% ou moins de leur temps initial !");
+        }
+        if((blackTimeControl.current.startingTime - blackTimeControl.current.timeElapsed) < 20000){
+          rawDelay = 300;
+          console.log("Les noirs ont moins de 20 secondes pour jouer !");
         }
       }
       let randDelay = Math.max(rawDelay,Math.random()*rawDelay*2)*1000;
