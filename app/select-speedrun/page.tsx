@@ -211,7 +211,7 @@ const SelectSpeedrun = () => {
             <div className=' w-full mt-20 md:ml-10 flex justify-center md:justify-start items-center text-2xl font-semibold text-white' >Position de départ (noirs):</div>
             {selectPositionBlack}
             <Link
-                className=' text-white hover:text-cyan-400 cursor-pointer text-3xl font-bold my-20 '
+                className=' w-28 p-3 animate-pulse hover:animate-none hover:bg-cyan-200 flex justify-center items-center text-cyan-300 hover:text-cyan-400 text-3xl font-bold border-2 rounded-lg border-cyan-400 shadow-[0_0_2px_#fff,inset_0_0_2px_#fff,0_0_5px_#08f,0_0_15px_#08f,0_0_30px_#08f] cursor-pointer my-20'
                 href = {{
                 pathname: '/speedrun',
                 query: {
