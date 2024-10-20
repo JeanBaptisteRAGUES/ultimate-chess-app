@@ -1,8 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { IoHourglassOutline } from 'react-icons/io5';
+import { FaAngleDown } from 'react-icons/fa6';
 
 import modeClassicalImg from "@/public/GameModes_icons/gamemode_classical.jpg";
 import modeSpeedrunImg from "@/public/GameModes_icons/gamemode_speedrun.jpg";
@@ -24,10 +26,35 @@ import modeAnalysisImg from "@/public/GameModes_icons/gamemode_analysis.jpg";
 // TODO: Liste des bots
 
 const SelectGameModePage = () => {
+    const [isBottom, setIsBottom] = useState(false);
+
+    const handleScroll = (e: any) => {
+        console.log(e);
+        console.log(`scrollHeight: ${e.target.scrollHeight}`);
+        console.log(`scrollTop: ${e.target.scrollTop}`);
+        console.log(`clientHeight: ${e.target.clientHeight}`);
+        const bottom = e.target.scrollHeight - Math.round(e.target.scrollTop) !== e.target.clientHeight;
+        console.log(`bottom: ${bottom}`);
+        setIsBottom(bottom);
+    }
+
+    const scrollButton = 
+        <div className=' w-full h-10 flex md:hidden justify-center items-center bg-slate-800 sticky bottom-0 left-1/2'>
+            {
+                isBottom ?
+                    <span className=' h-full w-full flex justify-center items-center text-cyan-300 animate-pulse font-semibold' >
+                        <FaAngleDown size={30} />
+                    </span>
+                    :
+                    <span className=' hidden' >
+                        <FaAngleDown size={30} />
+                    </span>
+            }
+        </div>
 
 
     return (
-        <div className="flex flex-row justify-around items-center text-3xl font-semibold bg-slate-800 h-[95vh] w-full flex-wrap overflow-auto gap-10 p-5" >
+        <div onScroll={handleScroll} className="flex flex-row justify-around items-center text-3xl font-semibold bg-slate-800 h-[95vh] w-full flex-wrap overflow-auto gap-10 pt-5 px-5" >
             <Link className=' text-white h-24 md:h-40 w-full md:w-2/5 overflow-hidden hover:border-cyan-400 hover:shadow-[0_0_2px_#fff,inset_0_0_2px_#fff,0_0_5px_#08f,0_0_15px_#08f,0_0_30px_#08f] cursor-pointer flex justify-start items-start' href={{pathname: '/select-bot'}} >
                 <Image
                     src={modeClassicalImg}
@@ -211,6 +238,7 @@ const SelectGameModePage = () => {
                     </p>
                 </div>
             </Link>
+            {scrollButton}
         </div>
     )
 }
