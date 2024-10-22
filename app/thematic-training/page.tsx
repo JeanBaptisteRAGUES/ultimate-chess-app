@@ -39,25 +39,11 @@ const ThematicTrainingPage = () => {
     const movesTypeRef = useRef(new Array()); // -1: erreur, 0(blanc): joueur, 1(jaune): lichess, 2(vert clair): stockfish, 3(vert foncé): stockfish forcé, 4(rouge): random
     const [showGameoverWindow, setShowGameoverWindow] = useState(false);
     const [winner, setWinner] = useState(''); // 'w' -> blancs gagnent, 'b' -> noirs gagnent, 'd' -> draw
-    const whiteTimeControl = useRef({
+    const [botTimestamp, setBotTimestamp] = useState({
       startingTime: 600,
       increment: 0,
       timeElapsed: 0,
     });
-    const blackTimeControl = useRef({
-      startingTime: 600,
-      increment: 0,
-      timeElapsed: 0,
-    });
-    const timeControls = new Map([
-      ['1+0', {startingTime: 60, increment: 0}],
-      ['3+0', {startingTime: 180, increment: 0}],
-      ['3+2', {startingTime: 180, increment: 2}],
-      ['10+0', {startingTime: 600, increment: 0}],
-      ['15+10', {startingTime: 900, increment: 10}],
-      ['30+20', {startingTime: 1800, increment: 20}],
-      ['90+30', {startingTime: 5400, increment: 30}],
-    ]);
     const [timeControl, setTimeControl] = useState('infinite');
 
     useEffect(() => {
@@ -144,7 +130,7 @@ const ThematicTrainingPage = () => {
       console.log('Play computer move');
       if(game.pgn().includes('#')) return;
       console.log(game.fen());
-      const move: Move | undefined = await botAI.current?.makeMove(game);
+      const move: Move | undefined = await botAI.current?.makeMove(game, botTimestamp);
 
       if(move && move.type >= 0){
         gameMove(move.notation, move.type);
