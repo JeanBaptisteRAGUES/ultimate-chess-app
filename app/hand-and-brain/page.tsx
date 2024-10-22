@@ -41,7 +41,12 @@ const HandAndBrainPage = () => {
     const movesTypeRef = useRef(new Array()); // -1: erreur, 0(blanc): joueur, 1(jaune): lichess, 2(vert clair): stockfish, 3(vert foncé): stockfish forcé, 4(rouge): random
     const [showGameoverWindow, setShowGameoverWindow] = useState(false);
     const [winner, setWinner] = useState(''); // 'w' -> blancs gagnent, 'b' -> noirs gagnent, 'd' -> draw
-    const whiteTimeControl = useRef({
+    const [botTimestamp, setBotTimestamp] = useState({
+      startingTime: 600,
+      increment: 0,
+      timeElapsed: 0,
+    });
+    /* const whiteTimeControl = useRef({
       startingTime: 600,
       increment: 0,
       timeElapsed: 0,
@@ -59,7 +64,7 @@ const HandAndBrainPage = () => {
       ['15+10', {startingTime: 900, increment: 10}],
       ['30+20', {startingTime: 1800, increment: 20}],
       ['90+30', {startingTime: 5400, increment: 30}],
-    ]);
+    ]); */
     const [timeControl, setTimeControl] = useState('infinite');
     const [selectedPiece, setSelectedPiece] = useState<string>('');
     const [allyStatus, setAllyStatus] = useState(0); // 0: ready, 1: thinking, 2: waiting
@@ -182,7 +187,7 @@ const HandAndBrainPage = () => {
       return pgnAfter.split(' ');
     }
 
-    function getTimeControlDelay() {
+    /* function getTimeControlDelay() {
       if(timeControl === 'infinite') return 300;
       //@ts-expect-error
       let rawDelay = (timeControls.get(timeControl)?.startingTime/60);
@@ -216,12 +221,12 @@ const HandAndBrainPage = () => {
       }
       let randDelay = Math.max(rawDelay,Math.random()*rawDelay*2)*1000;
       return randDelay;
-    }
+    } */
 
     async function playComputerMove() {
       console.log('Play computer move');
       if(game.pgn().includes('#')) return;
-      const move: Move | undefined = await opponentAI.current?.makeMove(game);
+      const move: Move | undefined = await opponentAI.current?.makeMove(game, botTimestamp);
 
       if(move && move.type >= 0){
         gameMove(move.notation, move.type);
@@ -262,11 +267,12 @@ const HandAndBrainPage = () => {
         if(game.get(sourceSquare).type !== selectedPiece) return false;
         gameMove(sourceSquare + targetSquare + promotion, 0);
         setAllyStatus(2);
-        let delay = getTimeControlDelay();
-        if(opponentElo === 3200) delay = 0;
+        //let delay = getTimeControlDelay();
+        //if(opponentElo === 3200) delay = 0;
         
-        const newTimeout = setTimeout(playComputerMove, delay);
-        setCurrentTimeout(newTimeout);
+        //const newTimeout = setTimeout(playComputerMove, delay);
+        playComputerMove();
+        //setCurrentTimeout(newTimeout);
         return true;
       }
       
@@ -434,11 +440,11 @@ const HandAndBrainPage = () => {
         console.log(move);
         if(move && move.type >= 0){
             gameMove(move.notation, move.type);
-            let delay = getTimeControlDelay();
-            if(opponentElo === 3200) delay = 0;
+            //let delay = getTimeControlDelay();
+            //if(opponentElo === 3200) delay = 0;
             setAllyStatus(2);
             if(gameStarted){
-                const newTimeout = setTimeout(playComputerMove, delay);
+                const newTimeout = setTimeout(playComputerMove, 300);
                 setCurrentTimeout(newTimeout);
             }
             return;
@@ -575,9 +581,10 @@ const selectPieceComponentSmartphone =
               game={game} 
               turnColor={game.turn()} 
               clockColor={playerColor === 'w' ? 'b' : 'w'}
+              botColor={playerColor === 'w' ? 'b' : 'w'}
               timeControl={timeControl} 
-              timeControls={timeControls}
               gameOver={gameOver}
+              setBotTimestamp={setBotTimestamp}
               gameStarted={gameStarted} 
               gameActive={gameActive}
             />
@@ -622,9 +629,10 @@ const selectPieceComponentSmartphone =
               game={game} 
               turnColor={game.turn()} 
               clockColor={playerColor === 'w' ? 'w' : 'b'}
+              botColor={playerColor === 'w' ? 'b' : 'w'}
               timeControl={timeControl} 
-              timeControls={timeControls}
               gameOver={gameOver}
+              setBotTimestamp={setBotTimestamp}
               gameStarted={gameStarted} 
               gameActive={gameActive}
             />

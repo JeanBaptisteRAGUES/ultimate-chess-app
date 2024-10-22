@@ -7,20 +7,39 @@ interface ClockProps {
     game: Chess,
     turnColor: string,
     clockColor: string,
+    botColor: string,
     timeControl: string,
-    timeControls: any,
     gameOver: (winner: string) => void,
+    setBotTimestamp: any,
     gameStarted: boolean,
     gameActive: any,
 }
+
+export type Timestamp = {
+    startingTime: number,
+    increment: number,
+    timeElapsed: number,
+  }
+
+const timeControls = new Map([
+    ['infinite', {startingTime: -1, increment: 0}],
+    ['1+0', {startingTime: 60, increment: 0}],
+    ['3+0', {startingTime: 180, increment: 0}],
+    ['3+2', {startingTime: 180, increment: 2}],
+    ['10+0', {startingTime: 600, increment: 0}],
+    ['15+10', {startingTime: 900, increment: 10}],
+    ['30+20', {startingTime: 1800, increment: 20}],
+    ['90+30', {startingTime: 5400, increment: 30}],
+]);
 
 const Clock: React.FC<ClockProps> = ({
     game,
     turnColor,
     clockColor,
+    botColor,
     timeControl,
-    timeControls,
     gameOver,
+    setBotTimestamp,
     gameStarted,
     gameActive
 }) => {
@@ -47,6 +66,7 @@ const Clock: React.FC<ClockProps> = ({
             if(+seconds < 10) seconds = '0' + seconds;
             setTimestamp(+hours > 0 ? `${hours}:${minutes}:${seconds}` : `${minutes}:${seconds}`);
             timeControlRef.current = newTimeControl;
+            if(botColor === clockColor) setBotTimestamp(newTimeControl);
         }
         //setCount(Math.random()*1000000);
     }
@@ -67,6 +87,14 @@ const Clock: React.FC<ClockProps> = ({
             if(+seconds < 10) seconds = '0' + seconds;
             setTimestamp(+hours > 0 ? `${hours}:${minutes}:${seconds}` : `${minutes}:${seconds}`);
             timeControlRef.current = newTimeControl;
+            if(botColor === clockColor) setBotTimestamp(newTimeControl);
+            console.log(timeControlRef.current);
+        }else{
+            if(botColor === clockColor) setBotTimestamp({
+                startingTime: -1,
+                increment: 0,
+                timeElapsed: 0,
+            });
         }
     }
 
@@ -77,7 +105,14 @@ const Clock: React.FC<ClockProps> = ({
   
     useEffect(() => {
         //console.log('Set Time Control !');
-        if(timeControl === "infinite") return ;
+        if(timeControl === "infinite") {
+            if(botColor === clockColor) setBotTimestamp({
+                startingTime: -1,
+                increment: 0,
+                timeElapsed: 0,
+            });
+            return ;
+        } 
         const newTimeControl = timeControlRef.current;
 
         //@ts-ignore
@@ -92,6 +127,8 @@ const Clock: React.FC<ClockProps> = ({
         if(+secondsWhite < 10) secondsWhite = '0' + secondsWhite;
         setTimestamp(+hoursWhite > 0 ? `${hoursWhite}:${minutesWhite}:${secondsWhite}` : `${minutesWhite}:${secondsWhite}`);
         timeControlRef.current = newTimeControl;
+        setBotTimestamp(newTimeControl);
+        console.log(timeControlRef.current);
         //console.log(`Set Time Control (${clockColor === 'w' ? 'white' : 'black'}): ${timeControlRef.current.startingTime} - ${timeControlRef.current.timeElapsed} `);
     }, [timeControl, gameStarted]);
   

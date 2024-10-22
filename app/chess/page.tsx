@@ -47,7 +47,12 @@ const ChessPage = () => {
     const movesTypeRef = useRef(new Array()); // -1: erreur, 0(blanc): joueur, 1(jaune): lichess, 2(vert clair): stockfish, 3(vert foncé): stockfish forcé, 4(rouge): random, 5(rose): human
     const [showGameoverWindow, setShowGameoverWindow] = useState(false);
     const [winner, setWinner] = useState(''); // 'w' -> blancs gagnent, 'b' -> noirs gagnent, 'd' -> draw
-    const whiteTimeControl = useRef({
+    const [botTimestamp, setBotTimestamp] = useState({
+      startingTime: 600,
+      increment: 0,
+      timeElapsed: 0,
+    });
+    /* const whiteTimeControl = useRef({
       startingTime: 600,
       increment: 0,
       timeElapsed: 0,
@@ -65,7 +70,7 @@ const ChessPage = () => {
       ['15+10', {startingTime: 900, increment: 10}],
       ['30+20', {startingTime: 1800, increment: 20}],
       ['90+30', {startingTime: 5400, increment: 30}],
-    ]);
+    ]); */
     const [whiteMaterialAdvantage, setWhiteMaterialAdvantage] = useState({
       pawn: 0,
       knight: 0,
@@ -216,7 +221,7 @@ const ChessPage = () => {
       return pgnAfter.split(' ');
     }
 
-    function getTimeControlDelay() {
+    /* function getTimeControlDelay() {
       if(timeControl === 'infinite') return 300;
       //@ts-expect-error
       let rawDelay = (timeControls.get(timeControl)?.startingTime/60);
@@ -230,7 +235,7 @@ const ChessPage = () => {
           rawDelay/=2;
           console.log("Les blancs ont 10% ou moins de leur temps initial !");
         }
-        if((whiteTimeControl.current.startingTime - whiteTimeControl.current.timeElapsed) < 20000){
+        if((whiteTimeControl.current.startingTime - whiteTimeControl.current.timeElapsed) < 20){
           rawDelay = 300;
           console.log("Les blancs ont moins de 20 secondes pour jouer !");
         }
@@ -243,21 +248,21 @@ const ChessPage = () => {
           rawDelay/=2;
           console.log("Les noirs ont 10% ou moins de leur temps initial !");
         }
-        if((blackTimeControl.current.startingTime - blackTimeControl.current.timeElapsed) < 20000){
+        if((blackTimeControl.current.startingTime - blackTimeControl.current.timeElapsed) < 20){
           rawDelay = 300;
           console.log("Les noirs ont moins de 20 secondes pour jouer !");
         }
       }
       let randDelay = Math.max(rawDelay,Math.random()*rawDelay*2)*1000;
       return randDelay;
-    }
+    } */
 
     async function playComputerMove(botID: number) {
       //console.log('Play computer move, game active ? ' + gameActive.current);
       console.log(`Bot current ID (${botAI.current?.getID()}) VS Request ID (${botID})`);
       if(game.pgn().includes('#') || !gameActive.current || botAI.current?.getID() !== botID) return;
       if(game.pgn().includes('#') || !gameActive.current) return;
-      const move: Move | undefined = await botAI.current?.makeMove(game);
+      const move: Move | undefined = await botAI.current?.makeMove(game, botTimestamp);
 
       if(move && move.type >= 0){
         gameMove(move.notation, move.type);
@@ -301,12 +306,13 @@ const ChessPage = () => {
 
       gameMove(sourceSquare + targetSquare + promotion, 0);
   
-      let delay = getTimeControlDelay();
-      if(botElo === 3200) delay = 0;
+      //let delay = getTimeControlDelay();
+      //if(botElo === 3200) delay = 0;
       if(gameStarted && botAI.current){
         //TODO: Corriger cette erreur de merde
-        const newTimeout = setTimeout(() => playComputerMove(oldBotID), delay);
-        setCurrentTimeout(newTimeout);
+        //const newTimeout = setTimeout(() => playComputerMove(oldBotID), delay);
+        playComputerMove(oldBotID);
+        //setCurrentTimeout(newTimeout);
       }
       
       return true;
@@ -502,9 +508,10 @@ const ChessPage = () => {
               game={game} 
               turnColor={game.turn()} 
               clockColor={playerColor === 'w' ? 'b' : 'w'}
+              botColor={playerColor === 'w' ? 'b' : 'w'}
               timeControl={timeControl} 
-              timeControls={timeControls}
               gameOver={gameOver}
+              setBotTimestamp={setBotTimestamp}
               gameStarted={gameStarted} 
               gameActive={gameActive}
             />
@@ -527,9 +534,10 @@ const ChessPage = () => {
               game={game} 
               turnColor={game.turn()} 
               clockColor={playerColor === 'w' ? 'w' : 'b'}
-              timeControl={timeControl} 
-              timeControls={timeControls}
+              botColor={playerColor === 'w' ? 'b' : 'w'}
+              timeControl={timeControl}
               gameOver={gameOver}
+              setBotTimestamp={setBotTimestamp}
               gameStarted={gameStarted} 
               gameActive={gameActive}
             />

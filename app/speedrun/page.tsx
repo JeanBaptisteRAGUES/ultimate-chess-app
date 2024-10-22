@@ -62,7 +62,12 @@ const SpeedrunPage = () => {
     const [showGameoverWindow, setShowGameoverWindow] = useState(0); // 0: Rien, 1: Adversaire suivant, 2: Bilan Speedrun
     const [winner, setWinner] = useState(''); // 'w' -> blancs gagnent, 'b' -> noirs gagnent, 'd' -> draw
     const [speedrunTime, setSpeedrunTime] = useState('00:00:00');
-    const whiteTimeControl = useRef({
+    const [botTimestamp, setBotTimestamp] = useState({
+      startingTime: 600,
+      increment: 0,
+      timeElapsed: 0,
+    });
+    /* const whiteTimeControl = useRef({
       startingTime: 600,
       increment: 0,
       timeElapsed: 0,
@@ -71,16 +76,7 @@ const SpeedrunPage = () => {
       startingTime: 600,
       increment: 0,
       timeElapsed: 0,
-    });
-    const timeControls = new Map([
-      ['1+0', {startingTime: 60, increment: 0}],
-      ['3+0', {startingTime: 180, increment: 0}],
-      ['3+2', {startingTime: 180, increment: 2}],
-      ['10+0', {startingTime: 600, increment: 0}],
-      ['15+10', {startingTime: 900, increment: 10}],
-      ['30+20', {startingTime: 1800, increment: 20}],
-      ['90+30', {startingTime: 5400, increment: 30}],
-    ]);
+    }); */
     const [whiteMaterialAdvantage, setWhiteMaterialAdvantage] = useState({
       pawn: 0,
       knight: 0,
@@ -587,10 +583,14 @@ const SpeedrunPage = () => {
       return pgnAfter.split(' ');
     }
 
-    function getTimeControlDelay() {
+    /* function getTimeControlDelay() {
       if(timeControl === 'infinite') return 300;
       //@ts-expect-error
       let rawDelay = (timeControls.get(timeControl)?.startingTime/60);
+      console.log(`whiteTimeControl.current.startingTime: ${whiteTimeControl.current.startingTime}`);
+      console.log(`whiteTimeControl.current.timeElapsed: ${whiteTimeControl.current.timeElapsed}`);
+      console.log(`blackTimeControl.current.startingTime: ${blackTimeControl.current.startingTime}`);
+      console.log(`blackTimeControl.current.startingTime: ${blackTimeControl.current.startingTime}`);
       if(game.history().length <= 10) rawDelay =  Math.min(5,rawDelay/4); // On joue plus vite dans l'ouverture
       if(game.turn() === 'w'){
         if((whiteTimeControl.current.startingTime - whiteTimeControl.current.timeElapsed) < whiteTimeControl.current.startingTime*0.2){
@@ -601,8 +601,8 @@ const SpeedrunPage = () => {
           rawDelay/=2;
           console.log("Les blancs ont 10% ou moins de leur temps initial !");
         }
-        if((whiteTimeControl.current.startingTime - whiteTimeControl.current.timeElapsed) < 20000){
-          rawDelay = 300;
+        if((whiteTimeControl.current.startingTime - whiteTimeControl.current.timeElapsed) < 20){
+          rawDelay = 0.3;
           console.log("Les blancs ont moins de 20 secondes pour jouer !");
         }
       }else{
@@ -614,14 +614,14 @@ const SpeedrunPage = () => {
           rawDelay/=2;
           console.log("Les noirs ont 10% ou moins de leur temps initial !");
         }
-        if((blackTimeControl.current.startingTime - blackTimeControl.current.timeElapsed) < 20000){
-          rawDelay = 300;
+        if((blackTimeControl.current.startingTime - blackTimeControl.current.timeElapsed) < 20){
+          rawDelay = 0.3;
           console.log("Les noirs ont moins de 20 secondes pour jouer !");
         }
       }
       let randDelay = Math.max(rawDelay,Math.random()*rawDelay*2)*1000;
       return randDelay;
-    }
+    } */
 
     async function playComputerMove(botID: number) {
       //console.log('Play computer move, game active ? ' + gameActive.current);
@@ -630,7 +630,7 @@ const SpeedrunPage = () => {
       console.log('Play computer move (playComputerMove(botID: number))');
       console.log(game.fen());
       console.log(game.moves());
-      const move: Move | undefined = await botAI.current?.makeMove(game);
+      const move: Move | undefined = await botAI.current?.makeMove(game, botTimestamp);
 
       if(move && move.type >= 0){
         console.log(`Bot move: ${move.notation} - Game active: ${gameActive.current}`);
@@ -679,11 +679,12 @@ const SpeedrunPage = () => {
 
       gameMove(sourceSquare + targetSquare + promotion, 0);
   
-      let delay = getTimeControlDelay();
-      if(botElo === 3200) delay = 0;
+      //let delay = getTimeControlDelay();
+      //if(botElo === 3200) delay = 0;
       if(gameStarted && botAI.current){
-        const newTimeout = setTimeout(() => playComputerMove(oldBotID), delay);
-        setCurrentTimeout(newTimeout);
+        //const newTimeout = setTimeout(() => playComputerMove(oldBotID), delay);
+        playComputerMove(oldBotID);
+        //setCurrentTimeout(newTimeout);
       }
       
       return true;
@@ -942,9 +943,10 @@ const SpeedrunPage = () => {
               game={game} 
               turnColor={game.turn()} 
               clockColor={playerColor === 'w' ? 'b' : 'w'}
-              timeControl={timeControl} 
-              timeControls={timeControls}
+              botColor={playerColor === 'w' ? 'b' : 'w'}
+              timeControl={timeControl}
               gameOver={gameOver}
+              setBotTimestamp={setBotTimestamp}
               gameStarted={gameStarted} 
               gameActive={gameActive}
             />
@@ -967,9 +969,10 @@ const SpeedrunPage = () => {
               game={game} 
               turnColor={game.turn()} 
               clockColor={playerColor === 'w' ? 'w' : 'b'}
+              botColor={playerColor === 'w' ? 'b' : 'w'}
               timeControl={timeControl} 
-              timeControls={timeControls}
               gameOver={gameOver}
+              setBotTimestamp={setBotTimestamp}
               gameStarted={gameStarted} 
               gameActive={gameActive}
             />

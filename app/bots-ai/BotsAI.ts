@@ -74,6 +74,7 @@ import speedrun_female17 from "@/public/Speedrun_opponents/females/speedrun_fema
 import speedrun_female18 from "@/public/Speedrun_opponents/females/speedrun_female18.jpg";
 import speedrun_female19 from "@/public/Speedrun_opponents/females/speedrun_female19.jpg";
 import speedrun_female20 from "@/public/Speedrun_opponents/females/speedrun_female20.jpg";
+import { Timestamp } from "../components/Clock";
 
 // Bots "célébrités"
 // TODO: Jouent les coups trouvés dans la BDD de chess.com pour des joueurs connus, puis stockfish
@@ -5033,7 +5034,30 @@ class BotsAI {
         return move;
     }
 
-    async makeMove(game: Chess): Promise<Move> {
+    #getTimeControlDelay(game: Chess, timeStamp: Timestamp) {
+        console.log('getTimeControlDelay');
+        if(timeStamp.startingTime < 0) return 300;
+
+        let rawDelay = timeStamp.startingTime/60;
+        if(game.history().length <= 10) rawDelay =  Math.min(5,rawDelay/4); // On joue plus vite dans l'ouverture
+        if((timeStamp.startingTime - timeStamp.timeElapsed) < timeStamp.startingTime*0.2){
+            rawDelay/=2;
+            console.log(`Le bot ${this.#username} 20% ou moins de leur temps initial !`);
+        }
+        if((timeStamp.startingTime - timeStamp.timeElapsed) < timeStamp.startingTime*0.1){
+            rawDelay/=2;
+            console.log(`Le bot ${this.#username} 10% ou moins de leur temps initial !`);
+        }
+        if((timeStamp.startingTime - timeStamp.timeElapsed) < 20){
+            rawDelay = 300;
+            console.log(`Le bot ${this.#username} a moins de 20 secondes pour jouer !`);
+        }
+        let randDelay = Math.max(rawDelay,Math.random()*rawDelay*2)*1000;
+        console.log(`Temps de réflexion du bot: ${Math.round(randDelay)/1000}s`);
+        return randDelay;
+    }
+
+    async makeMove(game: Chess, timeStamp: Timestamp): Promise<Move> {
         let move: Move = {
             notation: '',
             type: -1,
@@ -5163,6 +5187,9 @@ class BotsAI {
             move.notation = move.notation.replace(/.{4}[bnr]/, underPromoteMove + 'q');
         } 
 
+        //Simulation d'un temps de réflexion du bot
+        const thinkingDelay = this.#getTimeControlDelay(game, timeStamp);
+        await new Promise(resolve => setTimeout(resolve, thinkingDelay));
         return move;
     }
 

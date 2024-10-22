@@ -6,7 +6,7 @@ import {Chess, Color, DEFAULT_POSITION} from "chess.js";
 import { Chessboard } from "react-chessboard";
 import { Piece, Square } from "react-chessboard/dist/chessboard/types";
 import EvalAndWinrate from "../components/EvalAndWinrate";
-import Clock from "../components/Clock";
+import Clock, { Timestamp } from "../components/Clock";
 import Engine from "../engine/Engine";
 import Link from "next/link";
 import BotsAI, { Behaviour, Move } from "../bots-ai/BotsAI";
@@ -17,11 +17,27 @@ import { FaCirclePlay, FaRotate } from "react-icons/fa6";
 
 import stockfishOnly_pp from "@/public/Bots_images/chess3d_stockfish-only.jpg";
 
-const timeControlDelays = new Map([
-  ['1+0', 300],
-  ['3+0', 3000],
-  ['10+0', 15000],
-  ['90+30', 120000],
+const timestamps = new Map<string,Timestamp>([
+  ['1+0', {
+    startingTime: 60,
+    timeElapsed: 0,
+    increment: 0,
+  }],
+  ['3+0', {
+    startingTime: 180,
+    timeElapsed: 0,
+    increment: 0,
+  }],
+  ['10+0', {
+    startingTime: 600,
+    timeElapsed: 0,
+    increment: 0,
+  }],
+  ['90+30', {
+    startingTime: 5400,
+    timeElapsed: 0,
+    increment: 30,
+  }],
 ]);
 
 
@@ -33,7 +49,11 @@ const BotVsBotPage = () => {
     const bot1_Elo: number = eval(searchParams.get('bot1_Elo') || '2600');
     const bot2_Elo: number = eval(searchParams.get('bot2_Elo') || '2600');
     const timeControl = searchParams.get('timeControl') || '3+0';
-    const moveDelay = timeControlDelays.get(timeControl);
+    const botTimestamp = timestamps.get(timeControl) || {
+      startingTime: 180,
+      timeElapsed: 0,
+      increment: 0,
+    };
 
     const toolbox = new GameToolBox();
     const gameActive = useRef(true);
@@ -141,12 +161,13 @@ const BotVsBotPage = () => {
       //console.log('Play computer move');
       if(!gameActive.current || game.pgn().includes('#')) return;
  
-      const move: Move | undefined = game.fen().includes(' w ') ? await bot1_AI.current?.makeMove(game) : await bot2_AI.current?.makeMove(game);
+      const move: Move | undefined = game.fen().includes(' w ') ? await bot1_AI.current?.makeMove(game, botTimestamp) : await bot2_AI.current?.makeMove(game, botTimestamp);
 
       if(gameActive.current && move && move.type >= 0){
         gameMove(move.notation, move.type);
-        const newTimeout = setTimeout(playComputerMove, moveDelay);
-        setCurrentTimeout(newTimeout);
+        //const newTimeout = setTimeout(playComputerMove, moveDelay);
+        //setCurrentTimeout(newTimeout);
+        playComputerMove();
         return;
       } 
       console.log("Erreur lors de la génération d'un coup par l'ordinateur");
