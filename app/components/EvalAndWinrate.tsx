@@ -94,7 +94,7 @@ const EvalAndWinrate: React.FC<EvalProps> = ({game, databaseRating, winner, star
         }) */
 
         return bestLineFormated.map((bmfMove, i) => {
-            return <span id={bmfMove} key={i}>{bmfMove}</span>
+            return <span className=' flex justify-center items-center' id={bmfMove} key={i}>{bmfMove}</span>
         });
     }
 
@@ -143,10 +143,17 @@ const EvalAndWinrate: React.FC<EvalProps> = ({game, databaseRating, winner, star
     }, [currentFen]);
 
     return (
-        <div className=" h-20 w-full flex flex-col justify-center items-center my-5 md:my-0">
-            <div className=" text-white" >
-                {showEval ? engineEval : '???'}
-            </div>
+        <div className=" h-20 w-full flex flex-row justify-center items-center my-5 md:my-0">
+            {
+                engineEval.includes('-') ? 
+                    <div className=" h-fit w-10 bg-slate-950 text-white flex justify-center rounded-sm items-center px-2 mr-2" >
+                        {showEval ? engineEval : '???'}
+                    </div>
+                    :
+                    <div className=" h-fit w-10 bg-slate-50 text-black flex justify-center rounded-sm items-center px-2 mr-2" >
+                        {showEval ? engineEval : '???'}
+                    </div>
+            }
             {/* <div className=" h-5 w-52 flex flex-row">
                 <div className="bg-white h-5 flex justify-center" style={{width: `${winrate.white}%`}} >{
                 winrate.white >= 10 ? `${winrate.white}%` : "" 
@@ -158,7 +165,7 @@ const EvalAndWinrate: React.FC<EvalProps> = ({game, databaseRating, winner, star
                 winrate.black >= 10 ? `${winrate.black}%` : "" 
                 }</div>
             </div> */}
-            <div className=" flex justify-center items-center gap-x-2 gap-y-1 flex-wrap text-white pt-1" >
+            <div className=" flex justify-center items-center gap-x-2 gap-y-1 flex-wrap text-white" >
                 {formateBestLine(bestLine)}
             </div>
         </div>

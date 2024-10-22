@@ -5049,7 +5049,7 @@ class BotsAI {
             console.log(`Le bot ${this.#username} 10% ou moins de leur temps initial !`);
         }
         if((timeStamp.startingTime - timeStamp.timeElapsed) < 20){
-            rawDelay = 300;
+            rawDelay = 0.3;
             console.log(`Le bot ${this.#username} a moins de 20 secondes pour jouer !`);
         }
         let randDelay = Math.max(rawDelay,Math.random()*rawDelay*2)*1000;
