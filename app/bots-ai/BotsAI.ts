@@ -863,6 +863,11 @@ class BotsAI {
     }
 
     async #makeTunelVisionMove(game: Chess): Promise<Move> {
+        let stockfishMove: Move = {
+            notation: '',
+            type: -1
+        } 
+        
         const newGame = new Chess(game.fen());
         const opponentColor = this.#botColor === 'b' ? 'w' : 'b';
         /* const forgotPieceChance = new Map([
@@ -879,6 +884,7 @@ class BotsAI {
         console.log('Forgot Piece Chances (adjusted): ' + forgotPieceChance);
         let hasForgotten = false;
         let thingsForgotten = '';
+        let forgottenPiecesCases: Square[] = [];
 
         game.board().forEach((rank) => {
             rank.forEach((boardCase) => {
@@ -894,21 +900,24 @@ class BotsAI {
                         //console.log('Oublie le fou en ' + boardCase.square);
                         thingsForgotten+= `-le fou en ${boardCase.square} (${Math.round(rand)} <= ${forgotPieceChanceFinal} (${Math.round(forgotPieceChance)} * ${Math.round(10*inactivityBonusMult)/10}))\n`;
                         hasForgotten = true;
-                        newGame.put({ type: 'p', color: opponentColor }, boardCase.square)
+                        newGame.put({ type: 'p', color: opponentColor }, boardCase.square);
+                        forgottenPiecesCases.push(boardCase.square);
                     }
                     
                     if(boardCase?.type === 'q' && rand <= forgotPieceChanceFinal) {
                         //console.log('Oublie les déplacements en diagonale de la dame en ' + boardCase.square);
                         thingsForgotten+= `-les déplacements en diagonale de la dame en ${boardCase.square} (${Math.round(rand)} <= ${forgotPieceChanceFinal} (${Math.round(forgotPieceChance)} * ${Math.round(inactivityBonusMult)}))\n`;
                         hasForgotten = true;
-                        newGame.put({ type: 'r', color: opponentColor }, boardCase.square)
+                        newGame.put({ type: 'r', color: opponentColor }, boardCase.square);
+                        forgottenPiecesCases.push(boardCase.square);
                     }
 
                     if(boardCase?.type === 'q' && rand <= forgotPieceChanceFinal/2) {
                         //console.log('Oublie la dame en ' + boardCase.square);
                         thingsForgotten+= `-la dame en ${boardCase.square} (${Math.round(rand)} <= ${forgotPieceChanceFinal/2} (${Math.round(forgotPieceChance)}/2 * ${Math.round(inactivityBonusMult)}))\n`;
                         hasForgotten = true;
-                        newGame.put({ type: 'p', color: opponentColor }, boardCase.square)
+                        newGame.put({ type: 'p', color: opponentColor }, boardCase.square);
+                        forgottenPiecesCases.push(boardCase.square);
                     }
 
                 }
@@ -919,11 +928,26 @@ class BotsAI {
 
         
         if(hasForgotten) {
-            //TODO: Plutot utiliser makeStoskfishMoves() -> les 20 premiers et donner un bonus/malus pour les coups vers l'avant/l'arrière
-            const stockfishMove = await makeStockfishMove(this.#defaultBotParams, newGame, this.#engine);
-            stockfishMove.type = 5;
+            console.log(forgottenPiecesCases);
+            //const stockfishMove = await makeStockfishMove(this.#defaultBotParams, newGame, this.#engine);
+            let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, this.#defaultBotParams.skillValue, 30, false);
+            console.log(stockfishMoves);
 
-            if(!this.#toolbox.isMoveValid(game.fen(), stockfishMove.notation)) stockfishMove.type = -1;
+            stockfishMoves = stockfishMoves.filter((sfMove) => !forgottenPiecesCases.some((fpc) => this.#toolbox.getDistanceBetweenSquares(fpc, this.#toolbox.getMoveDestination(sfMove.bestMove)) < 3));
+            console.log(stockfishMoves);
+
+            //stockfishMove.type = 5;
+
+            stockfishMoves = stockfishMoves.filter((sfMove) => this.#toolbox.isMoveValid(game.fen(), sfMove.bestMove));
+            console.log(stockfishMoves);
+
+            /* stockfishMoves.sort(compareEval);
+            console.log(stockfishMoves); */
+
+            if(stockfishMoves.length > 1) {
+                stockfishMove.notation = stockfishMoves[0].bestMove;
+                stockfishMove.type = 5;
+            }
 
             if(stockfishMove.type === 5) {
                 console.log(`Le bot ${this.#username} oublie:${thingsForgotten}`);

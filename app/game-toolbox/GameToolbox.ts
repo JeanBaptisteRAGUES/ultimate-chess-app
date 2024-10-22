@@ -157,8 +157,21 @@ class GameToolBox {
             return 0;
         }
         const letterDiff = Math.abs(move[0].charCodeAt(0) - move[2].charCodeAt(0));
-        const digitDiff = Math.abs(eval(move[1]) - eval(move[3]))
+        const digitDiff = Math.abs(eval(move[1]) - eval(move[3]));
         return letterDiff + digitDiff;
+    }
+
+    /**
+     * Prends deux cases en entrée et retourne la distance entre elles (un mouvement de 1 en diagonal donne une distance de 2)
+     * @param square1 
+     * @param square2 
+     * @returns 
+     */
+    getDistanceBetweenSquares(square1: Square, square2: Square): number {
+      const letterDiff = Math.abs(square1.charCodeAt(0) - square2.charCodeAt(0));
+      const digitDiff = Math.abs(square1.charCodeAt(1) - square2.charCodeAt(1));
+      //console.log(`Distance entre ${square1} et ${square2}: ${letterDiff} + ${digitDiff} = ${letterDiff + digitDiff}`);
+      return letterDiff + digitDiff;
     }
 
     /**
