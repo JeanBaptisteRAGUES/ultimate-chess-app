@@ -930,10 +930,11 @@ class BotsAI {
         if(hasForgotten) {
             console.log(forgottenPiecesCases);
             //const stockfishMove = await makeStockfishMove(this.#defaultBotParams, newGame, this.#engine);
-            let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, this.#defaultBotParams.skillValue, 30, false);
+            let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(newGame.fen(), 10, this.#defaultBotParams.skillValue, 30, false);
             console.log(stockfishMoves);
 
-            stockfishMoves = stockfishMoves.filter((sfMove) => !forgottenPiecesCases.some((fpc) => this.#toolbox.getDistanceBetweenSquares(fpc, this.#toolbox.getMoveDestination(sfMove.bestMove)) < 3));
+            //TODO: Faire en sorte d'autoriser les captures même si elles sont à moins de 3 cases de la pièce oubliée
+            stockfishMoves = stockfishMoves.filter((sfMove) => (this.#toolbox.getExchangeValue(game.fen(), sfMove.bestMove) >= 0 || !forgottenPiecesCases.some((fpc) => this.#toolbox.getDistanceBetweenSquares(fpc, this.#toolbox.getMoveDestination(sfMove.bestMove)) < 3)));
             console.log(stockfishMoves);
 
             //stockfishMove.type = 5;

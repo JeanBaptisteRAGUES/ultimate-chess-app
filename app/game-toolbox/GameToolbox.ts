@@ -234,8 +234,8 @@ class GameToolBox {
       this.game.load(fen);
       const attackingPieceSquare = this.getMoveOrigin(move);
       const attackedPieceSquare = this.getMoveDestination(move);
-      const attackingPieceValue = pieceValues.get(this.game.get(attackingPieceSquare).type) || 0;
-      const attackedPieceValue = pieceValues.get(this.game.get(attackedPieceSquare).type) || 0;
+      const attackingPieceValue = pieceValues.get(this.game.get(attackingPieceSquare)?.type) || 0;
+      const attackedPieceValue = pieceValues.get(this.game.get(attackedPieceSquare)?.type) || 0;
 
       // Voir si la pièce est défendue
       if(this.isDefended(fen, attackedPieceSquare)) {
