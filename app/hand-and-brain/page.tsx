@@ -377,6 +377,7 @@ const HandAndBrainPage = () => {
               depth: 12
             }
           }}
+          target="_blank"
         >
           Analyse rapide
         </Link>
@@ -389,6 +390,7 @@ const HandAndBrainPage = () => {
               depth: 16
             }
           }}
+          target="_blank"
         >
           Analyse approfondie
         </Link>

@@ -929,11 +929,13 @@ class BotsAI {
         
         if(hasForgotten) {
             console.log(forgottenPiecesCases);
+            const timestampStart = performance.now();
             //const stockfishMove = await makeStockfishMove(this.#defaultBotParams, newGame, this.#engine);
-            let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(newGame.fen(), 10, this.#defaultBotParams.skillValue, 30, false);
+            let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(newGame.fen(), 10, this.#defaultBotParams.skillValue, 10, false);
+            console.log(`Durée de la recherche des 30 meilleurs coups: ${(performance.now() - timestampStart)/1000}s`);
             console.log(stockfishMoves);
 
-            //TODO: Faire en sorte d'autoriser les captures même si elles sont à moins de 3 cases de la pièce oubliée
+            //TODO: getExchangeValue(game.fen(), sfMove.bestMove) ou getExchangeValue(newGame.fen(), sfMove.bestMove) ?
             stockfishMoves = stockfishMoves.filter((sfMove) => (this.#toolbox.getExchangeValue(game.fen(), sfMove.bestMove) >= 0 || !forgottenPiecesCases.some((fpc) => this.#toolbox.getDistanceBetweenSquares(fpc, this.#toolbox.getMoveDestination(sfMove.bestMove)) < 3)));
             console.log(stockfishMoves);
 
@@ -5064,6 +5066,7 @@ class BotsAI {
         if(timeStamp.startingTime < 0) return 300;
 
         let rawDelay = timeStamp.startingTime/60;
+        console.log(`Raw Delay: ${rawDelay}`);
         if(game.history().length <= 10) rawDelay =  Math.min(5,rawDelay/4); // On joue plus vite dans l'ouverture
         if((timeStamp.startingTime - timeStamp.timeElapsed) < timeStamp.startingTime*0.2){
             rawDelay/=2;

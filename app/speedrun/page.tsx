@@ -835,6 +835,7 @@ const SpeedrunPage = () => {
                       depth: 12
                     }
                   }}
+                  target="_blank"
                 >
                   Analyser
                 </Link>

@@ -431,6 +431,7 @@ const ChessPage = () => {
               depth: 12
             }
           }}
+          target="_blank"
         >
           Analyse rapide
         </Link>

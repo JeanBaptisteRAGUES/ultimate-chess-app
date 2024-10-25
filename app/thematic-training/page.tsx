@@ -40,7 +40,7 @@ const ThematicTrainingPage = () => {
     const [showGameoverWindow, setShowGameoverWindow] = useState(false);
     const [winner, setWinner] = useState(''); // 'w' -> blancs gagnent, 'b' -> noirs gagnent, 'd' -> draw
     const [botTimestamp, setBotTimestamp] = useState({
-      startingTime: 600,
+      startingTime: 60,
       increment: 0,
       timeElapsed: 0,
     });
@@ -50,7 +50,7 @@ const ThematicTrainingPage = () => {
         engine.current = new Engine();
         engine.current.init();
         const botColor = playerColor === 'w' ? 'b' : 'w';
-        botAI.current = new BotsAI('default', elo, botColor, timeControl, false);
+        botAI.current = new BotsAI('human', elo, botColor, timeControl, false);
         console.log('Starting Fen: ' + startingFen);
         console.log('Game Fen: ' + game.fen());
         console.log('Current Fen:' + currentFen);
@@ -160,10 +160,9 @@ const ThematicTrainingPage = () => {
         console.log(sourceSquare + targetSquare + promotion);
         gameMove(sourceSquare + targetSquare + promotion, 0);
     
-        let delay = 500;
+        //let delay = 500;
         if(gameStarted){
-            const newTimeout = setTimeout(playComputerMove, delay);
-            setCurrentTimeout(newTimeout);
+            playComputerMove();
         }
         
         return true;
@@ -222,6 +221,7 @@ const ThematicTrainingPage = () => {
               depth: 12
             }
           }}
+          target="_blank"
         >
           Analyse rapide
         </Link>
@@ -235,6 +235,7 @@ const ThematicTrainingPage = () => {
               depth: 16
             }
           }}
+          target="_blank"
         >
           Analyse approfondie
         </Link>
