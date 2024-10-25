@@ -1156,7 +1156,7 @@ class BotsAI {
         //console.log('human logic: 0');
         console.log(`blunderMult: ${blunderMult}`);
         let moveInfos = blunderMult > 1 ? 
-            `Le bot ${this.#username} a ${Math.round((blunderMult-1)*100)}% de risque en plus de faire des erreurs.\n\n`
+            `Le bot ${this.#username} a ${Math.round((blunderMult-1)*100)}% de risque en plus de faire des erreurs par manque de temps.\n\n`
             :
             `Le bot ${this.#username} a encore assez de temps à la pendule pour ne pas augmenter les risques de faire une erreur.\n\n`;
 
