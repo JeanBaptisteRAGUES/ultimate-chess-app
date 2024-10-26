@@ -980,7 +980,7 @@ class BotsAI {
         } 
         //const history = JSON.parse(JSON.stringify(game.history({verbose: true})));
         let lastOpponentMove = game.history({verbose: true}).pop();
-        let lastOpponentMoveLan = lastOpponentMove?.lan;
+        let lastOpponentMoveLan = lastOpponentMove?.lan || '';
         let fenBeforeOpponentMove = lastOpponentMove?.before || DEFAULT_POSITION;
         fenBeforeOpponentMove = this.#botColor === 'w' ? fenBeforeOpponentMove.replace(' b ', ' w ') : fenBeforeOpponentMove.replace(' w ', ' b ');
         const gameTest = new Chess();
@@ -991,7 +991,7 @@ class BotsAI {
         let moveType = 5;
         let ignoreLastMoveRand = Math.round(Math.random()*100 );
 
-        if(!lastOpponentMoveLan || ignoreLastMoveRand > ignoreOpponentMoveChance) {
+        if((lastOpponentMoveLan !== '') || ignoreLastMoveRand > ignoreOpponentMoveChance) {
             return {
                 notation: '',
                 type: -1,
