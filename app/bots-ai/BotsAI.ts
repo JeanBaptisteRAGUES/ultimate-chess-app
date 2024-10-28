@@ -2182,7 +2182,7 @@ class BotsAI {
                 return move;
 
             case '1.e4 e5 2.Nf3 Nf6 3.Nxe5 Nc6 4.Nxc6 dxc6 5.e5 Ng4 6.d4 Bc5 7.h3 Bxd4 8.hxg4 Bxf2+ 9.Ke2':
-                move.notation = 'c1g4';
+                move.notation = 'c8g4';
                 move.type = 2;
                 return move;
 
