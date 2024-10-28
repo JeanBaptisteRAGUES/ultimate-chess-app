@@ -873,7 +873,7 @@ const SpeedrunPage = () => {
       null
 
     const gameOverWindow_2 = showGameoverWindow === 2 ? 
-      <div className=" flex justify-center items-center w-full h-full absolute top-0 left-0" >
+      <div className=" flex justify-center items-center w-full h-full absolute top-0 left-0 blur" >
         <div className=" flex flex-col justify-start items-center w-3/4 h-2/3 md:w-1/2 md:h-1/2 bg-gray-200 rounded" >
           <div className=" relative flex justify-center items-center w-full h-1/4 bg-fuchsia-600 text-white rounded-t" >
             <h1 className=" text-white font-bold flex justify-center items-center">
