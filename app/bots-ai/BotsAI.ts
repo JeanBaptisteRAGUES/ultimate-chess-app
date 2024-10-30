@@ -880,6 +880,7 @@ class BotsAI {
             ['Maximum', 0]
           ]).get(this.#botLevel) || 10; */
         let forgotPieceChance = Math.max(1, (Math.round(50 - Math.sqrt(this.#defaultBotParams.elo))))*blunderMult;
+        //let forgotPieceChance = 10000;
         console.log('Forgot Piece Chances (base): ' + forgotPieceChance);
         forgotPieceChance = forgotPieceChance*(Math.min(1.2, 0.8 + 0.01*(game.history().length/2)));
         console.log('Forgot Piece Chances (adjusted): ' + forgotPieceChance);
@@ -937,8 +938,34 @@ class BotsAI {
             console.log(stockfishMoves);
 
             //TODO: getExchangeValue(game.fen(), sfMove.bestMove) ou getExchangeValue(newGame.fen(), sfMove.bestMove) ?
+            /* console.log("Tableau des valeurs des 'échanges': ");
+            stockfishMoves.forEach((sfMove) => console.log(this.#toolbox.getExchangeValue(game.fen(), sfMove.bestMove)));
+
+            console.log("Tableau des distances avec la pièce oubliée: ");
+            stockfishMoves.forEach((sfMove) => {
+                console.log(`${sfMove.bestMove}: `);
+                forgottenPiecesCases.forEach((fpc) => console.log(`${fpc}: ${this.#toolbox.getDistanceBetweenSquares(fpc, this.#toolbox.getMoveDestination(sfMove.bestMove))}`));
+            }); */
             stockfishMoves = stockfishMoves.filter((sfMove) => (this.#toolbox.getExchangeValue(game.fen(), sfMove.bestMove) >= 0 || !forgottenPiecesCases.some((fpc) => this.#toolbox.getDistanceBetweenSquares(fpc, this.#toolbox.getMoveDestination(sfMove.bestMove)) < 3)));
             console.log(stockfishMoves);
+
+            //console.log(`${square?.square} is defended: ${this.#toolbox.isDefended(game.fen(), square?.square || 'a1')}`)
+            /* const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+            const digits = ['1', '2', '3', '4', '5', '6', '7', '8'];
+
+            digits.forEach((digit) => {
+                letters.forEach((letter) => {
+                    console.log(`${letter + digit} is defended by white: ${this.#toolbox.isDefended(game.fen(), (letter + digit) as any as Square).white}`);
+                    console.log(`${letter + digit} is defended by black: ${this.#toolbox.isDefended(game.fen(), (letter + digit) as any as Square).black}`);
+                })
+            })
+
+            digits.forEach((digit) => {
+                letters.forEach((letter) => {
+                    console.log(`${letter + digit} is attacked by white: ${game.isAttacked((letter + digit) as any as Square, 'w')}`);
+                    console.log(`${letter + digit} is attacked by black: ${game.isAttacked((letter + digit) as any as Square, 'b')}`);
+                })
+            }) */
 
             //stockfishMove.type = 5;
 
@@ -1153,7 +1180,7 @@ class BotsAI {
 
     // TODO: isLastMoveDangerous ? Si oui -> plus le bot est faible, plus il aura envie de bouger la pièce
     async #humanMoveLogic(game: Chess, useDatabase: Boolean, useRandom: Boolean, blunderMult: number): Promise<Move> {
-        //console.log('human logic: 0');
+        console.log('human logic: 0');
         console.log(`blunderMult: ${blunderMult}`);
         let moveInfos = blunderMult > 1 ? 
             `Le bot ${this.#username} a ${Math.round((blunderMult-1)*100)}% de risque en plus de faire des erreurs par manque de temps.\n\n`
@@ -1163,9 +1190,13 @@ class BotsAI {
         if(useDatabase) {
             console.log(moveInfos);
             //const movesList = this.#toolbox.convertHistorySanToLan(this.#toolbox.convertPgnToHistory(game.pgn()));
-            const startingFen = game.history().length > 0 ? game.history({verbose: true})[0].before : DEFAULT_POSITION;
+            /* const startingFen = game.history().length > 0 ? game.history({verbose: true})[0].before : DEFAULT_POSITION;
+            const startingFen_2 = game.fen(); */
+            const startingFen = game.history().length > 0 ? game.history({verbose: true})[0].before : game.fen();
             const movesList = this.#toolbox.convertHistorySanToLan(game.history(), startingFen);
-
+            console.log(`startingFen: ${startingFen}`);
+            /* console.log(`startingFen_2: ${startingFen_2}`);
+            console.log(`startingFen_3: ${startingFen_3}`); */
             const lichessMove = await makeLichessMove(movesList, this.#defaultBotParams.elo, startingFen, this.#toolbox);
             moveInfos += lichessMove.moveInfos;
             if(lichessMove.type >= 0){

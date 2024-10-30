@@ -444,20 +444,20 @@ const ChessPage = () => {
       </div>
 
     const gameOverWindow = showGameoverWindow ? 
-      <div className=" flex justify-center items-center w-full h-full absolute top-0 left-0" >
-        <div className=" flex flex-col justify-start items-center w-3/4 h-1/3 md:w-1/2 md:h-1/2 bg-slate-950 backdrop-blur bg-opacity-50 border border-slate-600/40 rounded" >
+      <div className=" flex justify-center items-center w-full h-full absolute backdrop-blur top-0 left-0" >
+        <div className=" flex flex-col justify-start items-center w-3/4 h-1/3 md:w-1/2 md:h-1/2 bg-slate-950 bg-opacity-80 border border-slate-600/40 rounded" >
           <div className=" flex justify-start items-center w-full h-fit">
             <button className=" text-white font-extrabold pl-2 md:pl-5 md:pt-2" onClick={() => setShowGameoverWindow(false)}>
               X
             </button>
           </div>
           <div className=" relative flex justify-center items-center w-full h-1/4 bg-transparent text-white rounded-t" >
-            <h1 className=" text-cyan-400 brightness-110 text-lg md:text-2xl font-bold flex justify-center items-center">
+            <h1 className=" text-lg md:text-2xl font-bold flex justify-center items-center">
               {
-                winner === 'w' ? 'Les blancs gagnent la partie !'
+                winner === 'w' ? (playerColor === 'w' ? <span className="text-cyan-400 brightness-110" >Les blancs gagnent la partie !</span> : <span className=" text-pink-400 brightness-110">Les blancs gagnent la partie !</span>)
                 :
                 (
-                  winner === 'b' ? 'Les noirs gagnent la partie !'
+                  winner === 'b' ? (playerColor === 'b' ? <span className="text-cyan-400 brightness-110" >Les noirs gagnent la partie !</span> : <span className=" text-pink-400 brightness-110">Les noirs gagnent la partie !</span>)
                   :
                   'Match nul'
                 )
@@ -605,13 +605,12 @@ const ChessPage = () => {
 
     const gameComponent = 
       <div className="flex flex-col justify-start items-center h-full">
-        {titleComponent}
         {boardComponent}
         {buttonsComponent}
       </div>
 
     const gameContainer =
-      <div className="flex flex-row justify-center items-center w-full md:w-1/2 h-full md:pl-5" >
+      <div className="flex flex-row justify-center items-center w-full md:w-1/2 h-full md:pl-5 pt-1 md:pt-5" >
         {gameComponent}
       </div>
 

@@ -1054,9 +1054,9 @@ const SpeedrunPage = () => {
         </div>
         <div className="flex flex-col justify-start items-center text-xs md:text-base text-white overflow-y-auto pr-2 h-full w-full md:w-1/3">
           <p className="flex flex-row justify-start items-center text-cyan-400 text-sm md:text-xl font-semibold w-full" >Informations sur le dernier coup du bot:</p>
-          <text className="flex flex-col justify-start items-start flex-wrap whitespace-pre-line" >
+          <p className="flex flex-col justify-start items-start flex-wrap whitespace-pre-line" >
             {moveInfos}
-          </text>
+          </p>
         </div>
       </div>
     )

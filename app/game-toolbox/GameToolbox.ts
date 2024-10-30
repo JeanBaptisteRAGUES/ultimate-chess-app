@@ -24,6 +24,11 @@ export type MaterialAdvantage = {
     points: number,
   }
 
+export type defendedCase = {
+  white: boolean,
+  black: boolean,
+}
+
 export const pieceValues = new Map([
     ['p', 1],
     ['n', 3],
@@ -201,16 +206,18 @@ class GameToolBox {
     }
 
     /**
-     * Indique si la pièce est défendue par un pion ou une autre pièce
+     * Indique si une case est défendue par un pion ou une autre pièce
      * @param fen 
      * @param pieceCase 
      * @returns Retourne un booléen pour savoir si la pièce est défendue ou non
      */
-    isDefended(fen: string, pieceSquare: Square): Boolean {
+    isDefended(fen: string, pieceSquare: Square): defendedCase {
         this.game.load(fen);
-        const pieceColor = this.game.get(pieceSquare).color;
 
-        return this.game.isAttacked(pieceSquare, pieceColor);
+        return {
+          white: this.game.isAttacked(pieceSquare, 'w'),
+          black: this.game.isAttacked(pieceSquare, 'b'),
+        }
     }
 
     /**
@@ -236,13 +243,15 @@ class GameToolBox {
       const attackedPieceSquare = this.getMoveDestination(move);
       const attackingPieceValue = pieceValues.get(this.game.get(attackingPieceSquare)?.type) || 0;
       const attackedPieceValue = pieceValues.get(this.game.get(attackedPieceSquare)?.type) || 0;
+      const attackingPieceColor = this.game.get(attackingPieceSquare).color;
+      const destinationIsDefended = attackingPieceColor === 'w' ? this.isDefended(fen, attackedPieceSquare).black : this.isDefended(fen, attackedPieceSquare).white;
 
       // Voir si la pièce est défendue
-      if(this.isDefended(fen, attackedPieceSquare)) {
-        console.log(`${attackedPieceSquare} est défendue: V(exchange) = ${attackedPieceValue} - ${attackingPieceValue}`);
+      if(destinationIsDefended) {
+        //console.log(`${attackedPieceSquare} est défendue: V(exchange) = ${attackedPieceValue} - ${attackingPieceValue}`);
         return attackedPieceValue - attackingPieceValue;
       } else {
-        console.log(`${attackedPieceSquare} n'est pas défendue: V(exchange) = ${attackedPieceValue}`);
+        //console.log(`${attackedPieceSquare} n'est pas défendue: V(exchange) = ${attackedPieceValue}`);
         return attackedPieceValue;
       }
 

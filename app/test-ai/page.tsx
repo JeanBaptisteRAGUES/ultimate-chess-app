@@ -39,8 +39,8 @@ const TestAI = () => {
     const [currentTimeout, setCurrentTimeout] = useState<NodeJS.Timeout>();
     //const [databaseRating, setDatabaseRating] = useState('Master');
     //const [botBehaviour, setBotBehaviour] = useState<Behaviour>('default');
-    const [currentFen, setCurrentFen] = useState(DEFAULT_POSITION);
-    const [virtualFen, setVirtualFen] = useState(DEFAULT_POSITION);
+    const [currentFen, setCurrentFen] = useState(startingFen);
+    const [virtualFen, setVirtualFen] = useState(startingFen);
     const [isVirtualMode, setIsVirtualMode] = useState(false);
     const [moveInfos, setMoveInfos] = useState('');
     const [engineEval, setEngineEval] = useState('0.3');
@@ -142,8 +142,8 @@ const TestAI = () => {
       setWinner('');
       setGameStarted(false);
       setIsVirtualMode(false);
-      setCurrentFen(DEFAULT_POSITION);
-      setVirtualFen(DEFAULT_POSITION);
+      setCurrentFen(startingFen);
+      setVirtualFen(startingFen);
       setWhiteMaterialAdvantage({
         pawn: 0,
         knight: 0,
@@ -259,7 +259,11 @@ const TestAI = () => {
       console.log(`Bot current ID (${botAI.current?.getID()}) VS Request ID (${botID})`);
       if(game.pgn().includes('#') || !gameActive.current || botAI.current?.getID() !== botID) return;
       if(game.pgn().includes('#') || !gameActive.current) return;
+      console.log(game.fen());
+      
       const move: Move | undefined = await botAI.current?.makeMove(game, botTimestamp);
+
+      console.log(move);
 
       if(move && move.type >= 0){
         gameMove(move.notation, move.type);
@@ -611,9 +615,9 @@ const TestAI = () => {
         </div>
         <div className="flex flex-col justify-start items-center text-xs md:text-base text-white overflow-y-auto pr-2 h-full w-full md:w-1/3">
           <p className="flex flex-row justify-start items-center text-cyan-400 text-sm md:text-xl font-semibold w-full" >Informations sur le dernier coup du bot:</p>
-          <text className="flex flex-col justify-start items-start flex-wrap whitespace-pre-line" >
+          <p className="flex flex-col justify-start items-start flex-wrap whitespace-pre-line" >
             {moveInfos}
-          </text>
+          </p>
         </div>
       </div>
     )
