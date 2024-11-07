@@ -37,3 +37,24 @@ body {
     )
     rgb(var(--background-start-rgb));
 }
+
+/* width */
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: #191818;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #2cc3fa;
+  border-radius: 5px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #2cc3fa;
+}

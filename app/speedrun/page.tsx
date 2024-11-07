@@ -58,6 +58,29 @@ const SpeedrunPage = () => {
     const [engineEval, setEngineEval] = useState('0.3');
     const [showEval, setShowEval] = useState(true);
     const gamesHistory = useRef<GameInfos[]>(new Array());
+    /* const gamesHistory = useRef<GameInfos[]>([
+      {
+        title: "Joueur VS Adversaire_1",
+        pgn: "1.e4 e5 2.Nf3 Nc6",
+        result: "1 - 0",
+        currentElo: 0,
+        eloGain: 100
+      },
+      {
+        title: "Adversaire_2 VS Joueur",
+        pgn: "1.e4 c5 2.Nf3 e6",
+        result: "0 - 1",
+        currentElo: 100,
+        eloGain: 200
+      },
+      {
+        title: "Joueur VS Adversaire_3",
+        pgn: "1.e4 e5 2.Nf3 Nf6",
+        result: "1/2 - 1/2",
+        currentElo: 200,
+        eloGain: 0
+      },
+    ]); */
     const movesTypeRef = useRef(new Array()); // -1: erreur, 0(blanc): joueur, 1(jaune): lichess, 2(vert clair): stockfish, 3(vert foncé): stockfish forcé, 4(rouge): random, 5(rose): human
     const [showGameoverWindow, setShowGameoverWindow] = useState(0); // 0: Rien, 1: Adversaire suivant, 2: Bilan Speedrun
     const [winner, setWinner] = useState(''); // 'w' -> blancs gagnent, 'b' -> noirs gagnent, 'd' -> draw
@@ -121,10 +144,6 @@ const SpeedrunPage = () => {
           {
             gimmick: 'human',
             chance: 90,
-          },
-          {
-            gimmick: 'queen-player',
-            chance: 95
           },
           {
             gimmick: 'pawn-pusher',
@@ -802,13 +821,13 @@ const SpeedrunPage = () => {
     const speedrunMenu_1 =
       <div className=" flex flex-col justify-center items-center gap-5">
         <div
-          className=" m-4 p-1 bg-fuchsia-600 text-white border rounded cursor-pointer"
+          className=" m-4 p-1 text-lg md:text-xl font-semibold text-cyan-300 brightness-110 cursor-pointer"
           onClick={() => stopSpeedrun()}
         >
           Arrêter le speedrun
         </div>
         <div
-          className=" m-4 p-1 bg-fuchsia-600 text-white border rounded cursor-pointer"
+          className=" m-4 p-1 text-lg md:text-xl font-semibold text-cyan-300 brightness-110 cursor-pointer"
           onClick={() => resetGame()}
         >
           Adversaire suivant
@@ -816,17 +835,16 @@ const SpeedrunPage = () => {
       </div>
 
     const speedrunMenu_2 =
-      <div className=" flex flex-col justify-start items-start gap-5">
-        <div className=" flex flex-col justify-start items-center text-3xl font-bold w-full">{speedrunTime}</div>
-        <div className=" flex flex-col justify-start items-start gap-5">
+      <div className=" flex flex-col justify-start items-center gap-5 h-full w-full">
+        <div className=" flex flex-col justify-start items-center text-3xl text-cyan-400 brightness-110 font-bold w-full">{speedrunTime}</div>
+        <div className=" flex flex-col justify-start items-start gap-5 w-full md:w-2/3 px-5 overflow-y-auto">
           {
             gamesHistory.current.map(gameInfos => {
               return <div key={gameInfos.title + gameInfos.pgn} className="flex flex-col justify-start items-start">
-                <span className=" text-lg font-semibold" >{gameInfos.title}</span>
-                <span>{gameInfos.pgn.replaceAll('. ', '.').trim().slice(0, 50).replaceAll(/\d?\.?[a-zA-Z]+$|\d.$|\s\d$|\d\.O-O-$|\d\.O-$|O-O-$|O-$/gm, '')}...   {gameInfos.result}</span>
-                <span>({gameInfos.currentElo} {gameInfos.eloGain >= 0 ? <span className=" text-green-600" >+{gameInfos.eloGain}</span> : <span className=" text-red-600" >{gameInfos.eloGain}</span>})</span>
+                <span className=" text-base md:text-lg font-semibold text-white" >{gameInfos.title}  ({gameInfos.currentElo} {gameInfos.eloGain >= 0 ? <span className=" text-green-600" >+{gameInfos.eloGain}</span> : <span className=" text-red-600" >{gameInfos.eloGain}</span>})</span>
+                <span className=" text-white">{gameInfos.pgn.replaceAll('. ', '.').trim().slice(0, 50).replaceAll(/\d?\.?[a-zA-Z]+$|\d.$|\s\d$|\d\.O-O-$|\d\.O-$|O-O-$|O-$/gm, '')}...   {gameInfos.result}</span>
                 <Link
-                  className=" p-1 bg-fuchsia-600 text-white border rounded cursor-pointer"
+                  className=" animate-pulse p-1 mt-1 text-cyan-400 brightness-110 cursor-pointer border-2 rounded-lg border-cyan-400 shadow-[0_0_2px_#fff,inset_0_0_2px_#fff,0_0_5px_#08f,0_0_15px_#08f,0_0_30px_#08f]"
                   onClick={() => clearEngines()}
                   href = {{
                     pathname: '/game-analysis',
@@ -846,23 +864,25 @@ const SpeedrunPage = () => {
       </div>
 
     const gameOverWindow_1 = showGameoverWindow === 1 ? 
-      <div className=" flex justify-center items-center w-full h-full absolute top-0 left-0" >
-        <div className=" flex flex-col justify-start items-center w-3/4 h-2/3 md:w-1/2 md:h-1/2 bg-gray-200 rounded" >
-          <div className=" relative flex justify-center items-center w-full h-1/4 bg-fuchsia-600 text-white rounded-t" >
-            <h1 className=" text-white font-bold flex justify-center items-center">
-              {
-                winner === 'w' ? 'Les blancs gagnent la partie !'
-                :
-                (
-                  winner === 'b' ? 'Les noirs gagnent la partie !'
-                  :
-                  'Match nul'
-                )
-              }
-            </h1>
-            <button className=" text-white font-extrabold absolute top-5 left-5" onClick={() => setShowGameoverWindow(0)}>
+      <div className=" flex justify-center items-center w-full h-full absolute backdrop-blur top-0 left-0" >
+        <div className=" flex flex-col justify-start items-center w-3/4 h-1/3 md:w-1/2 md:h-1/2 bg-slate-950 bg-opacity-80 border border-slate-600/40 rounded" >
+          <div className=" flex justify-start items-center w-full h-fit">
+            <button className=" text-white font-extrabold pl-2 md:pl-5 md:pt-2" onClick={() => setShowGameoverWindow(0)}>
               X
             </button>
+          </div>
+          <div className=" relative flex justify-center items-center w-full h-1/4 bg-transparent text-white rounded-t" >
+            <div className=" text-lg md:text-2xl font-bold flex justify-center items-center">
+              {
+                winner === 'w' ? (playerColor === 'w' ? <h1 className="text-cyan-400 brightness-110" >Les blancs gagnent la partie !</h1> : <h1 className=" text-pink-400 brightness-110">Les blancs gagnent la partie !</h1>)
+                :
+                (
+                  winner === 'b' ? (playerColor === 'b' ? <h1 className="text-cyan-400 brightness-110" >Les noirs gagnent la partie !</h1> : <h1 className=" text-pink-400 brightness-110">Les noirs gagnent la partie !</h1>)
+                  :
+                  <h1 className="text-slate-400 brightness-110" >Match nul</h1>
+                )
+              }
+            </div>
           </div>
           <div className="flex justify-center items-center h-full w-full">
             {speedrunMenu_1}
@@ -873,25 +893,14 @@ const SpeedrunPage = () => {
       null
 
     const gameOverWindow_2 = showGameoverWindow === 2 ? 
-      <div className=" flex justify-center items-center w-full h-full absolute top-0 left-0 blur" >
-        <div className=" flex flex-col justify-start items-center w-3/4 h-2/3 md:w-1/2 md:h-1/2 bg-gray-200 rounded" >
-          <div className=" relative flex justify-center items-center w-full h-1/4 bg-fuchsia-600 text-white rounded-t" >
-            <h1 className=" text-white font-bold flex justify-center items-center">
-              {
-                winner === 'w' ? 'Les blancs gagnent la partie !'
-                :
-                (
-                  winner === 'b' ? 'Les noirs gagnent la partie !'
-                  :
-                  'Match nul'
-                )
-              }
-            </h1>
-            <button className=" text-white font-extrabold absolute top-5 left-5" onClick={() => setShowGameoverWindow(0)}>
+      <div className=" flex justify-center items-center w-full h-full absolute backdrop-blur top-0 left-0" >
+        <div className=" flex flex-col justify-start items-center w-4/5 h-2/3 md:w-1/2 md:h-1/2 bg-slate-950 bg-opacity-80 border border-slate-600/40 rounded" >
+          <div className=" flex justify-start items-center w-full h-fit">
+            <button className=" text-white font-extrabold pl-2 md:pl-5 md:pt-2" onClick={() => setShowGameoverWindow(0)}>
               X
             </button>
           </div>
-          <div className="flex flex-col justify-start items-center h-full w-full p-2 overflow-y-auto">
+          <div className="flex justify-center items-center h-full w-full overflow-y-hidden">
             {speedrunMenu_2}
           </div>
         </div>

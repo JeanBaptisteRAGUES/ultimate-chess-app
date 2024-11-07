@@ -452,25 +452,22 @@ const ChessPage = () => {
             </button>
           </div>
           <div className=" relative flex justify-center items-center w-full h-1/4 bg-transparent text-white rounded-t" >
-            <h1 className=" text-lg md:text-2xl font-bold flex justify-center items-center">
+            <div className=" text-lg md:text-2xl font-bold flex justify-center items-center">
               {
-                winner === 'w' ? (playerColor === 'w' ? <span className="text-cyan-400 brightness-110" >Les blancs gagnent la partie !</span> : <span className=" text-pink-400 brightness-110">Les blancs gagnent la partie !</span>)
+                winner === 'w' ? (playerColor === 'w' ? <h1 className="text-cyan-400 brightness-110" >Les blancs gagnent la partie !</h1> : <h1 className=" text-pink-400 brightness-110">Les blancs gagnent la partie !</h1>)
                 :
                 (
-                  winner === 'b' ? (playerColor === 'b' ? <span className="text-cyan-400 brightness-110" >Les noirs gagnent la partie !</span> : <span className=" text-pink-400 brightness-110">Les noirs gagnent la partie !</span>)
+                  winner === 'b' ? (playerColor === 'b' ? <h1 className="text-cyan-400 brightness-110" >Les noirs gagnent la partie !</h1> : <h1 className=" text-pink-400 brightness-110">Les noirs gagnent la partie !</h1>)
                   :
-                  'Match nul'
+                  <h1 className="text-slate-400 brightness-110" >Match nul</h1>
                 )
               }
-            </h1>
+            </div>
           </div>
           <div className="flex justify-center items-center h-full w-full">
             {analysisMenu}
           </div>
         </div>
-        {/* <div className=" absolute w-3/4 h-2/3 md:w-1/2 md:h-1/2 bg-red-400 backdrop-blur bg-opacity-50">
-
-        </div> */}
       </div>
       :
       null

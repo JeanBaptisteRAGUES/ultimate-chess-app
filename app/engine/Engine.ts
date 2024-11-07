@@ -37,6 +37,8 @@ export type FenEval = {
     bestLines?: string[],
 }
 
+let stockfish: Worker;
+
 function getEvalFromData(data: string, coeff: number) {
     let evaluationStr: string | undefined = (evalRegex.exec(data))?.toString();
     if(!evaluationStr) return null;
@@ -66,7 +68,40 @@ function getBestLineFromData(data: string) {
     return bestLine;
 }
 
-let stockfish: Worker;
+function findBestMove_v2(fen: string, depth: number, skillValue: number): Promise<string> {
+    return new Promise((resolve, reject) => {
+        stockfish.postMessage(`position fen ${fen}`);
+        stockfish.postMessage(`setoption name Skill Level value ${skillValue}`);
+        stockfish.postMessage(`setoption name MultiPv value 1`);
+        stockfish.postMessage(`go depth ${depth}`);
+
+        stockfish.onmessage = function(event: any) {
+            //console.log(event.data);
+            if((event.data.match(bestMoveRegex)) !== null){
+                const newBestMove = event.data.match(bestMoveRegex)[1];
+                if(newBestMove !== null){
+                    resolve(newBestMove);
+                } else{
+                    reject(null);
+                }
+            }
+        }
+
+        stockfish.onerror = function(event: ErrorEvent) {
+            //this = new Worker('stockfish.js#stockfish.wasm');
+            event.stopPropagation();
+            event.stopImmediatePropagation();
+            console.log('%c Crash de Stockfish 16 (findBestMove_v2): réinitialisation..', "color:red; font-size:16px;");
+            stockfish.terminate()
+            stockfish = new Worker('stockfish.js#stockfish.wasm');
+            
+            findBestMove_v2(fen, depth, skillValue);
+            
+        }
+        
+    })
+}
+
 
 class Engine {
     stockfishAnalysis: Worker;
@@ -174,34 +209,6 @@ class Engine {
     }
 
     
-    /* findBestMove(fen: string, depth: number, skillValue: number): Promise<string> {
-        return new Promise((resolve, reject) => {
-            try {
-                stockfish.postMessage(`position fen ${fen}`);
-                stockfish.postMessage(`setoption name Skill Level value ${skillValue}`);
-                stockfish.postMessage(`setoption name MultiPv value 1`);
-                stockfish.postMessage(`go depth ${depth}`);
-
-                stockfish.onmessage = function(event: any) {
-                    //console.log(event.data);
-                    if((event.data.match(bestMoveRegex)) !== null){
-                        const newBestMove = event.data.match(bestMoveRegex)[1];
-                        if(newBestMove !== null){
-                            resolve(newBestMove);
-                        } else{
-                            reject(null);
-                        }
-                    }
-                }
-            } catch (error) {
-                console.log('findBestMove error: ' + error);
-                resolve('????');
-            }
-            
-        })
-    } */
-
-    // v2
     findBestMove(fen: string, depth: number, skillValue: number): Promise<string> {
         return new Promise((resolve, reject) => {
             stockfish.postMessage(`position fen ${fen}`);
@@ -225,7 +232,7 @@ class Engine {
                 //this = new Worker('stockfish.js#stockfish.wasm');
                 event.stopPropagation();
                 event.stopImmediatePropagation();
-                console.log('Crash de Stockfish 16: réinitialisation..');
+                console.log('%c Crash de Stockfish 16 (findBestMove): réinitialisation..', "color:red; font-size:16px;");
                 stockfish = new Worker('stockfish.js#stockfish.wasm');
 
                 stockfish.postMessage(`position fen ${fen}`);
@@ -249,7 +256,9 @@ class Engine {
         })
     }
 
-    
+    findBestMove_v3(fen: string, depth: number, skillValue: number): Promise<string> {
+        return findBestMove_v2(fen, depth, skillValue);
+    }
 
     findBestMoves(fen: string, depth: number, skillValue: number, multiPv: number, useCoeff: boolean): Promise<EvalResultSimplified[]> {
         //console.log('Find Best Moves: ' + fen);
@@ -298,6 +307,54 @@ class Engine {
                                 console.log('Erreur (findBestMoves): aucun coup trouvé');
                             }
                         } 
+                    }
+                }
+
+                stockfish.onerror = function(event: ErrorEvent) {
+                    //this = new Worker('stockfish.js#stockfish.wasm');
+                    event.stopPropagation();
+                    event.stopImmediatePropagation();
+                    console.log('%c Crash de Stockfish 16 (findBestMoves): réinitialisation..', "color:red; font-size:16px;");
+                    stockfish = new Worker('stockfish.js#stockfish.wasm');
+    
+                    stockfish.postMessage(`position fen ${fen}`);
+                    stockfish.postMessage(`setoption name Skill Level value ${skillValue}`);
+                    stockfish.postMessage(`setoption name MultiPv value ${multiPv}`);
+                    stockfish.postMessage(`go depth ${depth}`);
+    
+                    stockfish.onmessage = function(event: any) {
+                        //console.log(event.data);
+                        if(event.data.includes(`info depth ${depth} seldepth`)){
+                            let evaluationStr: string | null = getEvalFromData(event.data, coeff);
+                            let bestMove: string | null = getBestMoveFromData(event.data);
+                            //console.log(bestMove + ': ' + evaluationStr);
+    
+                            if(!evaluationStr || !bestMove || !event.data.match(firstEvalMoveRegex)){
+                                //console.log(event.data);
+                                reject("Erreur lors de l'évaluation");
+                                return;
+                            }
+    
+                            //console.log(bestMoves);
+                            //console.log(bestMoves.some((move) => move.bestMove === bestMove));
+                            if(!bestMoves.some((move) => move.bestMove === bestMove)){
+                                //console.log(bestMove + ' (2): ' + evaluationStr);
+                                bestMoves.push({
+                                    eval: evaluationStr,
+                                    bestMove: bestMove
+                                });
+                            }
+                        }
+                        if((event.data.match(bestMoveRegex)) !== null){
+                            if(event.data.match(bestMoveRegex)[1]){
+                                if(bestMoves.length > 0){
+                                    resolve(bestMoves);
+                                }else{
+                                    //reject('Erreur: aucun coup trouvé');
+                                    console.log('Erreur (findBestMoves): aucun coup trouvé');
+                                }
+                            } 
+                        }
                     }
                 }
             } catch (error) {

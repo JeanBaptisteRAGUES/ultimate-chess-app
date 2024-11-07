@@ -1318,7 +1318,7 @@ class BotsAI {
     }
 
     async #makeHumanMove(game: Chess, blunderMult: number): Promise<Move> {
-        console.log(`Bot AI (${this.#botID}): Human behaviour`);
+        console.log(`%c Bot AI (${this.#botID}): Human behaviour`, "color:green; font-size:16px;");
         //console.log('Last Random Move: ' + this.#lastRandomMove);
         let move: Move = {
             notation: '',
@@ -1330,6 +1330,11 @@ class BotsAI {
         if(humanMove.type >= 0) {
             return humanMove;
         }
+
+        console.log("%C Stockfish n'a pas pu générer de coup, le bot fait donc un coup aléatoire !", "color:red; font-size:16px;");
+
+        move = this.#makeRandomMove(2, 2, game, this.#botColor);
+        move.moveInfos = `Stockfish n'a pas pu générer de coup, le bot fait donc un coup aléatoire ! (${move.notation})`;
 
         /* const defaultMove = await this.#defaultMoveLogic(game, false, false);
         if(defaultMove.type >= 0) {
@@ -1794,7 +1799,7 @@ class BotsAI {
             moveInfos: `Le bot ${this.#username} a trouvé un coup dans son répertoire d'ouverture '${this.#behaviour}'.\n\n`,
         };
 
-        if(game.history().length > 20) {
+        if(game.history().length > 8) {
             return move;
         }
 
