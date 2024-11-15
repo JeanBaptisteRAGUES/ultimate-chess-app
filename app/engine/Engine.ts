@@ -115,7 +115,7 @@ class Engine {
 
     init() {
         return new Promise((resolve, reject) => {    
-            console.log('Stockfish init');
+            //console.log('Stockfish init');
             stockfish.postMessage('uci');
             stockfish.onmessage = function(event: any) {
                 //console.log(event.data);

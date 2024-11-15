@@ -366,7 +366,7 @@ const SpeedrunPage = () => {
             }
           });
         }
-        console.log('Selected bot behaviour: ' + botBehaviour);
+        console.log(`%c Selected bot behaviour: ${botBehaviour}`, "color:green; font-size:14px;");
 
         return botBehaviour;
     }
@@ -382,11 +382,11 @@ const SpeedrunPage = () => {
         
         const startingHistory = newPlayerColor === 'w' ? startingPgnWhite : startingPgnBlack;
         game.loadPgn(startingHistory);
-        console.log(startingHistory);
-        console.log(startingPgnWhite);
-        console.log(game.fen());
-        console.log(game.pgn());
-        console.log(game.history());
+        //console.log(startingHistory);
+        //console.log(startingPgnWhite);
+        //console.log(game.fen());
+        //console.log(game.pgn());
+        //console.log(game.history());
         setCurrentFen(game.fen());
         setVirtualFen(game.fen());
         
@@ -394,11 +394,11 @@ const SpeedrunPage = () => {
         setPlayerColor(newPlayerColor as Color);
         setBotElo(newBotElo);
         setBotBehaviour(newBotBehaviour);
-        console.log('Player Color: ' + newPlayerColor);
-        console.log("Bot Elo: " + newBotElo);
-        console.log("Bot Behaviour: " + newBotBehaviour);
-        console.log(timeControl);
-        console.log(game.fen());
+        //console.log('Player Color: ' + newPlayerColor);
+        //console.log("Bot Elo: " + newBotElo);
+        //console.log("Bot Behaviour: " + newBotBehaviour);
+        //console.log(timeControl);
+        //console.log(game.fen());
     }, []);
 
     useEffect(() => {
@@ -408,9 +408,9 @@ const SpeedrunPage = () => {
     }, [playerColor]);
 
     const gameMove = (moveNotation: string, moveType: number) => {
-      console.log('Play computer move (gameMove(moveNotation: string, moveType: number))');
-      console.log(game.fen());
-      console.log(game.moves());
+      //console.log('Play computer move (gameMove(moveNotation: string, moveType: number))');
+      //console.log(game.fen());
+      //console.log(game.moves());
       game.move(moveNotation);
       setCurrentFen(game.fen());
       setVirtualFen(game.fen());
@@ -449,7 +449,7 @@ const SpeedrunPage = () => {
         setVirtualFen(game.fen());
 
         //botAI.current?.reset();
-        console.log(newBotElo);
+        //console.log(newBotElo);
         botAI.current?.new(newBotBehaviour, newBotElo, newBotColor, timeControl, true);
         gameActive.current = false;
         movesTypeRef.current = [];
@@ -460,6 +460,7 @@ const SpeedrunPage = () => {
         setBotElo(newBotElo);
         setGameStarted(false);
         setIsVirtualMode(false);
+        setMoveInfos('Description des étapes de réflexion du bot pour trouver le coup suivant.');
 
         //TODO: Peut créer des erreurs si la position de départ n'est pas DEFAULT_POSITION
         setWhiteMaterialAdvantage({
@@ -644,16 +645,16 @@ const SpeedrunPage = () => {
 
     async function playComputerMove(botID: number) {
       //console.log('Play computer move, game active ? ' + gameActive.current);
-      console.log(`Bot current ID (${botAI.current?.getID()}) VS Request ID (${botID})`);
+      //console.log(`Bot current ID (${botAI.current?.getID()}) VS Request ID (${botID})`);
       if(game.pgn().includes('#') || !gameActive.current || botAI.current?.getID() !== botID) return;
-      console.log('Play computer move (playComputerMove(botID: number))');
-      console.log(game.fen());
-      console.log(game.moves());
+      //console.log('Play computer move (playComputerMove(botID: number))');
+      //console.log(game.fen());
+      //console.log(game.moves());
       const move: Move | undefined = await botAI.current?.makeMove(game, botTimestamp);
 
       if(move && move.type >= 0){
-        console.log(`Bot move: ${move.notation} - Game active: ${gameActive.current}`);
-        console.log(move.moveInfos);
+        //console.log(`Bot move: ${move.notation} - Game active: ${gameActive.current}`);
+        //console.log(move.moveInfos);
         gameMove(move.notation, move.type);
         setMoveInfos(move?.moveInfos || '');
         return;
@@ -686,7 +687,7 @@ const SpeedrunPage = () => {
     function onDrop(sourceSquare: Square, targetSquare: Square, piece: Piece) {
       const promotion = getPromotion(sourceSquare, piece);
       const oldBotID = botAI.current?.getID() || Math.random();
-      console.log(game.fen());
+      //console.log(game.fen());
       
       if(isVirtualMode) {
         gameVirtualMove(sourceSquare + targetSquare + promotion);
@@ -1008,9 +1009,9 @@ const SpeedrunPage = () => {
           gameActive.current = true;
           setShowEval(false);
           if(game.turn() !== playerColor && botAI.current){
-            console.log('Play computer move (startGameButton)');
-            console.log(game.fen());
-            console.log(game.moves());
+            //console.log('Play computer move (startGameButton)');
+            //console.log(game.fen());
+            //console.log(game.moves());
             playComputerMove(botAI.current.getID());
           }
         }}

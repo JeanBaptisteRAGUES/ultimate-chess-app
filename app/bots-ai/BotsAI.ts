@@ -341,7 +341,7 @@ function initDefaultBotParams(elo: number, timeControl: string): DefaultBotParam
     let filterLevel = 0; // Empèche de jouer certaines pièces lors d'un coup aléatoire
     let eloRange = [1200, 1800];
 
-    console.log(`Le bot d'un Élo de ${elo} a un skill de ${skillValue}`);
+    //console.log(`Le bot d'un Élo de ${elo} a un skill de ${skillValue}`);
 
     /*
         0-325 -> securityLvl = 0
@@ -363,7 +363,7 @@ function initDefaultBotParams(elo: number, timeControl: string): DefaultBotParam
 
     const level = getLevelFromElo(elo);
 
-    console.log(randMoveChance);
+    //console.log(randMoveChance);
 
     switch (level) {
         case 'Beginner':
@@ -563,7 +563,7 @@ class BotsAI {
         this.#username = randomName ? botInfos.name : (botsInfo.get(behaviour)?.name || botInfos.name);
         this.#profilePicture = randomName ? botInfos.image : (botsInfo.get(behaviour)?.image || botInfos.image);
 
-        console.log(this.#username);
+        //console.log(this.#username);
 
         /* if(behaviour === 'stockfish-only') {
             this.#engine.setStrength(1400);
@@ -583,7 +583,7 @@ class BotsAI {
     //TODO: securityLvl = 4 -> ne joue pas une pièce ou un pion sur une case défendue
     #makeRandomMove(filterLevel: number, securityLvl: number, game: Chess, botColor: Color): Move {
         //if(checkGameOver()) return;
-        console.log('Make Random Move');
+        //console.log('Make Random Move');
 
         const possibleMoves = game.moves();
         let possiblesMovesFiltered = this.#toolbox.filterMoves(possibleMoves, filterLevel);
@@ -629,9 +629,9 @@ class BotsAI {
         gameTest.put({type: lastMove.piece, color: lastMove.color}, lastMove.to); */
 
         // On modifie la fen pour que l'adversaire puisse virtuellement jouer deux fois d'affilé
-        console.log(`Game Fen: ${game.fen()}`);
+        //console.log(`Game Fen: ${game.fen()}`);
         const testFen = game.fen().includes(' b ') ? game.fen().replace(' b ', ' w ') : game.fen().replace(' w ', ' b ');
-        console.log(`Test Fen: ${testFen}`);
+        //console.log(`Test Fen: ${testFen}`);
         gameTest.load(testFen);
 
         const pieceMoves = gameTest.moves({square: lastMove.to, verbose: true});
@@ -680,7 +680,7 @@ class BotsAI {
 
         if(danger && ignoreDirectAttack < ignoreDirectAttackChances){
             danger = false;
-            console.log(`${this.#username} ignore le danger !`);
+            //console.log(`${this.#username} ignore le danger !`);
             dangerousMoveInfos = `Ignore Danger: Le dernier coup était une attaque directe dangereuse (security level: ${this.#defaultBotParams.securityLvl}) mais le bot l'ignore (${Math.round(ignoreDirectAttack)} < ${ignoreDirectAttackChances}).\n\n`;
         }
     
@@ -701,7 +701,7 @@ class BotsAI {
             console.log(squareInfos);
             if(squareInfos && squareInfos?.type !== 'p' && squareInfos?.color === this.#botColor) {
                 const dangerValue = this.#toolbox.getExchangeValue(gameTest.fen(), pieceMove.lan);
-                console.log(`Danger: ${pieceMove.san} -> ${dangerValue}`);
+                //console.log(`Danger: ${pieceMove.san} -> ${dangerValue}`);
 
                 if(dangerValue >= 1){
                     dangerCases.push({
@@ -721,7 +721,7 @@ class BotsAI {
 
         if(danger && ignoreDiscoveryAttack < ignoreDiscoveryAttackChances){
             danger = false;
-            console.log(`${this.#username} ignore le danger !`);
+            //console.log(`${this.#username} ignore le danger !`);
             dangerousMoveInfos += `Ignore Danger: Le dernier coup était une attaque à la découverte dangereuse (security level: ${this.#defaultBotParams.securityLvl}) mais le bot l'ignore (${Math.round(ignoreDiscoveryAttack)} < ${ignoreDiscoveryAttackChances}).\n\n`;
         }
 
@@ -749,7 +749,7 @@ class BotsAI {
             moveInfos: '',
         } 
     
-        console.log(`${botColor} is forced to Checkmate`);
+        //console.log(`${botColor} is forced to Checkmate`);
         const stockfishRes = await this.#engine.findBestMove(game.fen(), 20, 20);
         stockfishMove.notation = stockfishRes;
         stockfishMove.type = 3;
@@ -781,7 +781,7 @@ class BotsAI {
                 const rand = Math.round(Math.random()*100);
                 const captureValue = this.#toolbox.getExchangeValue(game.fen(), moveLan);
                 const captureChance = Math.min(captureValue*forceExchangeChance, 90)
-                console.log(`Move: ${possibleMove} (value: ${captureValue}, capture chances: ${captureChance}, rand: ${rand})`);
+                //console.log(`Move: ${possibleMove} (value: ${captureValue}, capture chances: ${captureChance}, rand: ${rand})`);
                 if(rand <= captureChance){
                     move.notation = moveLan;
                     move.type = 5
@@ -853,7 +853,7 @@ class BotsAI {
         if(humanReaction) stockfishMove.type = 5;
 
         if(stockfishMove.type >= 0) {
-            console.log('Le bot réagit mal à la menace et doit bouger sa pièce en ' + this.#toolbox.getMoveDestination(stockfishMove.notation))
+            //console.log('Le bot réagit mal à la menace et doit bouger sa pièce en ' + this.#toolbox.getMoveDestination(stockfishMove.notation))
             stockfishMove.moveInfos = `Make Human Threat Reaction: Le bot réagit mal à la menace et doit bouger sa pièce en ${this.#toolbox.getMoveDestination(stockfishMove.notation)}.\n\n`;
         }else{
             stockfishMove.moveInfos = `Make Human Threat Reaction: Malgrès le danger, le bot n'a pas réagi dans la précipitation à la menace.\n\n`;
@@ -881,9 +881,9 @@ class BotsAI {
           ]).get(this.#botLevel) || 10; */
         let forgotPieceChance = Math.max(1, (Math.round(50 - Math.sqrt(this.#defaultBotParams.elo))))*blunderMult;
         //let forgotPieceChance = 10000;
-        console.log('Forgot Piece Chances (base): ' + forgotPieceChance);
+        //console.log('Forgot Piece Chances (base): ' + forgotPieceChance);
         forgotPieceChance = forgotPieceChance*(Math.min(1.2, 0.8 + 0.01*(game.history().length/2)));
-        console.log('Forgot Piece Chances (adjusted): ' + forgotPieceChance);
+        //console.log('Forgot Piece Chances (adjusted): ' + forgotPieceChance);
         let hasForgotten = false;
         let thingsForgotten = '';
         let forgottenPiecesCases: Square[] = [];
@@ -930,12 +930,12 @@ class BotsAI {
 
         
         if(hasForgotten) {
-            console.log(forgottenPiecesCases);
+            //console.log(forgottenPiecesCases);
             const timestampStart = performance.now();
             //const stockfishMove = await makeStockfishMove(this.#defaultBotParams, newGame, this.#engine);
             let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(newGame.fen(), 10, this.#defaultBotParams.skillValue, 10, false);
-            console.log(`Durée de la recherche des 30 meilleurs coups: ${(performance.now() - timestampStart)/1000}s`);
-            console.log(stockfishMoves);
+            //console.log(`Durée de la recherche des 30 meilleurs coups: ${(performance.now() - timestampStart)/1000}s`);
+            //console.log(stockfishMoves);
 
             //TODO: getExchangeValue(game.fen(), sfMove.bestMove) ou getExchangeValue(newGame.fen(), sfMove.bestMove) ?
             /* console.log("Tableau des valeurs des 'échanges': ");
@@ -947,7 +947,7 @@ class BotsAI {
                 forgottenPiecesCases.forEach((fpc) => console.log(`${fpc}: ${this.#toolbox.getDistanceBetweenSquares(fpc, this.#toolbox.getMoveDestination(sfMove.bestMove))}`));
             }); */
             stockfishMoves = stockfishMoves.filter((sfMove) => (this.#toolbox.getExchangeValue(game.fen(), sfMove.bestMove) >= 0 || !forgottenPiecesCases.some((fpc) => this.#toolbox.getDistanceBetweenSquares(fpc, this.#toolbox.getMoveDestination(sfMove.bestMove)) < 3)));
-            console.log(stockfishMoves);
+            //console.log(stockfishMoves);
 
             //console.log(`${square?.square} is defended: ${this.#toolbox.isDefended(game.fen(), square?.square || 'a1')}`)
             /* const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
@@ -970,7 +970,7 @@ class BotsAI {
             //stockfishMove.type = 5;
 
             stockfishMoves = stockfishMoves.filter((sfMove) => this.#toolbox.isMoveValid(game.fen(), sfMove.bestMove));
-            console.log(stockfishMoves);
+            //console.log(stockfishMoves);
 
             /* stockfishMoves.sort(compareEval);
             console.log(stockfishMoves); */
@@ -981,7 +981,7 @@ class BotsAI {
             }
 
             if(stockfishMove.type === 5) {
-                console.log(`Le bot ${this.#username} oublie:${thingsForgotten}`);
+                //console.log(`Le bot ${this.#username} oublie:${thingsForgotten}`);
                 stockfishMove.moveInfos = `Make Tunel Vision Move: Le bot ${this.#username} oublie:\n${thingsForgotten}\n\n`;
             }else{
                 stockfishMove.moveInfos = `Make Tunel Vision Move: Le bot ${this.#username} avait oublié une ou des pièces mais le coup résultant n'était pas valide (forgot piece chance: ${Math.round(forgotPieceChance)} * inactivity (0.1 - 1.5)).\n\n`;
@@ -1012,9 +1012,9 @@ class BotsAI {
         fenBeforeOpponentMove = this.#botColor === 'w' ? fenBeforeOpponentMove.replace(' b ', ' w ') : fenBeforeOpponentMove.replace(' w ', ' b ');
         const gameTest = new Chess();
         let ignoreOpponentMoveChance = Math.max(1, (Math.round(55 - Math.pow(this.#defaultBotParams.elo, 1/1.9))))*blunderMult;
-        console.log('Ignore Opponent Move Chances (base): ' + ignoreOpponentMoveChance);
+        //console.log('Ignore Opponent Move Chances (base): ' + ignoreOpponentMoveChance);
         ignoreOpponentMoveChance = ignoreOpponentMoveChance*(Math.min(1.2, 0.8 + 0.01*(game.history().length/2)));
-        console.log('Ignore Opponent Move Chances (adjusted): ' + ignoreOpponentMoveChance);
+        //console.log('Ignore Opponent Move Chances (adjusted): ' + ignoreOpponentMoveChance);
         let moveType = 5;
         let ignoreLastMoveRand = Math.round(Math.random()*100 );
 
@@ -1047,7 +1047,7 @@ class BotsAI {
             if(stockfishMoves.length > 0) {
                 stockfishMove.notation = stockfishMoves[0].bestMove;
                 stockfishMove.type = 5;
-                console.log(`Le bot ${this.#username} ignore le dernier coup de l'adversaire`);
+                //console.log(`Le bot ${this.#username} ignore le dernier coup de l'adversaire`);
                 stockfishMove.moveInfos = `Ignore Oponent Move: Le bot ${this.#username} ignore le dernier coup de l'adversaire (${Math.round(ignoreLastMoveRand)} <= ${Math.round(ignoreOpponentMoveChance)}).\n\n`;
             }else{
                 stockfishMove.moveInfos = `Ignore Oponent Move: Le bot ${this.#username} aurait dû ignorer le dernier coup de l'adversaire (${Math.round(ignoreLastMoveRand)} <= ${Math.round(ignoreOpponentMoveChance)}), mais le coup résultant n'était pas valide.\n\n`;
@@ -1180,21 +1180,21 @@ class BotsAI {
 
     // TODO: isLastMoveDangerous ? Si oui -> plus le bot est faible, plus il aura envie de bouger la pièce
     async #humanMoveLogic(game: Chess, useDatabase: Boolean, useRandom: Boolean, blunderMult: number): Promise<Move> {
-        console.log('human logic: 0');
-        console.log(`blunderMult: ${blunderMult}`);
+        //console.log('human logic: 0');
+        //console.log(`blunderMult: ${blunderMult}`);
         let moveInfos = blunderMult > 1 ? 
             `Le bot ${this.#username} a ${Math.round((blunderMult-1)*100)}% de risque en plus de faire des erreurs par manque de temps.\n\n`
             :
             `Le bot ${this.#username} a encore assez de temps à la pendule pour ne pas augmenter les risques de faire une erreur.\n\n`;
 
         if(useDatabase) {
-            console.log(moveInfos);
+            //console.log(moveInfos);
             //const movesList = this.#toolbox.convertHistorySanToLan(this.#toolbox.convertPgnToHistory(game.pgn()));
             /* const startingFen = game.history().length > 0 ? game.history({verbose: true})[0].before : DEFAULT_POSITION;
             const startingFen_2 = game.fen(); */
             const startingFen = game.history().length > 0 ? game.history({verbose: true})[0].before : game.fen();
             const movesList = this.#toolbox.convertHistorySanToLan(game.history(), startingFen);
-            console.log(`startingFen: ${startingFen}`);
+            //console.log(`startingFen: ${startingFen}`);
             /* console.log(`startingFen_2: ${startingFen_2}`);
             console.log(`startingFen_3: ${startingFen_3}`); */
             const lichessMove = await makeLichessMove(movesList, this.#defaultBotParams.elo, startingFen, this.#toolbox);
@@ -1312,13 +1312,13 @@ class BotsAI {
         moveInfos += stockfishMove.moveInfos;
         stockfishMove.moveInfos = moveInfos; 
         //console.log('human logic: 10');
-        console.log(stockfishMove);
+        //console.log(stockfishMove);
 
         return stockfishMove;
     }
 
     async #makeHumanMove(game: Chess, blunderMult: number): Promise<Move> {
-        console.log(`%c Bot AI (${this.#botID}): Human behaviour`, "color:green; font-size:16px;");
+        //console.log(`%c Bot AI (${this.#botID}): Human behaviour`, "color:green; font-size:16px;");
         //console.log('Last Random Move: ' + this.#lastRandomMove);
         let move: Move = {
             notation: '',
@@ -5031,7 +5031,7 @@ class BotsAI {
     }
 
     #getTimeControlDelay(game: Chess, timeStamp: Timestamp) {
-        console.log('getTimeControlDelay');
+        //console.log('getTimeControlDelay');
         if(timeStamp.startingTime < 0) return {
             randDelay: 300,
             blunderMult: 1.0,
@@ -5071,9 +5071,9 @@ class BotsAI {
             type: -1,
         };
 
-        console.log('Play computer move (async makeMove(game: Chess))');
-        console.log(game.fen());
-        console.log(game.moves());
+        //console.log('Play computer move (async makeMove(game: Chess))');
+        //console.log(game.fen());
+        //console.log(game.moves());
 
         //Simulation d'un temps de réflexion du bot
         const {randDelay : thinkingDelay, blunderMult} = this.#getTimeControlDelay(game, timeStamp);
@@ -5280,7 +5280,7 @@ class BotsAI {
         this.#profilePicture = randomName ? botInfos.image : (botsInfo.get(newBehaviour)?.image || botInfos.image);
         //this.#engine.init();
         this.#defaultBotParams = initDefaultBotParams(newElo, timeControl);
-        console.log(`New Bot (${this.#botID}): ${this.#behaviour}`);
+        //console.log(`New Bot (${this.#botID}): ${this.#behaviour}`);
     }
 
     reset() {
