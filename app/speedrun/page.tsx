@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 'use client'
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Image, { StaticImageData } from 'next/image';
 import {Chess, Color, DEFAULT_POSITION, PieceSymbol} from "chess.js";
 import { Chessboard } from "react-chessboard";
@@ -241,124 +241,13 @@ const SpeedrunPage = () => {
       },
     ];
 
-    const gimmicksNoOpenings: {min: number, max: number, gimmicks: {gimmick: Behaviour, chance: number}[]}[] = [
-      {
-        min: 0,
-        max: 99,
-        gimmicks: [
-          {
-            gimmick: 'semi-random',
-            chance: 60,
-          },
-          {
-            gimmick: 'random-player',
-            chance: 90
-          },
-          {
-            gimmick: 'blundering',
-            chance: 100
-          }
-        ]
-      },
-      {
-        min: 100,
-        max: 499,
-        gimmicks: [
-          {
-            gimmick: 'human',
-            chance: 90,
-          },
-          {
-            gimmick: 'pawn-pusher',
-            chance: 100
-          }
-        ]
-      },
-      {
-        min: 500,
-        max: 999,
-        gimmicks: [
-          {
-            gimmick: 'human',
-            chance: 85,
-          },
-          {
-            gimmick: 'gambit-fanatic',
-            chance: 90
-          },
-          {
-            gimmick: 'castle-destroyer',
-            chance: 100
-          },
-        ]
-      },
-      {
-        min: 1000,
-        max: 1499,
-        gimmicks: [
-          {
-            gimmick: 'human',
-            chance: 90,
-          },
-          {
-            gimmick: 'gambit-fanatic',
-            chance: 95
-          },
-          {
-            gimmick: 'castle-destroyer',
-            chance: 100
-          },
-        ]
-      },
-      {
-        min: 1500,
-        max: 2999,
-        gimmicks: [
-          {
-            gimmick: 'human',
-            chance: 90,
-          },
-          {
-            gimmick: 'gambit-fanatic',
-            chance: 95
-          },
-          {
-            gimmick: 'castle-destroyer',
-            chance: 100
-          },
-        ]
-      },
-      {
-        min: 3000,
-        max: 3200,
-        gimmicks: [
-          {
-            gimmick: 'stockfish-only',
-            chance: 95,
-          },
-          {
-            gimmick: 'human',
-            chance: 100
-          },
-        ]
-      },
-    ];
-
     function pickRandomBehaviour(botElo: number): Behaviour{
         const behaviourRand = Math.random()*100;
-        let botBehaviour: Behaviour = 'default';
+        let botBehaviour: Behaviour = 'human';
         //console.log(behaviourRand);
 
         if(startingPgnWhite === '' && startingPgnBlack === '') {
           gimmicks.forEach(gimmick => {
-            if(gimmick.min <= botElo && botElo <= gimmick.max){
-              gimmick.gimmicks.forEach(behaviour => {
-                if(botBehaviour === 'default' && behaviourRand <= behaviour.chance) botBehaviour = behaviour.gimmick;
-              })
-            }
-          });
-        }else{
-          gimmicksNoOpenings.forEach(gimmick => {
             if(gimmick.min <= botElo && botElo <= gimmick.max){
               gimmick.gimmicks.forEach(behaviour => {
                 if(botBehaviour === 'default' && behaviourRand <= behaviour.chance) botBehaviour = behaviour.gimmick;
@@ -399,6 +288,11 @@ const SpeedrunPage = () => {
         //console.log("Bot Behaviour: " + newBotBehaviour);
         //console.log(timeControl);
         //console.log(game.fen());
+        movesTypeRef.current = [];
+        const historyArray = startingHistory.replaceAll('. ', '.').split(' ');
+        console.log(historyArray);
+        historyArray.forEach((move, i) => movesTypeRef.current.push(4));
+        console.log(movesTypeRef.current);
     }, []);
 
     useEffect(() => {
