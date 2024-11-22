@@ -289,10 +289,11 @@ const SpeedrunPage = () => {
         //console.log(timeControl);
         //console.log(game.fen());
         movesTypeRef.current = [];
-        const historyArray = startingHistory.replaceAll('. ', '.').split(' ');
-        console.log(historyArray);
-        historyArray.forEach((move, i) => movesTypeRef.current.push(4));
-        console.log(movesTypeRef.current);
+        //console.log(startingHistory);
+        const historyArray = startingHistory.replaceAll('. ', '.').split(' ').filter(h => h.length > 0);
+        //console.log(historyArray);
+        historyArray.forEach((move, i) => movesTypeRef.current.push(0));
+        //console.log(movesTypeRef.current);
     }, []);
 
     useEffect(() => {
@@ -347,6 +348,10 @@ const SpeedrunPage = () => {
         botAI.current?.new(newBotBehaviour, newBotElo, newBotColor, timeControl, true);
         gameActive.current = false;
         movesTypeRef.current = [];
+        //console.log(startingHistory);
+        const historyArray = startingHistory.replaceAll('. ', '.').split(' ').filter(h => h.length > 0);
+        console.log(historyArray);
+        historyArray.forEach((move, i) => movesTypeRef.current.push(0));
         setShowGameoverWindow(0);
         setWinner('');
         setPlayerColor(newPlayerColor as Color);

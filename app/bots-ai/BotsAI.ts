@@ -598,7 +598,7 @@ class BotsAI {
             notation: finalMovesList[randomIndex],
             type: 4,
             moveInfos: `Make Random Move: Le coup aléatoire ${finalMovesList[randomIndex]} a été choisi parmis la liste de coups possibles
-            disponibles au niveau de sécurité ${securityLvl}: ${JSON.stringify(finalMovesList)}.\n\n`,
+            disponibles au niveau de sécurité ${securityLvl}.\n\n`,
         }
     }
 
@@ -653,18 +653,22 @@ class BotsAI {
                 //console.log(`Danger: ${pieceMove.san} -> ${dangerValue}`);
 
                 if(dangerValue >= 1){
-                    dangerCases.push({
-                        dangerCase: attackedCase,
-                        dangerValue: dangerValue
-                    })
+                    if(!dangerCases.some(dc => dc.dangerCase === attackedCase && dc.dangerValue === dangerValue)){
+                        dangerCases.push({
+                            dangerCase: attackedCase,
+                            dangerValue: dangerValue
+                        })
+                    }
                     danger = true;
                 }
 
                 if(this.#defaultBotParams.securityLvl >= 2 && dangerValue > 0){
-                    dangerCases.push({
-                        dangerCase: attackedCase,
-                        dangerValue: dangerValue
-                    })
+                    if(!dangerCases.some(dc => dc.dangerCase === attackedCase && dc.dangerValue === dangerValue)){
+                        dangerCases.push({
+                            dangerCase: attackedCase,
+                            dangerValue: dangerValue
+                        })
+                    }
                     danger = true;
                 }
             }
@@ -684,7 +688,7 @@ class BotsAI {
             dangerousMoveInfos = `Ignore Danger: Le dernier coup était une attaque directe dangereuse (security level: ${this.#defaultBotParams.securityLvl}) mais le bot l'ignore (${Math.round(ignoreDirectAttack)} < ${ignoreDirectAttackChances}).\n\n`;
         }
     
-        if(danger || this.#defaultBotParams.securityLvl < 3) {
+        if(this.#defaultBotParams.securityLvl < 3) {
             if(!danger) dangerousMoveInfos += `Is Last Move Dangerous: Le bot ne regarde pas s'il y a des attaques à la découverte (security level: ${this.#defaultBotParams.securityLvl}).\n\n`;
             return {
                 danger: danger,
@@ -698,16 +702,18 @@ class BotsAI {
             const attackedCase = pieceMove.to;
             const squareInfos = gameTest.get(attackedCase);
     
-            console.log(squareInfos);
+            //console.log(squareInfos);
             if(squareInfos && squareInfos?.type !== 'p' && squareInfos?.color === this.#botColor) {
                 const dangerValue = this.#toolbox.getExchangeValue(gameTest.fen(), pieceMove.lan);
                 //console.log(`Danger: ${pieceMove.san} -> ${dangerValue}`);
 
                 if(dangerValue >= 1){
-                    dangerCases.push({
-                        dangerCase: attackedCase,
-                        dangerValue: dangerValue
-                    })
+                    if(!dangerCases.some(dc => dc.dangerCase === attackedCase && dc.dangerValue === dangerValue)){
+                        dangerCases.push({
+                            dangerCase: attackedCase,
+                            dangerValue: dangerValue
+                        })
+                    }
                     danger = true;
                 }
             }
@@ -799,64 +805,48 @@ class BotsAI {
         let stockfishMove: Move = {
             notation: '',
             type: -1
-        } 
-        let humanReaction = false;
+        }
+        
+        const sortedThreats = dangerCases.sort((case1, case2) => case2.dangerValue - case1.dangerValue);
+        const mostThreatenedPiece = sortedThreats[0];
+        const badReactionChance = Math.round(mostThreatenedPiece.dangerValue*Math.max(0.1, 90 - Math.pow(this.#defaultBotParams.elo, 1/1.7))*blunderMult);
+        const rand = Math.round(Math.random()*100);
 
-        /* const badReactionChanceBase = new Map([
-            ['Beginner', 10],
-            ['Casual', 5],
-            ['Intermediate', 2],
-            ['Advanced', 1],
-            ['Master', 0.5],
-            ['Maximum', 0]
-          ]).get(this.#botLevel) || 10; */
+        /* console.log(`sortedThreats:`);
+        console.log(sortedThreats);
+        console.log(`mostThreatenedPiece:`);
+        console.log(mostThreatenedPiece);
+        console.log(`badReactionChance: ${badReactionChance}`);
+        console.log(`rand: ${rand}`); */
 
-        const badReactionChanceBase = Math.max(1, 30 - Math.pow(this.#defaultBotParams.elo, 1/2.3))*blunderMult;
+        if(rand <= badReactionChance){
+            //console.log(`Danger cases: `);
+            //console.log(dangerCases);
 
-        //console.log("Attacked cases: ");
-        //console.log(dangerCases);
-        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, 20, 50, false);
+            //console.log(`Most Threatened Piece Case: ${mostThreatenedPiece.dangerCase}`);
+            //console.log(game.moves({square: mostThreatenedPiece.dangerCase as any as Square}));
 
-        stockfishMoves = stockfishMoves.map((evalRes) => {
-            const moveOrigin = this.#toolbox.getMoveOrigin(evalRes.bestMove);
+            let threatenedPieceMoves = game.moves({square: mostThreatenedPiece.dangerCase as any as Square});
 
-            const {dangerCase, dangerValue} = dangerCases.find((dangerCase) => dangerCase.dangerCase === moveOrigin) || {dangerCase: '', dangerValue: 0};
-            if(dangerValue !== 0) {
-                //TODO: Il ne faudrait autoriser que les déplacements sur des cases safe
-                const badReactionChance = badReactionChanceBase*Math.abs(dangerValue)
-                const rand = Math.random()*100;
-                let badReactionBonus = 0;
+            //console.log(`Threatened Piece Moves: ${threatenedPieceMoves}`);
 
-                if(rand <= badReactionChance){
-                    badReactionBonus = Math.round(12 - Math.pow(this.#defaultBotParams.elo, 1/3));
-                    humanReaction = true;
-                }
-                //console.log(`badReactionChanceBase: ${badReactionChanceBase}, badReactionChance: ${badReactionChance}, rand: ${rand}, badReactionBonus: ${badReactionBonus}`);
-                //console.log(`${evalRes.bestMove} includes ${moveOrigin}`);
-                //console.log(`Danger Case: ${dangerCase}, Danger Value: ${dangerValue}`);
-                evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + badReactionBonus).toString();
-                return evalRes;
-            }
+            threatenedPieceMoves = threatenedPieceMoves.filter(move => this.#toolbox.getExchangeValue(game.fen(), this.#toolbox.convertMoveSanToLan(game.fen(), move)) >= 0);
 
-            evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox)).toString();
-            return evalRes;
-        });
+            //console.log(`Safe Threatened Piece Moves: ${threatenedPieceMoves}`);
 
-        stockfishMoves.sort(compareEval);
+            const randPick = Math.floor(Math.random()*threatenedPieceMoves.length);
+            //console.log(`randPick: ${randPick}`);
 
-        //console.log(stockfishMoves);
+            stockfishMove.notation = threatenedPieceMoves.length > 0 ? this.#toolbox.convertMoveSanToLan(game.fen(), threatenedPieceMoves[randPick]) : '';
 
-        stockfishMove.notation = stockfishMoves[0].bestMove;
-
-        //if(dangerCases.includes(this.#toolbox.getMoveOrigin(stockfishMove.notation))) stockfishMove.type = 5;
-        //Si humanReaction === false, type = -1 donc le coup n'est pas joué
-        if(humanReaction) stockfishMove.type = 5;
+            if(stockfishMove.notation !== '') stockfishMove.type = 5;
+        }
 
         if(stockfishMove.type >= 0) {
             //console.log('Le bot réagit mal à la menace et doit bouger sa pièce en ' + this.#toolbox.getMoveDestination(stockfishMove.notation))
-            stockfishMove.moveInfos = `Make Human Threat Reaction: Le bot réagit mal à la menace et doit bouger sa pièce en ${this.#toolbox.getMoveDestination(stockfishMove.notation)}.\n\n`;
+            stockfishMove.moveInfos = `Make Human Threat Reaction: Le bot réagit mal à la menace (${rand} <= ${badReactionChance}) et doit bouger sa pièce en ${this.#toolbox.getMoveDestination(stockfishMove.notation)}.\n\n`;
         }else{
-            stockfishMove.moveInfos = `Make Human Threat Reaction: Malgrès le danger, le bot n'a pas réagi dans la précipitation à la menace.\n\n`;
+            stockfishMove.moveInfos = `Make Human Threat Reaction: Malgrès le danger, le bot n'a pas réagi dans la précipitation à la menace (${rand} > ${badReactionChance}).\n\n`;
         }
 
         return stockfishMove

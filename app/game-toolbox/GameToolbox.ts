@@ -246,6 +246,8 @@ class GameToolBox {
       const attackingPieceColor = this.game.get(attackingPieceSquare).color;
       const destinationIsDefended = attackingPieceColor === 'w' ? this.isDefended(fen, attackedPieceSquare).black : this.isDefended(fen, attackedPieceSquare).white;
 
+      //TODO: Attention, consière une case safe si elle est actuellement bloquée par la pièce qui va se déplacer alors que cette case
+      //sera attaquée si la pièce bouge.
       // Voir si la pièce est défendue
       if(destinationIsDefended) {
         //console.log(`${attackedPieceSquare} est défendue: V(exchange) = ${attackedPieceValue} - ${attackingPieceValue}`);
