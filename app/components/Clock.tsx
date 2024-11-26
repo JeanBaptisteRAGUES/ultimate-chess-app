@@ -88,7 +88,7 @@ const Clock: React.FC<ClockProps> = ({
             setTimestamp(+hours > 0 ? `${hours}:${minutes}:${seconds}` : `${minutes}:${seconds}`);
             timeControlRef.current = newTimeControl;
             if(botColor === clockColor) setBotTimestamp(newTimeControl);
-            console.log(timeControlRef.current);
+            //console.log(timeControlRef.current);
         }else{
             if(botColor === clockColor) setBotTimestamp({
                 startingTime: -1,
@@ -128,7 +128,7 @@ const Clock: React.FC<ClockProps> = ({
         setTimestamp(+hoursWhite > 0 ? `${hoursWhite}:${minutesWhite}:${secondsWhite}` : `${minutesWhite}:${secondsWhite}`);
         timeControlRef.current = newTimeControl;
         setBotTimestamp(newTimeControl);
-        console.log(timeControlRef.current);
+        //console.log(timeControlRef.current);
         //console.log(`Set Time Control (${clockColor === 'w' ? 'white' : 'black'}): ${timeControlRef.current.startingTime} - ${timeControlRef.current.timeElapsed} `);
     }, [timeControl, gameStarted]);
   

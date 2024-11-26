@@ -806,10 +806,18 @@ class BotsAI {
             notation: '',
             type: -1
         }
+
+        if(!dangerCases || dangerCases.length <= 0) {
+            /* console.log('%c Erreur avec le paramètre dangerCases !', "color:red; font-size:14px;");
+            console.log(dangerCases); */
+            stockfishMove.moveInfos = `Make Human Threat Reaction: Pas de pièce en danger d'après le bot ! (Niveau de sécurité: ${this.#defaultBotParams.securityLvl})`;
+            return stockfishMove;
+        }
         
         const sortedThreats = dangerCases.sort((case1, case2) => case2.dangerValue - case1.dangerValue);
         const mostThreatenedPiece = sortedThreats[0];
-        const badReactionChance = Math.round(mostThreatenedPiece.dangerValue*Math.max(0.1, 90 - Math.pow(this.#defaultBotParams.elo, 1/1.7))*blunderMult);
+        let badReactionChance = Math.round(mostThreatenedPiece.dangerValue*Math.max(0.1, 90 - Math.pow(this.#defaultBotParams.elo, 1/1.7))*blunderMult);
+        badReactionChance = Math.min(50, badReactionChance);
         const rand = Math.round(Math.random()*100);
 
         /* console.log(`sortedThreats:`);
@@ -826,18 +834,21 @@ class BotsAI {
             //console.log(`Most Threatened Piece Case: ${mostThreatenedPiece.dangerCase}`);
             //console.log(game.moves({square: mostThreatenedPiece.dangerCase as any as Square}));
 
-            let threatenedPieceMoves = game.moves({square: mostThreatenedPiece.dangerCase as any as Square});
+            //TODO: Problème quand la pièce menacée peut aller au même endroit qu'une autre pièce du même type: Rd1 au lieu de Rdd1 ou Rhd1
+            //let threatenedPieceMoves = game.moves({square: mostThreatenedPiece.dangerCase as any as Square});
+            let threatenedPieceMoves = game.moves({verbose: true}).filter(move => move.from === mostThreatenedPiece.dangerCase).map(move => move.lan);
 
-            //console.log(`Threatened Piece Moves: ${threatenedPieceMoves}`);
+            //console.log(`Threatened Piece Moves 2: ${threatenedPieceMoves}`);
 
-            threatenedPieceMoves = threatenedPieceMoves.filter(move => this.#toolbox.getExchangeValue(game.fen(), this.#toolbox.convertMoveSanToLan(game.fen(), move)) >= 0);
+            threatenedPieceMoves = threatenedPieceMoves.filter(move => this.#toolbox.getExchangeValue(game.fen(), move) >= 0);
 
             //console.log(`Safe Threatened Piece Moves: ${threatenedPieceMoves}`);
 
             const randPick = Math.floor(Math.random()*threatenedPieceMoves.length);
             //console.log(`randPick: ${randPick}`);
 
-            stockfishMove.notation = threatenedPieceMoves.length > 0 ? this.#toolbox.convertMoveSanToLan(game.fen(), threatenedPieceMoves[randPick]) : '';
+            stockfishMove.notation = threatenedPieceMoves.length > 0 ? threatenedPieceMoves[randPick] : '';
+            //console.log(stockfishMove.notation);
 
             if(stockfishMove.notation !== '') stockfishMove.type = 5;
         }
@@ -5030,25 +5041,25 @@ class BotsAI {
         let rawDelay = timeStamp.startingTime/60;
         let timePercentage = (timeStamp.startingTime - timeStamp.timeElapsed)/timeStamp.startingTime;
         let blunderMult = 1.0;
-        console.log(`Raw Delay: ${rawDelay}`);
+        //console.log(`Raw Delay: ${rawDelay}`);
         if(game.history().length <= 10) rawDelay =  Math.min(5,rawDelay/4); // On joue plus vite dans l'ouverture
         if(timePercentage <= 0.2){
             rawDelay/=2;
             blunderMult = 1.2;
-            console.log(`Le bot ${this.#username} 20% ou moins de son temps initial !`);
+            //console.log(`Le bot ${this.#username} 20% ou moins de son temps initial !`);
         }
         if(timePercentage <= 0.1){
             rawDelay/=2;
             blunderMult = 1.5;
-            console.log(`Le bot ${this.#username} 10% ou moins de son temps initial !`);
+            //console.log(`Le bot ${this.#username} 10% ou moins de son temps initial !`);
         }
         if(timePercentage <= 0.05 && (timeStamp.startingTime - timeStamp.timeElapsed) < 20){
             rawDelay = 0.3;
             blunderMult = 2.0;
-            console.log(`Le bot ${this.#username} n'a presque plus de temps pour jouer !`);
+            //console.log(`Le bot ${this.#username} n'a presque plus de temps pour jouer !`);
         }
         let randDelay = Math.max(rawDelay,Math.random()*rawDelay*2)*1000;
-        console.log(`Temps de réflexion du bot: ${Math.round(randDelay)/1000}s`);
+        //console.log(`Temps de réflexion du bot: ${Math.round(randDelay)/1000}s`);
         return {
             randDelay: randDelay,
             blunderMult: blunderMult,
