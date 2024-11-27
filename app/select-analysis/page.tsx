@@ -51,7 +51,7 @@ const SelectAnalysis = () => {
                     pathname: '/game-analysis',
                     query: {
                         pgn: pgn,
-                        epth: depth,
+                        depth: depth,
                     }
                 }}
             >

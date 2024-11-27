@@ -519,12 +519,16 @@ class Engine {
         if(Math.sign(evalBefore) === -1 && moveEval.playerColor === 'b' && evalAfter < -10) blunderAccuracy = Math.max(0.85, blunderAccuracy);
 
         // Empêche d'afficher des coups comme étant des erreurs si stockfish avait sous-estimé l'avantage de la position
-        if(Math.sign(evalBefore) === 1 && moveEval.playerColor === 'w' && evalAfter > evalBefore) {
+        if(moveEval.playerColor === 'w' && evalAfter > evalBefore) {
             scoreAccuracy = 1;
+            scoreAbsoluteDiff = 0;
+            moveEval.accuracy = 1;
             blunderAccuracy = 1;
         }
-        if(Math.sign(evalBefore) === -1 && moveEval.playerColor === 'b' && evalAfter < evalBefore) {
+        if(moveEval.playerColor === 'b' && evalAfter < evalBefore) {
             scoreAccuracy = 1;
+            scoreAbsoluteDiff = 0;
+            moveEval.accuracy = 1;
             blunderAccuracy = 1;
         }
 
@@ -546,14 +550,26 @@ class Engine {
         console.log('Mult: ' + mult);
         console.log('Blunder Accuracy: ' + blunderAccuracy);
         console.log('Marked as book move: ' + isBookMove); */
-        
 
-        if(moveEval.bestMove === moveEval.movePlayed) {
-            moveEval.accuracy = 1;
-            return moveEval;
+        const isBrillant = (scoreAbsoluteDiff: number, moveEval: EvalResult, movesSet: string[]) => {
+            console.log(`Test si ${moveEval.movePlayed} est un coup brillant:`)
+            console.log(`scoreAbsoluteDiff: ${scoreAbsoluteDiff}`);
+            console.log(`moveEval.bestMove: ${moveEval.bestMove}`);
+            console.log(`moveEval.movePlayed: ${moveEval.movePlayed}`);
+            console.log(movesSet.slice(0, -1));
+            console.log(`fen: ${this.toolbox.convertHistoryToFen(movesSet.slice(0, -1))}`);
+            console.log(`Exchange Value: ${this.toolbox.getExchangeValue(this.toolbox.convertHistoryToFen(movesSet.slice(0, -1)), moveEval.movePlayed)}`);
+            if(scoreAbsoluteDiff > 0.15 && moveEval.bestMove !== moveEval.movePlayed) return false;
+            //if(this.toolbox.getExchangeValue(this.toolbox.convertHistoryToFen(movesSet.slice(0, -1)), moveEval.movePlayed) > -2) return false;
+            const capturesChainValue = this.toolbox.getCapturesChainValue(this.toolbox.convertHistoryToFen(movesSet.slice(0, -1)), moveEval.movePlayed);
+            console.log(`${moveEval.movePlayed} est peut être un coup brillant ? (${capturesChainValue} <= -2) ?`);
+            if(capturesChainValue > -2) return false;
+            console.log(`%c ${moveEval.movePlayed} est un coup brillant !`, 'color:cyan; font-size:12px;');
+            return true;
         }
 
-        if(scoreAccuracy > 1){
+        if(moveEval.bestMove === moveEval.movePlayed || scoreAccuracy >= 1) {
+            if(isBrillant(scoreAbsoluteDiff, moveEval, movesSet)) moveEval.quality = "!!";
             moveEval.accuracy = 1;
             return moveEval;
         }

@@ -61,6 +61,7 @@ const GameAnalysisPage = () => {
     const board = new Array(64).fill(0);
     const analysisResultsRef = useRef<EvalResult[]>([]);
     const evalMapRef = useRef<Map<string,FenEval>>(new Map());
+    const brillantIndexRef = useRef(-1);
     const inaccuracyIndexRef = useRef(-1);
     const errorIndexRef = useRef(-1);
     const blunderIndexRef = useRef(-1);
@@ -153,7 +154,7 @@ const GameAnalysisPage = () => {
         gameHistory.current = gameHistoryChess.history({verbose: true});
         console.log(gameHistory.current);
         engine.current.initAnalysis().then(() => {
-            console.log('Launch PGN analysis');
+            console.log(`%c Launch PGN analysis (profondeur: ${depth})`, 'color: green');
             engine.current?.showWinDrawLose();
             launchStockfishAnalysis(pgn, depth);
         });
@@ -287,6 +288,8 @@ const GameAnalysisPage = () => {
 
     const getMoveColor = (moveQuality: string, squareColor: string): string => {
         switch (moveQuality) {
+            case '!!':
+                return squareColor === 'white' ? 'rgb(43,255,255)' : 'rgb(30,225,225)';
             case '?!':
                 return squareColor === 'white' ? 'rgb(240,220,130)' : 'rgb(220,200,80)';
             case '?':
@@ -306,6 +309,7 @@ const GameAnalysisPage = () => {
         console.log(playerColor);
 
         // Reset previous highlight
+        brillantIndexRef.current = -1;
         inaccuracyIndexRef.current = -1;
         errorIndexRef.current = -1;
         blunderIndexRef.current = -1;
@@ -334,6 +338,9 @@ const GameAnalysisPage = () => {
         if(endCaseRef.current) endCaseRef.current.setAttribute('style', `background-color: ${getMoveColor(quality, endCaseColor)}`);
         
         // highlight move quality (ok / inaccuracy / error / blunder)
+        if(quality === '!!'){
+            brillantIndexRef.current = toolbox.getCaseIndex(toolbox.getMoveDestination(lastMove) || 'a1', boardOrientationRef.current);
+        }
         if(quality === '?!'){
             inaccuracyIndexRef.current = toolbox.getCaseIndex(toolbox.getMoveDestination(lastMove) || 'a1', boardOrientationRef.current);
         }
@@ -535,6 +542,7 @@ const GameAnalysisPage = () => {
                     if(result.quality === '??') return <span onClick={() => showMovePosition(result.movePlayed, i, true)} key={i} className=" text-red-600 cursor-pointer select-none" style={{backgroundColor: currentIndex === i ? "rgba(34, 211, 238, 0.3)" : "rgba(0,0,0,0)" }} >{bestMoveSpan}</span>;
                     if(result.quality === '?') return <span onClick={() => showMovePosition(result.movePlayed, i, true)} key={i} className=" text-orange-500 cursor-pointer select-none" style={{backgroundColor: currentIndex === i ? "rgba(34, 211, 238, 0.3)" : "rgba(0,0,0,0)" }} >{bestMoveSpan}</span>;
                     if(result.quality === '?!') return <span onClick={() => showMovePosition(result.movePlayed, i, true)} key={i} className=" text-yellow-400 cursor-pointer select-none" style={{backgroundColor: currentIndex === i ? "rgba(34, 211, 238, 0.3)" : "rgba(0,0,0,0)" }} >{bestMoveSpan}</span>;
+                    if(result.quality === '!!') return <span onClick={() => showMovePosition(result.movePlayed, i, true)} key={i} className=" text-cyan-400 cursor-pointer select-none" style={{backgroundColor: currentIndex === i ? "rgba(43, 255, 255, 0.3)" : "rgba(0,0,0,0)" }} >{bestMoveSpan}</span>;
                     return <span onClick={() => showMovePosition(result.movePlayed, i, true)} key={i} className=" text-white cursor-pointer select-none" style={{backgroundColor: currentIndex === i ? "rgba(34, 211, 238, 0.3)" : "rgba(0,0,0,0)" }} >{bestMoveSpan}</span>;
                 })
             }
@@ -684,11 +692,13 @@ const GameAnalysisPage = () => {
             <div className=" absolute flex flex-wrap h-[304px] md:h-[512px] w-[304px] md:w-[512px] pointer-events-none" >
                 {
                     board.map((e,i) => {
+                        const brillantIcon = brillantIndexRef.current === i ? <span className="w-5 h-5 translate-x-1 -translate-y-1 bg-cyan-400 text-white font-bold rounded-full flex justify-center items-center" >!!</span> : null;
                         const inaccuracyIcon = inaccuracyIndexRef.current === i ? <span className="w-5 h-5 translate-x-1 -translate-y-1 bg-yellow-500 text-white font-bold rounded-full flex justify-center items-center" >?!</span> : null;
                         const errorIcon = errorIndexRef.current === i ? <span className="w-5 h-5 translate-x-1 -translate-y-1 bg-orange-600 text-white font-bold rounded-full flex justify-center items-center" >?</span> : null;
                         const blunderIcon = blunderIndexRef.current === i ? <span className="w-5 h-5 translate-x-1 -translate-y-1 bg-red-600 text-white font-bold rounded-full flex justify-center items-center" >??</span>  : null;
 
                         return <div className=" h-[38px] md:h-[64px] w-[38px] md:w-[64px] flex justify-end" key={i}>
+                            {brillantIcon}
                             {inaccuracyIcon}
                             {errorIcon}
                             {blunderIcon}

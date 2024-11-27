@@ -37,6 +37,23 @@ export const pieceValues = new Map([
     ['q', 9],
   ]);
 
+/* function getCapturesChainValueRec(fen: string, move: string): number {
+  const game = new Chess();
+  game.load(fen);
+  const attackingPieceSquare = this.getMoveOrigin(move);
+  const attackedPieceSquare = this.getMoveDestination(move);
+  //const attackingPieceValue = pieceValues.get(this.game.get(attackingPieceSquare)?.type) || 0;
+  const attackedPieceValue = pieceValues.get(this.game.get(attackedPieceSquare)?.type) || 0;
+
+  this.game.move(move);
+
+  let moves = this.game.moves({verbose: true}).filter(gMove => gMove.captured !== undefined);
+  moves.sort((gMove1, gMove2) => (pieceValues.get(gMove1.piece) || 0) - (pieceValues.get(gMove2.piece) || 0));
+  if(moves.length <= 0) return attackedPieceValue;
+
+  return attackedPieceValue - getCapturesChainValueRec(this.game.fen(), moves[0]);
+} */
+
 class GameToolBox {
     game: Chess;
 
@@ -256,8 +273,26 @@ class GameToolBox {
         //console.log(`${attackedPieceSquare} n'est pas défendue: V(exchange) = ${attackedPieceValue}`);
         return attackedPieceValue;
       }
+    }
 
-      
+    getCapturesChainValue(fen: string, move: string): number {
+      this.game.load(fen);
+      //const attackingPieceSquare = this.getMoveOrigin(move);
+      const attackedPieceSquare = this.getMoveDestination(move);
+      //const attackingPieceValue = pieceValues.get(this.game.get(attackingPieceSquare)?.type) || 0;
+      const attackedPieceValue = pieceValues.get(this.game.get(attackedPieceSquare)?.type) || 0;
+    
+      this.game.move(move);
+    
+      let moves = this.game.moves({verbose: true}).filter(gMove => gMove.captured !== undefined && gMove.to === attackedPieceSquare && this.getExchangeValue(this.game.fen(), gMove.lan) >= 0);
+      moves.sort((gMove1, gMove2) => (pieceValues.get(gMove1.piece) || 0) - (pieceValues.get(gMove2.piece) || 0));
+
+      console.log(`Move ${move}, value: ${attackedPieceValue}`);
+      console.log(moves);
+
+      if(moves.length <= 0) return attackedPieceValue;
+    
+      return attackedPieceValue - this.getCapturesChainValue(this.game.fen(), moves[0].lan);
     }
 
     filterMoves(movesList: string[], filterLevel: number) {
@@ -547,6 +582,33 @@ class GameToolBox {
      */
     convertPgnToArray(pgn: string): string[] {
         return pgn.replaceAll('. ', '.').split(' ');
+    }
+
+    /**
+     * '1. e4 e5 2. Nf3' -> 'rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2'
+     * @param pgn 
+     * @returns 
+     */
+    convertPgnToFen(pgn: string): string {
+      this.game.loadPgn(pgn);
+      return this.game.fen();
+    }
+
+    /**
+     * ['e4', 'e5', 'Nf3'] -> 'rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2'
+     * @param history 
+     * @param startingFen 
+     * @returns 
+     */
+    convertHistoryToFen(history: string[], startingFen?: string): string {
+      this.game.load(DEFAULT_POSITION);
+        if(startingFen) this.game.load(startingFen);
+
+        for(let sanMove of history){
+            this.game.move(sanMove);
+        }
+
+        return this.game.fen();
     }
 
     isMoveValid(fen: string, move: string): boolean {
