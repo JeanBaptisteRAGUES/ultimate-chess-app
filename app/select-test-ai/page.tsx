@@ -337,6 +337,18 @@ const SelectTestAI = () => {
                     />
                 </span>
             </div>
+            <div onClick={() => {setBehaviour('homemade-engine')}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'homemade-engine' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <span className=' w-full h-full flex justify-center items-center rounded' >
+                    <Image
+                        src={botsInfo.get('homemade-engine')?.image || human_pp}
+                        alt="homemade engine"
+                        width={150}
+                        height={150}
+                        // blurDataURL="data:..." automatically provided
+                        placeholder="blur" // Optional blur-up while loading
+                    />
+                </span>
+            </div>
         </div>
 
     const timeControlComponent =

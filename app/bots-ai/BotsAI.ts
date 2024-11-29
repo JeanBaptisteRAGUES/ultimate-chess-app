@@ -1,6 +1,6 @@
 // TODO: Niveaux de difficulté Beginner, Casual, Intermediate, Advanced, Master, Maximum
 
-import { Chess, Color, DEFAULT_POSITION, Piece, Square } from "chess.js";
+import { Chess, Color, DEFAULT_POSITION, Piece, Square, validateFen } from "chess.js";
 import { fetchLichessDatabase, getHandMoveFromLichessDB } from "../libs/fetchLichess";
 import Engine, { EvalResultSimplified } from "../engine/Engine";
 import GameToolBox from "../game-toolbox/GameToolbox";
@@ -32,6 +32,7 @@ import gambitFanatic_pp from "@/public/Bots_images/chess3d_gambit-fanatic.jpg";
 import stonewall_pp from "@/public/Bots_images/chess3d_stone-wall.jpg";
 import dragon_pp from "@/public/Bots_images/chess3d_dragon.jpg";
 import caroLondon_pp from "@/public/Bots_images/chess3d_caro-london.jpg";
+import homemadeEngine_pp from "@/public/Bots_images/chess3d_homemade-engine.jpg";
 
 import speedrun_male01 from "@/public/Speedrun_opponents/males/speedrun_male01.jpg";
 import speedrun_male02 from "@/public/Speedrun_opponents/males/speedrun_male02.jpg";
@@ -96,7 +97,7 @@ export type BotDescription  = {
 }
 
 // TODO: 'strategy-stranger' | 'sacrifice-enjoyer' | 'min-max | 'botdanov' | 'sharp-player' | 'closed' | 'open' | 'hyper-aggressive'
-export type Behaviour = 'default' | 'stockfish-random' | 'stockfish-only' | 'human' | 'pawn-pusher' | 'fianchetto-sniper' | 'shy' | 'blundering' | 'drawish' | 'exchanges-lover' | 'exchanges-hater' | 'queen-player' | 'botez-gambit' | 'castle-destroyer' | 'chessable-master' | 'auto-didacte' | 'random-player' | 'semi-random' | 'copycat' | 'bongcloud' | 'gambit-fanatic' | 'cow-lover' | 'indian-king' | 'stonewall' | 'dragon' | 'caro-london';
+export type Behaviour = 'default' | 'homemade-engine' | 'stockfish-random' | 'stockfish-only' | 'human' | 'pawn-pusher' | 'fianchetto-sniper' | 'shy' | 'blundering' | 'drawish' | 'exchanges-lover' | 'exchanges-hater' | 'queen-player' | 'botez-gambit' | 'castle-destroyer' | 'chessable-master' | 'auto-didacte' | 'random-player' | 'semi-random' | 'copycat' | 'bongcloud' | 'gambit-fanatic' | 'cow-lover' | 'indian-king' | 'stonewall' | 'dragon' | 'caro-london';
 
 type DefaultBotParams = {
     randMoveChance: number, 
@@ -134,7 +135,8 @@ export const botsInfo = new Map<Behaviour, BotDescription>([
     ['gambit-fanatic', {name: 'Joker', description: "Joker aime sortir ses adversaires des sentiers battus et les entrainer dans les profondeurs obscures de la foret. Il ne vous laissera aucun répis et vous donnera du fil à retordre dès l'ouverture avec des gambits agressifs !", image: gambitFanatic_pp}],
     ['fianchetto-sniper', {name: 'Hippo', description: "Ne vous fiez pas à l'apparente tranquilité de l'hippopotame, il peut se réveler être un animal très dangereux et agressif. Il en va de même pour l'ouverture Hippopotamus !", image: hippo_pp}],
     ['exchanges-hater', {name: 'Emmeline', description: "Emmeline est de nature pacifiste et évitera le plus possible les échanges de pièces", image: exchangesHater_pp}],
-    ['exchanges-lover', {name: 'Jason', description: "Jason aime l'action et cherchera le plus possible à capturer les pièces adverses.", image: exchangesLover_pp}]
+    ['exchanges-lover', {name: 'Jason', description: "Jason aime l'action et cherchera le plus possible à capturer les pièces adverses.", image: exchangesLover_pp}],
+    ['homemade-engine', {name: 'Simplet', description: "Moteur d'échecs fait maison.", image: homemadeEngine_pp }],
 
 ]);
 
@@ -1128,6 +1130,160 @@ class BotsAI {
         if(defaultMove.type >= 0) {
             return defaultMove;
         }
+
+        return move;
+    }
+
+    #minMax(fen: string, iRec: number, recMax: number, prevMoveDest: string, prevMoveValue: number): {bestMove: string, bestScore: number} {
+        const newGame = new Chess();
+        newGame.load(fen);
+        let bestScore = -9999;
+        let bestMove = '';
+        let score = -10000;
+
+        if(iRec >= recMax) return {bestMove: '', bestScore: 0};
+
+        let moves = newGame.moves({verbose: true});
+        //moves = moves.map(move => this.#toolbox.convertMoveSanToLan(newGame.fen(), move));
+
+        //if(iRec === 0) console.log(moves);
+        
+        moves.forEach((gMove) => {
+            newGame.load(fen);
+            score = this.#toolbox.getCapturesChainValue(newGame.fen(), gMove.lan);
+            if(gMove.to === prevMoveDest) score -= prevMoveValue;
+            newGame.move(gMove.lan);
+            //console.log(`${gMove.san} flags: ${gMove.flags}`);
+            //console.log(gMove.flags.match(/e|p|q|k/gm));
+
+            //TODO: Décommenter
+            if(iRec === 0) score += this.#toolbox.getMoveActivity(gMove.lan);
+            if(iRec === 0 && validateFen(this.#toolbox.changeFenPlayer(newGame.fen())).ok) score += this.#toolbox.getPositionActivity(this.#toolbox.changeFenPlayer(newGame.fen()));
+            if(gMove.flags.match(/q|k/gm)) score += 0.5;
+            if((iRec === 0 && gMove.piece === 'n' && (gMove.from.match(/1|8/gm))) || (iRec === 0 && gMove.piece === 'b' && (gMove.from.match(/1|8/gm)))) score += 0.3;
+            if(iRec === 0 && gMove.lan === 'h2h3' || gMove.lan === 'h7h6') score += 0.1;
+            if(iRec === 0 && gMove.piece === 'q') {
+                if(gMove.to.match(/d2|d7|e2|e7/gm)) {
+                    score += 0.2;
+                }else {
+                    score -= 0.2;
+                }
+            }
+            //if(iRec === 0) console.log(`${gMove.san} score de base: ${score}`);
+            score -= this.#minMax(newGame.fen(), iRec+1, recMax, gMove.to, this.#toolbox.getSquareValue(fen, gMove.to)).bestScore;
+            //if(iRec === 0) console.log(`${gMove.san} score après coup adversaire: ${score}`);
+            if(score >= bestScore) {
+                bestScore = score;
+                bestMove = gMove.lan;
+            }
+        })
+
+        //console.log(`Min Max: ${bestMove} est le meilleur coup avec un score de ${bestScore}`);
+
+        return {bestMove: bestMove, bestScore: bestScore};
+    }
+
+    #habitsOpenings(game: Chess): Move {
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+        let rand = Math.random()*100;
+
+        switch (game.pgn().replaceAll(/\.\s/g, '.')) {
+            // When Black
+            // e4
+            case '1.e4':
+                move.notation = 'e7e5';
+                move.type = 1;
+                return move;
+
+            // e4 e5 Nf3
+            case '1.e4 e5 2.Nf3':
+                move.notation = 'b8c6';
+                move.type = 1;
+                return move;  
+                
+            // Italian
+            case '1.e4 e5 2.Nf3 Nc6 3.Bc4':
+                move.notation = 'f8c5';
+                move.type = 1;
+                return move;
+                
+            case '1.e4 e5 2.Nf3 Nc6 3.Bc4 Bc5 4.d3':
+                move.notation = 'g8f6';
+                move.type = 1;
+                return move; 
+
+            case '1.e4 e5 2.Nf3 Nc6 3.Bc4 Bc5 4.d3 Nf6 5.Ng5':
+                move.notation = 'e8g8';
+                move.type = 1;
+                return move; 
+
+            // Italian
+            case '1.e4 e5 2.Nf3 Nc6 3.Bb5':
+                move.notation = 'g8f6';
+                move.type = 1;
+                return move;
+                
+            case '1.e4 e5 2.Nf3 Nc6 3.Bb5 Nf6 4.d3':
+                move.notation = 'f8c5';
+                move.type = 1;
+                return move; 
+
+            case '1.e4 e5 2.Nf3 Nc6 3.Bb5 Nf6 4.d3 Bc5 5.O-O':
+                move.notation = 'd7d6';
+                move.type = 1;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.Bb5 Nf6 4.d3 Bc5 5.Bxc6':
+                move.notation = 'd7c6';
+                move.type = 1;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.Bb5 Nf6 4.d3 Bc5 5.Bxc6 dxc6 6.Nxe5':
+                move.notation = 'd8d4';
+                move.type = 1;
+                return move;
+
+            default:
+                break;
+        }
+
+        return move;
+    }
+
+    async #homemadeEngineLogic(game: Chess, blunderMult: number): Promise<Move> {
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+
+        const habitsMove = this.#habitsOpenings(game);
+
+        if(habitsMove.type >= 0) {
+            habitsMove.moveInfos = `Ouverture: Le bot ${this.#username} a trouvé un coup dans sa base d'ouvertures (Habits openings).\n\n`;
+            return habitsMove;
+        }
+
+        move.moveInfos = `Ouverture: Le bot ${this.#username} n'a pas trouvé de coup dans sa base d'ouvertures (Habits openings).\n\n`;
+
+        const minMaxRes = this.#minMax(game.fen(), 0, 2, '', 0);
+        move.notation = minMaxRes.bestMove;
+        move.type = 5;
+        move.moveInfos += `makeHomemadeEngineMove: Le moteur d'échecs fait maison choisit le coup ${move.notation} avec un score de ${Math.round(minMaxRes.bestScore*100)/100}.\n\n`;
+
+        return move;
+    }
+
+    async #makeHomemadeEngineMove(game: Chess, blunderMult: number): Promise<Move> {
+        console.log('Bot AI: Homemade Engine');
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+
+        move = await this.#homemadeEngineLogic(game, blunderMult);
 
         return move;
     }
@@ -5082,6 +5238,10 @@ class BotsAI {
         switch (this.#behaviour) {
             case "default":
                 move = await this.#makeDefaultMove(game, blunderMult);
+                break;
+
+            case "homemade-engine":
+                move = await this.#makeHomemadeEngineMove(game, blunderMult);
                 break;
 
             //TODO: Récupérer game.history({verbose: true}) et si length > 1 utiliser startingFen = history[0].before

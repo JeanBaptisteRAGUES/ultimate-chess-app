@@ -1,4 +1,4 @@
-import { Chess, Color, DEFAULT_POSITION, Move, Piece, PieceSymbol, Square } from "chess.js";
+import { Chess, Color, DEFAULT_POSITION, Move, Piece, PieceSymbol, Square, validateFen } from "chess.js";
 
 // TODO: Faire un type pour les coups de type san ou uci/lan
 // TODO: Faire attention aux complications que celà peut amener (conversion, méthodes string inutilisables etc..)
@@ -249,6 +249,73 @@ class GameToolBox {
         return this.game.history().pop()?.includes('x') || false;
     }
 
+    changeFenPlayer(fen: string): string {
+      return fen.includes(' w ') ? fen.replace(' w ', ' b ') : fen.replace(' b ', ' w ');
+    }
+
+    getMoveActivity(move: string): number {
+      const letters = new Map([
+        ['a', 0.001],
+        ['b', 0.002],
+        ['c', 0.003],
+        ['d', 0.005],
+        ['e', 0.005],
+        ['f', 0.003],
+        ['g', 0.002],
+        ['h', 0.001],
+      ]);
+
+      const digits = new Map([
+        ['1', 0.001],
+        ['2', 0.002],
+        ['3', 0.003],
+        ['4', 0.005],
+        ['5', 0.005],
+        ['6', 0.003],
+        ['7', 0.002],
+        ['8', 0.001],
+      ]);
+
+      return 100*(letters.get(move[2]) || 0) + 100*(digits.get(move[3]) || 0);
+    }
+
+    getPositionActivity(fen: string): number {
+      const letters = new Map([
+        ['a', 0.001],
+        ['b', 0.002],
+        ['c', 0.003],
+        ['d', 0.005],
+        ['e', 0.005],
+        ['f', 0.003],
+        ['g', 0.002],
+        ['h', 0.001],
+      ]);
+
+      const digits = new Map([
+        ['1', 0.001],
+        ['2', 0.002],
+        ['3', 0.003],
+        ['4', 0.005],
+        ['5', 0.005],
+        ['6', 0.003],
+        ['7', 0.002],
+        ['8', 0.001],
+      ]);
+
+      this.game.load(fen);
+
+      let moves = this.game.moves();
+      moves = moves.map(move => this.convertMoveSanToLan(fen, move));
+
+      return moves.reduce((acc, curr) => acc + (letters.get(curr[2]) || 0) + (digits.get(curr[3]) || 0), 0);
+    }
+
+    getSquareValue(fen: string, square: string): number {
+      this.game.load(fen);
+
+      return pieceValues.get(this.game.get(square as any as Square)?.type) || 0;
+    }
+
     /**
      * Renvoie la valeur de l'échange entre deux pièces en supposant que la pièce qui capture va être re-mangée après
      * @param fen string
@@ -277,22 +344,66 @@ class GameToolBox {
 
     getCapturesChainValue(fen: string, move: string): number {
       this.game.load(fen);
-      //const attackingPieceSquare = this.getMoveOrigin(move);
       const attackedPieceSquare = this.getMoveDestination(move);
-      //const attackingPieceValue = pieceValues.get(this.game.get(attackingPieceSquare)?.type) || 0;
       const attackedPieceValue = pieceValues.get(this.game.get(attackedPieceSquare)?.type) || 0;
     
       this.game.move(move);
+
+      if(this.game.isCheckmate()) return 1000;
     
       let moves = this.game.moves({verbose: true}).filter(gMove => gMove.captured !== undefined && gMove.to === attackedPieceSquare && this.getExchangeValue(this.game.fen(), gMove.lan) >= 0);
       moves.sort((gMove1, gMove2) => (pieceValues.get(gMove1.piece) || 0) - (pieceValues.get(gMove2.piece) || 0));
 
-      console.log(`Move ${move}, value: ${attackedPieceValue}`);
-      console.log(moves);
-
       if(moves.length <= 0) return attackedPieceValue;
     
       return attackedPieceValue - this.getCapturesChainValue(this.game.fen(), moves[0].lan);
+    }
+
+    //TODO: Régler le problème de surévaluer un coup car va prendre en compte le cas où la dame va prendre le pion protégé en h5
+    //lors de la poussée h7 -> h5 sans se demander si c'est vraiment rentable pour l'adversaire de capturer
+    getCapturesChainValue2(fen: string, move: string): number {
+      this.game.load(fen);
+      let attackedPieceSquare = this.getMoveDestination(move);
+      let attackedPieceValue = pieceValues.get(this.game.get(attackedPieceSquare)?.type) || 0;
+      let scoreCurrent = attackedPieceValue;
+      let scoreBest = -999;
+      let i = 1;
+    
+      //console.log(move);
+      //console.log(`${move} -> ${attackedPieceValue} en ${attackedPieceSquare}`);
+      this.game.move(move);
+
+      if(this.game.isCheckmate()) return 1000;
+    
+      let moves = this.game.moves({verbose: true}).filter(gMove => gMove.captured !== undefined && gMove.to === attackedPieceSquare);
+      moves.sort((gMove1, gMove2) => (pieceValues.get(gMove1.piece) || 0) - (pieceValues.get(gMove2.piece) || 0));
+
+      //console.log(moves);
+
+      while(moves.length > 0) {
+        attackedPieceSquare = this.getMoveDestination(moves[0].lan);
+        attackedPieceValue = pieceValues.get(this.game.get(attackedPieceSquare)?.type) || 0;
+
+        if(i%2 === 0) {
+          scoreCurrent += attackedPieceValue;
+          //if(this.game.isCheckmate()) scoreCurrent += 1000;
+        }else{
+          scoreCurrent -= attackedPieceValue;
+          //if(this.game.isCheckmate()) scoreCurrent -= 1000;
+          
+          if(scoreCurrent > scoreBest) scoreBest = scoreCurrent;
+        }
+        console.log(`${move} (${i}) -> score: ${scoreCurrent}, best: ${scoreBest}`);
+        this.game.move(moves[0]);
+        moves = this.game.moves({verbose: true}).filter(gMove => gMove.captured !== undefined && gMove.to === attackedPieceSquare);
+        moves.sort((gMove1, gMove2) => (pieceValues.get(gMove1.piece) || 0) - (pieceValues.get(gMove2.piece) || 0));
+        i++;
+      }
+
+      if(i%2 !== 0 && scoreCurrent > scoreBest) scoreBest = scoreCurrent;
+      console.log(`${move} (${i}) -> score: ${scoreCurrent}, best: ${scoreBest}`);
+  
+      return scoreBest;
     }
 
     filterMoves(movesList: string[], filterLevel: number) {
