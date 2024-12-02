@@ -76,6 +76,7 @@ import speedrun_female18 from "@/public/Speedrun_opponents/females/speedrun_fema
 import speedrun_female19 from "@/public/Speedrun_opponents/females/speedrun_female19.jpg";
 import speedrun_female20 from "@/public/Speedrun_opponents/females/speedrun_female20.jpg";
 import { Timestamp } from "../components/Clock";
+import HomemadeEngine from "../homemade-engine/HomemadeEngine";
 
 // Bots "célébrités"
 // TODO: Jouent les coups trouvés dans la BDD de chess.com pour des joueurs connus, puis stockfish
@@ -539,6 +540,7 @@ function generateRandomProfile(): BotDescription {
 class BotsAI {
     #botID: number;
     #engine: Engine;
+    #homemadeEngine: HomemadeEngine;
     #toolbox: GameToolBox;
     #defaultBotParams: DefaultBotParams;
     #behaviour: Behaviour; 
@@ -553,6 +555,7 @@ class BotsAI {
     constructor(behaviour: Behaviour, elo: number, botColor: Color, timeControl: string, randomName: boolean) {
         this.#botID = generateBotID();
         this.#engine = new Engine();
+        this.#homemadeEngine = new HomemadeEngine();
         this.#toolbox = new GameToolBox();
         //this.#botElo = elo;
         this.#botLevel = getLevelFromElo(elo);
@@ -1183,6 +1186,78 @@ class BotsAI {
         return {bestMove: bestMove, bestScore: bestScore};
     }
 
+    async #minMax2(fen: string, iRec: number, recMax: number, prevMoveDest: string, prevMoveValue: number): Promise<{bestMove: string, bestScore: number}> {
+        return new Promise((resolve, reject) => {
+            const newGame = new Chess();
+            newGame.load(fen);
+            let bestScore = -9999;
+            let bestMove = '';
+            let score = -10000;
+
+            if(iRec >= recMax) return {bestMove: '', bestScore: 0};
+
+            let moves = newGame.moves({verbose: true});
+            //moves = moves.map(move => this.#toolbox.convertMoveSanToLan(newGame.fen(), move));
+
+            //if(iRec === 0) console.log(moves);
+            
+            moves.forEach(async (gMove) => {
+                newGame.load(fen);
+                score = this.#toolbox.getCapturesChainValue(newGame.fen(), gMove.lan);
+                if(gMove.to === prevMoveDest) score -= prevMoveValue;
+                newGame.move(gMove.lan);
+                //console.log(`${gMove.san} flags: ${gMove.flags}`);
+                //console.log(gMove.flags.match(/e|p|q|k/gm));
+
+                //TODO: Décommenter
+                if(iRec === 0) score += this.#toolbox.getMoveActivity(gMove.lan);
+                if(iRec === 0 && validateFen(this.#toolbox.changeFenPlayer(newGame.fen())).ok) score += this.#toolbox.getPositionActivity(this.#toolbox.changeFenPlayer(newGame.fen()));
+                if(gMove.flags.match(/q|k/gm)) score += 0.5;
+                if((iRec === 0 && gMove.piece === 'n' && (gMove.from.match(/1|8/gm))) || (iRec === 0 && gMove.piece === 'b' && (gMove.from.match(/1|8/gm)))) score += 0.3;
+                if(iRec === 0 && gMove.lan === 'h2h3' || gMove.lan === 'h7h6') score += 0.1;
+                if(iRec === 0 && gMove.piece === 'q') {
+                    if(gMove.to.match(/d2|d7|e2|e7/gm)) {
+                        score += 0.2;
+                    }else {
+                        score -= 0.2;
+                    }
+                }
+                //if(iRec === 0) console.log(`${gMove.san} score de base: ${score}`);
+                score -= (await this.#minMax2(newGame.fen(), iRec+1, recMax, gMove.to, this.#toolbox.getSquareValue(fen, gMove.to))).bestScore;
+                //if(iRec === 0) console.log(`${gMove.san} score après coup adversaire: ${score}`);
+                if(score >= bestScore) {
+                    bestScore = score;
+                    bestMove = gMove.lan;
+                }
+            })
+
+            //console.log(`Min Max: ${bestMove} est le meilleur coup avec un score de ${bestScore}`);
+
+            resolve({bestMove: bestMove, bestScore: bestScore});
+        });
+    }
+
+    async testHeavyComputingFunction(game: Chess): Promise<Move> {
+        return new Promise((resolve, reject) => {
+            let move: Move = {
+                notation: '',
+                type: -1,
+            };
+            let z = 0;
+
+            for(let i =0; i < 2000000000; i++) {
+                z += i;
+            }
+
+            console.log(`z = ${z}`);
+            move.notation = game.moves({verbose: true})[0].lan;
+            move.type = 4;
+            move.moveInfos = `Le bot a choisi le premier coup possible.\n\n`;
+
+            resolve(move);
+        });
+    }
+
     #habitsOpenings(game: Chess): Move {
         let move: Move = {
             notation: '',
@@ -1220,7 +1295,7 @@ class BotsAI {
                 move.type = 1;
                 return move; 
 
-            // Italian
+            // Ruy Lopez
             case '1.e4 e5 2.Nf3 Nc6 3.Bb5':
                 move.notation = 'g8f6';
                 move.type = 1;
@@ -1246,6 +1321,618 @@ class BotsAI {
                 move.type = 1;
                 return move;
 
+            // Scotch Game
+            case '1.e4 e5 2.Nf3 Nc6 3.d4':
+                move.notation = 'e5d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Nxd4':
+                move.notation = 'g8f6';
+                move.type = 1;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Nxd4 Nf6 5.Nxc6':
+                move.notation = 'b7c6';
+                move.type = 1;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Nxd4 Nf6 5.Nxc6 bxc6 6.e5':
+                move.notation = 'd8e7';
+                move.type = 1;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Nxd4 Nf6 5.Nc3':
+                move.notation = 'f8b4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Nxd4 Nf6 5.Nc3 Bb4 6.Nxc6':
+                move.notation = 'b7c6';
+                move.type = 1;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Nxd4 Nf6 5.Nc3 Bb4 6.Nxc6 bxc6 7.e5':
+                move.notation = 'd8e7';
+                move.type = 1;
+                return move;
+
+            // Scotch Gambit
+            case '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Bc4':
+                move.notation = 'g8f6';
+                move.type = 1;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Bc4 Nf6 5.e5':
+                move.notation = 'd7d5';
+                move.type = 1;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Bc4 Nf6 5.e5 d5 6.Bb5':
+                move.notation = 'f6e4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Bc4 Nf6 5.e5 d5 6.Bb5 Nxe4 7.Nxd4':
+                move.notation = 'c8d7';
+                move.type = 1;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Bc4 Nf6 5.O-O':
+                move.notation = 'f6e4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Bc4 Nf6 5.O-O Nxe4 7.Re1':
+                move.notation = 'd7d5';
+                move.type = 1;
+                return move;
+
+            // Three Knights
+            case '1.e4 e5 2.Nf3 Nc6 3.Nc3':
+                move.notation = 'g8f6';
+                move.type = 1;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.Nc3 Nf6 4.Bc4':
+                move.notation = 'f8c5';
+                move.type = 1;
+                return move;
+
+            // Ponziani
+            case '1.e4 e5 2.Nf3 Nc6 3.c3':
+                move.notation = 'g8f6';
+                move.type = 1;
+                return move;
+
+            // White
+
+            case '':
+                move.notation = 'e2e4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 e5':
+                move.notation = 'g1f3';
+                move.type = 1;
+                return move;
+
+            // Petrov
+            case '1.e4 e5 2.Nf3 Nf6':
+                move.notation = 'b1c3';
+                move.type = 1;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Nc3 Nc6':
+                if(this.#defaultBotParams.elo < 1200) {
+                    move.notation = 'f1c4';
+                    move.type = 1;
+                    return move;
+                }
+                move.notation = 'f1b5';
+                move.type = 1;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Nc3 Nc6 4.Bc4 Bc5':
+                move.notation = 'd2d3';
+                move.type = 1;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Nc3 Nc6 4.Bc4 Nxe4':
+                move.notation = 'c3e4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nf6 3.Nc3 Nc6 4.Bc4 Nxe4 5.Nxe4 d5':
+                move.notation = 'c4d3';
+                move.type = 1;
+                return move;
+
+            // Italian
+            case '1.e4 e5 2.Nf3 Nc6':
+                move.notation = 'b1c3';
+                move.type = 1;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.Nc3 Nf6':
+                if(this.#defaultBotParams.elo < 1200) {
+                    move.notation = 'f1c4';
+                    move.type = 1;
+                    return move;
+                }
+                move.notation = 'f1b5';
+                move.type = 1;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.Nc3 Nf6 4.Bc4 Bc5':
+                move.notation = 'd2d3';
+                move.type = 1;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.Nc3 Nf6 4.Bc4 Nxe4':
+                move.notation = 'c3e4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 e5 2.Nf3 Nc6 3.Nc3 Nf6 4.Bc4 Nxe4 5.Nxe4 d5':
+                move.notation = 'c4d3';
+                move.type = 1;
+                return move;
+
+            // Philidor
+            case '1.e4 e5 2.Nf3 d6':
+                if(this.#defaultBotParams.elo < 1200) {
+                    move.notation = 'b1c3';
+                    move.type = 1;
+                    return move;
+                }
+                move.notation = 'd2d4';
+                move.type = 1;
+                return move;
+
+            // Sicilian defense
+            case '1.e4 c5':
+                move.notation = 'g1f3';
+                move.type = 1;
+                return move;
+
+            // Delayed Alapin (d6)
+            case '1.e4 c5 2.Nf3 d6':
+                move.notation = 'c2c3';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 d6 3.c3 Nf6':
+                move.notation = 'f1e2';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 d6 3.c3 Nf6 4.Be2 Nc6':
+                move.notation = 'd2d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 d6 3.c3 Nf6 4.Be2 Nc6 5.d4 cxd4':
+                move.notation = 'c3d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 d6 3.c3 Nf6 4.Be2 Nxe4':
+                move.notation = 'd1a4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 d6 3.c3 Nf6 4.Be2 Nxe4':
+                move.notation = 'd1a4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 d6 3.c3 Nc6':
+                move.notation = 'd2d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 d6 3.c3 Nc6 4.d4 cxd4':
+                move.notation = 'c3d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 d6 3.c3 e5':
+                move.notation = 'd2d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 d6 3.c3 e5 4.d4 cxd4':
+                move.notation = 'c3d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 d6 3.c3 g6':
+                move.notation = 'd2d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 d6 3.c3 g6 4.d4 cxd4':
+                move.notation = 'c3d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 d6 3.c3 a6':
+                move.notation = 'd2d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 d6 3.c3 a6 4.d4 cxd4':
+                move.notation = 'c3d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 d6 3.c3 e6':
+                move.notation = 'd2d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 d6 3.c3 e6 4.d4 cxd4':
+                move.notation = 'c3d4';
+                move.type = 1;
+                return move;
+
+            // Delayed Alapin (Nc6)
+            case '1.e4 c5 2.Nf3 Nc6':
+                move.notation = 'c2c3';
+                move.type = 1;
+                return move;
+            
+            case '1.e4 c5 2.Nf3 Nc6 3.c3 Nf6':
+                move.notation = 'e4e5';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 Nc6 3.c3 e5':
+                move.notation = 'd2d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 Nc6 3.c3 e5 4.d4 cxd4':
+                move.notation = 'c3d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 Nc6 3.c3 d6':
+                move.notation = 'd2d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 Nc6 3.c3 d6 4.d4 cxd4':
+                move.notation = 'c3d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 Nc6 3.c3 g6':
+                move.notation = 'd2d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 Nc6 3.c3 g6 4.d4 cxd4':
+                move.notation = 'c3d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 Nc6 3.c3 a6':
+                move.notation = 'd2d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 Nc6 3.c3 a6 4.d4 cxd4':
+                move.notation = 'c3d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 Nc6 3.c3 e6':
+                move.notation = 'd2d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 Nc6 3.c3 e6 4.d4 cxd4':
+                move.notation = 'c3d4';
+                move.type = 1;
+                return move;
+
+            // Delayed Alapin (e6)
+            case '1.e4 c5 2.Nf3 e6':
+                move.notation = 'c2c3';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 e6 3.c3 d5':
+                move.notation = 'e4d5';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 e6 3.c3 d5 4.exd5 Qxd5':
+                move.notation = 'd2d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 e6 3.c3 d5 4.exd5 exd5':
+                move.notation = 'd2d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 e6 3.c3 Nf6':
+                move.notation = 'e4e5';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 e6 3.c3 e5':
+                move.notation = 'd2d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 e6 3.c3 e5 4.d4 cxd4':
+                move.notation = 'c3d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 e6 3.c3 d6':
+                move.notation = 'd2d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 e6 3.c3 d6 4.d4 cxd4':
+                move.notation = 'c3d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 e6 3.c3 g6':
+                move.notation = 'd2d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 e6 3.c3 g6 4.d4 cxd4':
+                move.notation = 'c3d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 e6 3.c3 a6':
+                move.notation = 'd2d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 e6 3.c3 a6 4.d4 cxd4':
+                move.notation = 'c3d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 e6 3.c3 Nc6':
+                move.notation = 'd2d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 e6 3.c3 Nc6 4.d4 cxd4':
+                move.notation = 'c3d4';
+                move.type = 1;
+                return move;
+
+            // Delayed Alapin (g6)
+            case '1.e4 c5 2.Nf3 g6':
+                move.notation = 'c2c3';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 g6 3.c3 Bg7':
+                move.notation = 'd2d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 g6 3.c3 Bg7 4.d4 cxd4':
+                move.notation = 'c3d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 g6 3.c3 d5':
+                move.notation = 'e4d5';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 g6 3.c3 d5 4.exd5 Qxd5':
+                move.notation = 'd2d4';
+                move.type = 1;
+                return move;
+
+            // Delayed Alapin (a6)
+            case '1.e4 c5 2.Nf3 a6':
+                move.notation = 'c2c3';
+                move.type = 1;
+                return move;
+            
+            case '1.e4 c5 2.Nf3 a6 3.c3 Nf6':
+                move.notation = 'e4e5';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 a6 3.c3 b5':
+                move.notation = 'd2d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 a6 3.c3 b5 4.d4 cxd4':
+                move.notation = 'c3d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 a6 3.c3 e5':
+                move.notation = 'f3e5';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 a6 3.c3 d5':
+                move.notation = 'e4d5';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 a6 3.c3 d5 4.exd5 Qxd5':
+                move.notation = 'd2d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 a6 3.c3 d6':
+                move.notation = 'd2d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 a6 3.c3 d6 4.d4 cxd4':
+                move.notation = 'c3d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 a6 3.c3 g6':
+                move.notation = 'd2d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 a6 3.c3 g6 4.d4 cxd4':
+                move.notation = 'c3d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 a6 3.c3 e6':
+                move.notation = 'd2d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 a6 3.c3 e6 4.d4 cxd4':
+                move.notation = 'c3d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 e6 3.c3 Nc6':
+                move.notation = 'd2d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c5 2.Nf3 e6 3.c3 Nc6 4.d4 cxd4':
+                move.notation = 'c3d4';
+                move.type = 1;
+                return move;
+
+            // French defense
+            case '1.e4 e6':
+                move.notation = 'd2d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 e6 2.d4 d5':
+                move.notation = 'e4d5';
+                move.type = 1;
+                return move;
+
+            // Caro Kann
+            case '1.e4 c6':
+                move.notation = 'g1f3';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c6 2.Nf3 d5':
+                move.notation = 'b1c3';
+                move.type = 1;
+                return move;
+
+            case '1.e4 c6 2.Nf3 d5 3.Nc3 Bg4':
+                move.notation = 'h2h3';
+                move.type = 1;
+                return move;
+
+            // Scandinavian defense
+            case '1.e4 d5':
+                move.notation = 'e4d5';
+                move.type = 1;
+                return move;
+
+            case '1.e4 d5 2.exd5 Qxd5':
+                move.notation = 'b1c3';
+                move.type = 1;
+                return move;
+
+            case '1.e4 d5 2.exd5 Qxd5 3.Nc3 Qa5':
+                move.notation = 'd2d4';
+                move.type = 1;
+                return move;
+
+            // Alekhine defense
+            case '1.e4 Nf6':
+                move.notation = 'b1c3';
+                move.type = 1;
+                return move;
+
+            case '1.e4 Nf6 2.Nc3 e5':
+                move.notation = 'g1f3';
+                move.type = 1;
+                return move;
+
+            case '1.e4 Nf6 2.Nc3 e5 3.Nf3 Nc6':
+                if(this.#defaultBotParams.elo < 1200) {
+                    move.notation = 'f1c4';
+                    move.type = 1;
+                    return move;
+                }
+                move.notation = 'f1b5';
+                move.type = 1;
+                return move;
+
+            // Modern defense
+            case '1.e4 g6':
+                move.notation = 'd2d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 g6 2.d4 Bg7':
+                move.notation = 'g1f3';
+                move.type = 1;
+                return move;
+
+            case '1.e4 g6 2.d4 Bg7 3.Nf3 d6':
+                move.notation = 'b1c3';
+                move.type = 1;
+                return move;
+
+            // Pirc defense
+            case '1.e4 d6':
+                move.notation = 'd2d4';
+                move.type = 1;
+                return move;
+
+            case '1.e4 d6 2.d4 g6':
+                move.notation = 'g1f3';
+                move.type = 1;
+                return move;
+
+            case '1.e4 d6 2.d4 g6 3.Nf3 Bg7':
+                move.notation = 'b1c3';
+                move.type = 1;
+                return move;
+
+            case '1.e4 d6 2.d4 Nf6':
+                move.notation = 'g1f3';
+                move.type = 1;
+                return move;
+
+            case '1.e4 d6 2.d4 Nf6 3.Nf3 g6':
+                move.notation = 'b1c3';
+                move.type = 1;
+                return move;
+
+            // Nimzowitsch Defense
+            case '1.e4 Nc6':
+                move.notation = 'g1f3';
+                move.type = 1;
+                return move;
+
+            case '1.e4 Nc6 2.Nf3 e5':
+                move.notation = 'f1c4';
+                move.type = 1;
+                return move;
+
             default:
                 break;
         }
@@ -1268,7 +1955,7 @@ class BotsAI {
 
         move.moveInfos = `Ouverture: Le bot ${this.#username} n'a pas trouvé de coup dans sa base d'ouvertures (Habits openings).\n\n`;
 
-        const minMaxRes = this.#minMax(game.fen(), 0, 2, '', 0);
+        const minMaxRes = await this.#minMax2(game.fen(), 0, 2, '', 0);
         move.notation = minMaxRes.bestMove;
         move.type = 5;
         move.moveInfos += `makeHomemadeEngineMove: Le moteur d'échecs fait maison choisit le coup ${move.notation} avec un score de ${Math.round(minMaxRes.bestScore*100)/100}.\n\n`;
@@ -1283,7 +1970,12 @@ class BotsAI {
             type: -1,
         };
 
-        move = await this.#homemadeEngineLogic(game, blunderMult);
+        //move = await this.#homemadeEngineLogic(game, blunderMult);
+
+        //move = await this.testHeavyComputingFunction(game);
+
+        console.log(`this.#homemadeEngine.findBestMove(game.fen());`);
+        move = await this.#homemadeEngine.findBestMove(game, game.fen());
 
         return move;
     }
