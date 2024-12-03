@@ -1134,128 +1134,13 @@ class BotsAI {
             return defaultMove;
         }
 
+        const homemadeEngineMove = await this.#homemadeEngine.findBestMove(game.fen());
+        if(homemadeEngineMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return homemadeEngineMove;
+        }
+
         return move;
-    }
-
-    #minMax(fen: string, iRec: number, recMax: number, prevMoveDest: string, prevMoveValue: number): {bestMove: string, bestScore: number} {
-        const newGame = new Chess();
-        newGame.load(fen);
-        let bestScore = -9999;
-        let bestMove = '';
-        let score = -10000;
-
-        if(iRec >= recMax) return {bestMove: '', bestScore: 0};
-
-        let moves = newGame.moves({verbose: true});
-        //moves = moves.map(move => this.#toolbox.convertMoveSanToLan(newGame.fen(), move));
-
-        //if(iRec === 0) console.log(moves);
-        
-        moves.forEach((gMove) => {
-            newGame.load(fen);
-            score = this.#toolbox.getCapturesChainValue(newGame.fen(), gMove.lan);
-            if(gMove.to === prevMoveDest) score -= prevMoveValue;
-            newGame.move(gMove.lan);
-            //console.log(`${gMove.san} flags: ${gMove.flags}`);
-            //console.log(gMove.flags.match(/e|p|q|k/gm));
-
-            //TODO: Décommenter
-            if(iRec === 0) score += this.#toolbox.getMoveActivity(gMove.lan);
-            if(iRec === 0 && validateFen(this.#toolbox.changeFenPlayer(newGame.fen())).ok) score += this.#toolbox.getPositionActivity(this.#toolbox.changeFenPlayer(newGame.fen()));
-            if(gMove.flags.match(/q|k/gm)) score += 0.5;
-            if((iRec === 0 && gMove.piece === 'n' && (gMove.from.match(/1|8/gm))) || (iRec === 0 && gMove.piece === 'b' && (gMove.from.match(/1|8/gm)))) score += 0.3;
-            if(iRec === 0 && gMove.lan === 'h2h3' || gMove.lan === 'h7h6') score += 0.1;
-            if(iRec === 0 && gMove.piece === 'q') {
-                if(gMove.to.match(/d2|d7|e2|e7/gm)) {
-                    score += 0.2;
-                }else {
-                    score -= 0.2;
-                }
-            }
-            //if(iRec === 0) console.log(`${gMove.san} score de base: ${score}`);
-            score -= this.#minMax(newGame.fen(), iRec+1, recMax, gMove.to, this.#toolbox.getSquareValue(fen, gMove.to)).bestScore;
-            //if(iRec === 0) console.log(`${gMove.san} score après coup adversaire: ${score}`);
-            if(score >= bestScore) {
-                bestScore = score;
-                bestMove = gMove.lan;
-            }
-        })
-
-        //console.log(`Min Max: ${bestMove} est le meilleur coup avec un score de ${bestScore}`);
-
-        return {bestMove: bestMove, bestScore: bestScore};
-    }
-
-    async #minMax2(fen: string, iRec: number, recMax: number, prevMoveDest: string, prevMoveValue: number): Promise<{bestMove: string, bestScore: number}> {
-        return new Promise((resolve, reject) => {
-            const newGame = new Chess();
-            newGame.load(fen);
-            let bestScore = -9999;
-            let bestMove = '';
-            let score = -10000;
-
-            if(iRec >= recMax) return {bestMove: '', bestScore: 0};
-
-            let moves = newGame.moves({verbose: true});
-            //moves = moves.map(move => this.#toolbox.convertMoveSanToLan(newGame.fen(), move));
-
-            //if(iRec === 0) console.log(moves);
-            
-            moves.forEach(async (gMove) => {
-                newGame.load(fen);
-                score = this.#toolbox.getCapturesChainValue(newGame.fen(), gMove.lan);
-                if(gMove.to === prevMoveDest) score -= prevMoveValue;
-                newGame.move(gMove.lan);
-                //console.log(`${gMove.san} flags: ${gMove.flags}`);
-                //console.log(gMove.flags.match(/e|p|q|k/gm));
-
-                //TODO: Décommenter
-                if(iRec === 0) score += this.#toolbox.getMoveActivity(gMove.lan);
-                if(iRec === 0 && validateFen(this.#toolbox.changeFenPlayer(newGame.fen())).ok) score += this.#toolbox.getPositionActivity(this.#toolbox.changeFenPlayer(newGame.fen()));
-                if(gMove.flags.match(/q|k/gm)) score += 0.5;
-                if((iRec === 0 && gMove.piece === 'n' && (gMove.from.match(/1|8/gm))) || (iRec === 0 && gMove.piece === 'b' && (gMove.from.match(/1|8/gm)))) score += 0.3;
-                if(iRec === 0 && gMove.lan === 'h2h3' || gMove.lan === 'h7h6') score += 0.1;
-                if(iRec === 0 && gMove.piece === 'q') {
-                    if(gMove.to.match(/d2|d7|e2|e7/gm)) {
-                        score += 0.2;
-                    }else {
-                        score -= 0.2;
-                    }
-                }
-                //if(iRec === 0) console.log(`${gMove.san} score de base: ${score}`);
-                score -= (await this.#minMax2(newGame.fen(), iRec+1, recMax, gMove.to, this.#toolbox.getSquareValue(fen, gMove.to))).bestScore;
-                //if(iRec === 0) console.log(`${gMove.san} score après coup adversaire: ${score}`);
-                if(score >= bestScore) {
-                    bestScore = score;
-                    bestMove = gMove.lan;
-                }
-            })
-
-            //console.log(`Min Max: ${bestMove} est le meilleur coup avec un score de ${bestScore}`);
-
-            resolve({bestMove: bestMove, bestScore: bestScore});
-        });
-    }
-
-    async testHeavyComputingFunction(game: Chess): Promise<Move> {
-        return new Promise((resolve, reject) => {
-            let move: Move = {
-                notation: '',
-                type: -1,
-            };
-            let z = 0;
-
-            for(let i =0; i < 2000000000; i++) {
-                z += i;
-            }
-
-            console.log(`z = ${z}`);
-            move.notation = game.moves({verbose: true})[0].lan;
-            move.type = 4;
-            move.moveInfos = `Le bot a choisi le premier coup possible.\n\n`;
-
-            resolve(move);
-        });
     }
 
     #habitsOpenings(game: Chess): Move {
@@ -1955,10 +1840,10 @@ class BotsAI {
 
         move.moveInfos = `Ouverture: Le bot ${this.#username} n'a pas trouvé de coup dans sa base d'ouvertures (Habits openings).\n\n`;
 
-        const minMaxRes = await this.#minMax2(game.fen(), 0, 2, '', 0);
-        move.notation = minMaxRes.bestMove;
-        move.type = 5;
-        move.moveInfos += `makeHomemadeEngineMove: Le moteur d'échecs fait maison choisit le coup ${move.notation} avec un score de ${Math.round(minMaxRes.bestScore*100)/100}.\n\n`;
+        const homemadeEngineMove = await this.#homemadeEngine.findBestMove(game.fen());
+        move.notation = homemadeEngineMove.notation;
+        move.type = homemadeEngineMove.type;
+        move.moveInfos += homemadeEngineMove.moveInfos;
 
         return move;
     }
@@ -1970,12 +1855,9 @@ class BotsAI {
             type: -1,
         };
 
-        //move = await this.#homemadeEngineLogic(game, blunderMult);
+        this.#lastRandomMove = this.#lastRandomMove-1;
 
-        //move = await this.testHeavyComputingFunction(game);
-
-        console.log(`this.#homemadeEngine.findBestMove(game.fen());`);
-        move = await this.#homemadeEngine.findBestMove(game, game.fen());
+        move = await this.#homemadeEngineLogic(game, blunderMult);
 
         return move;
     }
@@ -1991,6 +1873,12 @@ class BotsAI {
         if(defaultMove.type >= 0) {
             this.#lastRandomMove = this.#lastRandomMove-1;
             return defaultMove;
+        }
+
+        const homemadeEngineMove = await this.#homemadeEngine.findBestMove(game.fen());
+        if(homemadeEngineMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return homemadeEngineMove;
         }
 
         return move;
@@ -2016,12 +1904,18 @@ class BotsAI {
         let move: Move = {
             notation: '',
             type: -1,
+            moveInfos: '',
         };
 
         const defaultMove = await this.#stockfishOnlyLogic(game, false, false);
         if(defaultMove.type >= 0) {
             this.#lastRandomMove = this.#lastRandomMove-1;
             return defaultMove;
+        }
+
+        const homemadeEngineMove = await this.#homemadeEngine.findBestMove(game.fen());
+        if(homemadeEngineMove.type >= 0) {
+            return homemadeEngineMove;
         }
 
         return move;
@@ -2180,10 +2074,17 @@ class BotsAI {
             return humanMove;
         }
 
-        console.log("%C Stockfish n'a pas pu générer de coup, le bot fait donc un coup aléatoire !", "color:red; font-size:16px;");
+        move.moveInfos += `Erreur: Stockfish a rencontré un problème et n'a pas pu générer de coup, le bot utilise la méthode min-max pour trouver un coup ! (${move.notation})`;
+
+        const homemadeEngineMove = await this.#homemadeEngine.findBestMove(game.fen());
+        if(homemadeEngineMove.type >= 0) {
+            return homemadeEngineMove;
+        }
+
+        //console.log("%C Stockfish n'a pas pu générer de coup, le bot fait donc un coup aléatoire !", "color:red; font-size:16px;");
 
         move = this.#makeRandomMove(2, 2, game, this.#botColor);
-        move.moveInfos = `Stockfish n'a pas pu générer de coup, le bot fait donc un coup aléatoire ! (${move.notation})`;
+        move.moveInfos += `Ni Stockfish, ni la méthode min-max n'ont pu générer de coup, le bot fait donc un coup aléatoire ! (${move.notation})`;
 
         /* const defaultMove = await this.#defaultMoveLogic(game, false, false);
         if(defaultMove.type >= 0) {

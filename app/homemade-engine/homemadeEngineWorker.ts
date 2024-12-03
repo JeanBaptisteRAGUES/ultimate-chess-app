@@ -6,34 +6,6 @@ import GameToolBox from "../game-toolbox/GameToolbox";
 
 const toolbox = new GameToolBox();
 
-function testHeavyComputingFunction(fen: string) {
-    const game = new Chess();
-    let move: Move = {
-        notation: '',
-        type: -1,
-    };
-    let z = 0;
-
-    
-    for(let i =0; i < 800000000; i++) {
-        z += i;
-    }
-
-    console.log(`z = ${z}`);
-    
-    if(validateFen(fen).ok) {
-        game.load(fen);
-        move.notation = game.moves({verbose: true})[0].lan;
-        move.type = 4;
-        move.moveInfos = `Le bot a choisi le premier coup possible.\n\n`;
-    }else{
-        move.moveInfos = `Le bot n'a pas trouvé de coup.\n\n`;
-    }
-    
-
-    return move;
-}
-
 function minMax(fen: string, iRec: number, recMax: number, prevMoveDest: string, prevMoveValue: number): {bestMove: string, bestScore: number} {
     const newGame = new Chess();
     newGame.load(fen);
@@ -56,19 +28,25 @@ function minMax(fen: string, iRec: number, recMax: number, prevMoveDest: string,
         //console.log(`${gMove.san} flags: ${gMove.flags}`);
         //console.log(gMove.flags.match(/e|p|q|k/gm));
 
-        //TODO: Décommenter
-        if(iRec === 0) score += toolbox.getMoveActivity(gMove.lan);
-        if(iRec === 0 && validateFen(toolbox.changeFenPlayer(newGame.fen())).ok) score += toolbox.getPositionActivity(toolbox.changeFenPlayer(newGame.fen()));
-        if(gMove.flags.match(/q|k/gm)) score += 0.5;
-        if((iRec === 0 && gMove.piece === 'n' && (gMove.from.match(/1|8/gm))) || (iRec === 0 && gMove.piece === 'b' && (gMove.from.match(/1|8/gm)))) score += 0.3;
-        if(iRec === 0 && gMove.lan === 'h2h3' || gMove.lan === 'h7h6') score += 0.1;
-        if(iRec === 0 && gMove.piece === 'q') {
-            if(gMove.to.match(/d2|d7|e2|e7/gm)) {
-                score += 0.2;
-            }else {
-                score -= 0.2;
+        if(iRec === 0) {
+            score += toolbox.getMoveActivity(gMove.lan);
+            if(validateFen(toolbox.changeFenPlayer(newGame.fen())).ok) score += toolbox.getPositionActivity(toolbox.changeFenPlayer(newGame.fen()));
+            if((gMove.piece === 'n' && (gMove.from.match(/1|8/gm))) || (gMove.piece === 'b' && (gMove.from.match(/1|8/gm)))) score += 0.3;
+            if(gMove.lan === 'h2h3' || gMove.lan === 'h7h6') score += 0.1;
+            if(gMove.to == 'e3' && gMove.piece !== 'p' && newGame.get('e2').type === 'p') score -=0.5;
+            if(gMove.to == 'e6' && gMove.piece !== 'p' && newGame.get('e7').type === 'p') score -=0.5;
+            if(gMove.to == 'd3' && gMove.piece !== 'p' && newGame.get('d2').type === 'p') score -=0.5;
+            if(gMove.to == 'd6' && gMove.piece !== 'p' && newGame.get('d7').type === 'p') score -=0.5;
+            if(gMove.piece === 'q') {
+                if(gMove.to.match(/d2|d7|e2|e7|f3|f6/gm)) {
+                    score += 0.2;
+                }else {
+                    score -= 0.2;
+                }
             }
         }
+        if(gMove.flags.match(/q|k/gm)) score += 0.5;
+
         //if(iRec === 0) console.log(`${gMove.san} score de base: ${score}`);
         score -= minMax(newGame.fen(), iRec+1, recMax, gMove.to, toolbox.getSquareValue(fen, gMove.to)).bestScore;
         //if(iRec === 0) console.log(`${gMove.san} score après coup adversaire: ${score}`);
