@@ -157,11 +157,11 @@ const SpeedrunPage = () => {
         gimmicks: [
           {
             gimmick: 'human',
-            chance: 90,
+            chance: 80,
           },
           {
-            gimmick: 'caro-london',
-            chance: 92
+            gimmick: 'homemade-engine',
+            chance: 90
           },
           {
             gimmick: 'copycat',

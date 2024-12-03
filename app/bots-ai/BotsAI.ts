@@ -137,7 +137,7 @@ export const botsInfo = new Map<Behaviour, BotDescription>([
     ['fianchetto-sniper', {name: 'Hippo', description: "Ne vous fiez pas à l'apparente tranquilité de l'hippopotame, il peut se réveler être un animal très dangereux et agressif. Il en va de même pour l'ouverture Hippopotamus !", image: hippo_pp}],
     ['exchanges-hater', {name: 'Emmeline', description: "Emmeline est de nature pacifiste et évitera le plus possible les échanges de pièces", image: exchangesHater_pp}],
     ['exchanges-lover', {name: 'Jason', description: "Jason aime l'action et cherchera le plus possible à capturer les pièces adverses.", image: exchangesLover_pp}],
-    ['homemade-engine', {name: 'Simplet', description: "Moteur d'échecs fait maison.", image: homemadeEngine_pp }],
+    ['homemade-engine', {name: 'Simplet', description: "Simplet aime appliquer les principes de base aux Échecs. Il développe ses pièces, essaie de controler le centre et il défend ses pièces en prise même s'il lui arrive de rater des tactiques plus complexes.", image: homemadeEngine_pp }],
 
 ]);
 
