@@ -1840,7 +1840,13 @@ class BotsAI {
 
         move.moveInfos = `Ouverture: Le bot ${this.#username} n'a pas trouvé de coup dans sa base d'ouvertures (Habits openings).\n\n`;
 
+        if(isRandomMovePlayable(this.#defaultBotParams, this.#botLevel, this.#lastRandomMove, blunderMult)) {
+            this.#lastRandomMove = this.#defaultBotParams.randMoveInterval;
+            return this.#makeRandomMove(this.#defaultBotParams.filterLevel, this.#defaultBotParams.securityLvl, game, this.#botColor);
+        }
+
         const homemadeEngineMove = await this.#homemadeEngine.findBestMove(game.fen());
+        this.#lastRandomMove = this.#lastRandomMove-1;
         move.notation = homemadeEngineMove.notation;
         move.type = homemadeEngineMove.type;
         move.moveInfos += homemadeEngineMove.moveInfos;
@@ -1854,8 +1860,6 @@ class BotsAI {
             notation: '',
             type: -1,
         };
-
-        this.#lastRandomMove = this.#lastRandomMove-1;
 
         move = await this.#homemadeEngineLogic(game, blunderMult);
 
