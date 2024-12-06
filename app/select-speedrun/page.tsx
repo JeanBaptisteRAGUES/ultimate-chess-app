@@ -29,9 +29,9 @@ const SelectSpeedrun = () => {
     };
 
     const eloRangeComponent =
-        <div className='flex flex-row justify-around items-center flex-wrap w-full' >
+        <div className='flex flex-row justify-around items-center flex-wrap w-11/12' >
             <MultiRangeSlider
-                className='w-full'
+                className='w-full mt-5'
                 label={true}
                 ruler={false}
                 min={0}
@@ -52,7 +52,7 @@ const SelectSpeedrun = () => {
         </div>
 
     const eloStepComponent = 
-        <div className='flex flex-row justify-around items-center flex-wrap w-full mt-2 px-2 gap-2' >
+        <div className='flex flex-row justify-around items-center flex-wrap w-11/12 mt-2 px-2 gap-2 overflow-x-clip' >
             <div onClick={() => setEloStep(10)} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: eloStep === 10 ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center text-4xl font-bold text-center' >10</span>
             </div>
@@ -68,7 +68,7 @@ const SelectSpeedrun = () => {
         </div>
 
     const timeControlComponent =
-        <div className='flex mt-10 flex-row justify-around items-center flex-wrap w-full' >
+        <div className='flex mt-10 flex-row justify-around items-center flex-wrap w-11/12 overflow-x-clip' >
             <div onClick={() => setTimeControl('1+0')} className=' h-[150px] md:h-[110px] w-[150px] md:w-[110px] flex flex-col justify-center items-center cursor-pointer' style={{color: timeControl === '1+0' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <GiBulletBill size={100} />
                 <span className=' w-full h-[10px] flex justify-center items-center' >1+0</span>
@@ -104,15 +104,15 @@ const SelectSpeedrun = () => {
         </div>
 
     const playerColorComponent = 
-        <div className='flex flex-row justify-around items-center flex-wrap w-full mt-2 px-2 gap-2' >
-            <div onClick={() => setPlayerColor('random')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: playerColor === 'random' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
-                <span className=' w-full h-full flex justify-center items-center text-4xl font-bold text-center' >Random</span>
+        <div className='flex flex-col md:flex-row justify-around items-center flex-wrap w-11/12 mt-2 px-2 gap-2' >
+            <div onClick={() => setPlayerColor('random')} className=' h-[50px] md:h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: playerColor === 'random' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <span className=' w-full h-full flex justify-center items-center text-3xl md:text-4xl font-bold text-center' >Random</span>
             </div>
-            <div onClick={() => setPlayerColor('w')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: playerColor === 'w' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
-                <span className=' w-full h-full flex justify-center items-center text-4xl font-bold text-center' >White</span>
+            <div onClick={() => setPlayerColor('w')} className=' h-[50px] md:h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: playerColor === 'w' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <span className=' w-full h-full flex justify-center items-center text-3xl md:text-4xl font-bold text-center' >White</span>
             </div>
-            <div onClick={() => setPlayerColor('b')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: playerColor === 'b' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
-                <span className=' w-full h-full flex justify-center items-center text-4xl font-bold text-center' >Black</span>
+            <div onClick={() => setPlayerColor('b')} className=' h-[50px] md:h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer' style={{color: playerColor === 'b' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <span className=' w-full h-full flex justify-center items-center text-3xl md:text-4xl font-bold text-center' >Black</span>
             </div>
         </div>
 
@@ -155,7 +155,7 @@ const SelectSpeedrun = () => {
     }
 
     const selectPositionWhite = 
-        <div className='flex flex-col justify-around items-center flex-wrap w-full mt-2 px-2 gap-2' >
+        <div className='flex flex-col justify-around items-center flex-wrap w-11/12 mt-2 px-2 gap-2' >
             <div className=' relative w-72 h-72 flex justify-center items-center'>
                 <Chessboard 
                     id='selectPositionWhite'
@@ -173,7 +173,7 @@ const SelectSpeedrun = () => {
         </div>
 
     const selectPositionBlack = 
-        <div className='flex flex-col justify-around items-center flex-wrap w-full mt-2 px-2 gap-2' >
+        <div className='flex flex-col justify-around items-center flex-wrap w-11/12 mt-2 px-2 gap-2' >
             <div className=' relative w-72 h-72 flex justify-center items-center'>
                 <Chessboard 
                     id='selectPositionBlack'
@@ -193,22 +193,22 @@ const SelectSpeedrun = () => {
 
 
     return (
-        <div className="flex flex-col justify-start items-center bg-slate-800 h-[95vh] w-full overflow-auto" >
-            <div className=' w-full md:ml-10 flex justify-center md:justify-start items-center text-2xl font-semibold text-white mt-5 mb-2' >Interval Élo:</div>
-            <div className=' w-full md:ml-10 flex justify-center md:justify-start items-center gap-5 text-xl font-semibold text-white mt-2 mb-2' >
+        <div className="flex flex-col justify-start items-center bg-slate-800 h-[95vh] w-full overflow-y-auto overflow-x-clip" >
+            <div className=' w-11/12 md:ml-10 flex justify-center md:justify-start items-center text-2xl font-semibold text-white mt-5 mb-2' >Interval Élo:</div>
+            <div className=' w-11/12 md:ml-10 flex justify-center md:justify-start items-center gap-5 text-xl font-semibold text-white mt-2 mb-2' >
                 <span>Min: {eloMin}</span>  
                 <span>Max: {eloMax}</span>
             </div>
             {eloRangeComponent}
-            <div className=' w-full mt-20 md:ml-10 flex justify-center md:justify-start items-center text-2xl font-semibold text-white' >Incrément Élo:</div>
+            <div className=' w-11/12 mt-20 md:ml-10 flex justify-center md:justify-start items-center text-2xl font-semibold text-white' >Incrément Élo:</div>
             {eloStepComponent}
-            <div className=' w-full mt-20 md:ml-10 flex justify-center md:justify-start items-center text-2xl font-semibold text-white' >Cadence:</div>
+            <div className=' w-11/12 mt-20 md:ml-10 flex justify-center md:justify-start items-center text-2xl font-semibold text-white' >Cadence:</div>
             {timeControlComponent}
-            <div className=' w-full mt-20 md:ml-10 flex justify-center md:justify-start items-center text-2xl font-semibold text-white' >Couleur:</div>
+            <div className=' w-11/12 mt-20 md:ml-10 flex justify-center md:justify-start items-center text-2xl font-semibold text-white' >Couleur:</div>
             {playerColorComponent}
-            <div className=' w-full mt-20 md:ml-10 flex justify-center md:justify-start items-center text-2xl font-semibold text-white' >Position de départ (blancs):</div>
+            <div className=' w-11/12 mt-20 md:ml-10 flex justify-center md:justify-start items-center text-2xl font-semibold text-white' >Position de départ (blancs):</div>
             {selectPositionWhite}
-            <div className=' w-full mt-20 md:ml-10 flex justify-center md:justify-start items-center text-2xl font-semibold text-white' >Position de départ (noirs):</div>
+            <div className=' w-11/12 mt-20 md:ml-10 flex justify-center md:justify-start items-center text-2xl font-semibold text-white' >Position de départ (noirs):</div>
             {selectPositionBlack}
             <Link
                 className=' w-28 p-3 animate-pulse hover:animate-none hover:bg-cyan-200 flex justify-center items-center text-cyan-300 hover:text-cyan-400 text-3xl font-bold border-2 rounded-lg border-cyan-400 shadow-[0_0_2px_#fff,inset_0_0_2px_#fff,0_0_5px_#08f,0_0_15px_#08f,0_0_30px_#08f] cursor-pointer my-20'

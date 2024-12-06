@@ -830,7 +830,7 @@ const SpeedrunPage = () => {
 
     // TODO: Problème d'horloge lorsqu'on switch de position, le temps défile pour le mauvais joueur
     const boardComponent =
-      <div className=" relative flex flex-col justify-center items-center h-min md:h-[500px] w-[95vw] md:w-[500px] mt-5 md:my-10" >
+      <div className=" relative flex flex-col justify-center items-center h-min md:h-[480px] w-[95vw] md:w-[480px] mt-5 md:my-10" >
           <div className=" relative flex justify-start p-2 w-full h-10 font-medium bg-slate-100 rounded-t-md">
             <div className=" h-full flex justify-start items-center flex-grow-[4]" >
               <span className=' w-9 h-9 flex justify-center items-center rounded mr-3' >
@@ -861,12 +861,14 @@ const SpeedrunPage = () => {
               gameActive={gameActive}
             />
           </div>
-          <Chessboard 
-            id="PlayVsRandom"
-            position={isVirtualMode ? virtualFen : currentFen}
-            onPieceDrop={onDrop} 
-            boardOrientation={playerColor === 'w' ? 'white' : 'black'}
-          />
+          <div className=" relative w-full h-full flex justify-center items-center">
+            <Chessboard 
+              id="PlayVsRandom"
+              position={isVirtualMode ? virtualFen : currentFen}
+              onPieceDrop={onDrop} 
+              boardOrientation={playerColor === 'w' ? 'white' : 'black'}
+            />
+          </div>
           <div className=" relative flex justify-around p-2 w-full h-10 font-medium rounded-b-md bg-slate-100">
             <div className=" h-full flex justify-start items-center flex-grow-[4]" >
               Joueur ({playerElo}) {playerColor === 'w' ? (
