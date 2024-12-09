@@ -23,6 +23,12 @@ export type EvalResult = {
     wdl?: string[],
 }
 
+export type AnalysisResult = {
+    results: EvalResult[],
+    white: Map<string, number>,
+    black: Map<string, number>,
+}
+
 export type EvalResultSimplified = {
     bestMove: string,
     eval: string,
@@ -589,9 +595,21 @@ class Engine {
     //Test avec : movesArray = ['e2e4', 'e7e5', 'g1f3', 'b8c6', 'f1b5'];
     // TODO: Erreur sur l'évaluation du dernier coup lors de l'analyse pour ce pgn : #-1 au lieu de #1
     // 1.e4 e5 2.Nf3 Bc5 3.d4 exd4 4.Nxd4 Qf6 5.Be3 Nc6 6.c3 Bxd4 7.cxd4 Qh4 8.Nc3 Nf6 9.e5 Ne4 10.g3 Nxc3 11.bxc3 Qd8 12.Qd2 d5 13.Bg2 Rb8 14.O-O b6 15.Rfe1 Be6 16.Rad1 Bg4 17.Rc1 Bf5 18.c4 Ne7 19.cxd5 O-O 20.d6 Rc8 21.dxe7 Qxe7 22.d5 Rfd8 23.Bf4 Be6 24.d6 cxd6 25.exd6 Qf8 26.Rxc8 Re8 27.Rxe8 Qxe8 28.Rd1 h6 29.d7 Qxd7 30.Qxd7 a6 31.Qd8+ Kh7 32.Be4+ f5 33.Bc2 g6 34.Qe7+ Bf7 35.Qxf7+ Kh8 36.Be5#
-    async launchGameAnalysis(movesList_lan: string[], depth: number, callback: (progress: number) => void, startingFen?: string) {
+    async launchGameAnalysis(movesList_lan: string[], depth: number, callback: (progress: number) => void, startingFen?: string): Promise<AnalysisResult> {
         console.log('Start Game Anaysis');
         let results = [];
+        let whiteMovesQuality = new Map([
+            ['!!', 0],
+            ['?!', 0],
+            ['?', 0],
+            ['??', 0],
+        ]);
+        let blackMovesQuality = new Map([
+            ['!!', 0],
+            ['?!', 0],
+            ['?', 0],
+            ['??', 0],
+        ]);
         let movesSetArray = movesList_lan.map((move, i) => {
             return movesList_lan.slice(0, i+1).join(' ');
         });
@@ -632,6 +650,12 @@ class Engine {
 
         for(let [i, result] of results.entries()){
             result = await this.evalMoveQuality(result, movesSetArray_san[i], i < 15);
+            if(result.playerColor === 'w' && whiteMovesQuality.has(result.quality)) {
+                whiteMovesQuality.set(result.quality, (whiteMovesQuality.get(result.quality) || 0) + 1)
+            }
+            if(result.playerColor === 'b' && blackMovesQuality.has(result.quality)) {
+                blackMovesQuality.set(result.quality, (blackMovesQuality.get(result.quality) || 0) + 1)
+            }
         }
 
         /* results.forEach((result, i) => {
@@ -639,7 +663,12 @@ class Engine {
         }); */
 
         console.log(results);
-        return results;
+        //return results;
+        return {
+            results: results,
+            white: whiteMovesQuality,
+            black: blackMovesQuality,
+        }
     }
 }
 

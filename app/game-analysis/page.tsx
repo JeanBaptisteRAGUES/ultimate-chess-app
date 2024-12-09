@@ -2,7 +2,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from "react";
-import Engine, { EvalResult, FenEval } from "../engine/Engine";
+import Engine, { AnalysisResult, EvalResult, FenEval } from "../engine/Engine";
 import GameToolBox from "../game-toolbox/GameToolbox";
 import { AnalysisChart } from "../components/AnalysisChart";
 import { Chess, Color, DEFAULT_POSITION, Move } from "chess.js";
@@ -56,6 +56,8 @@ const GameAnalysisPage = () => {
     });
     const [whiteAccuracy, setWhiteAccuracy] = useState(100);
     const [blackAccuracy, setBlackAccuracy] = useState(100);
+    const [whiteMovesQuality, setWhiteMovesQuality] = useState<Map<string, number>>(new Map([['', 0]]));
+    const [blackMovesQuality, setBlackMovesQuality] = useState<Map<string, number>>(new Map([['', 0]]));
 
     const gameActive = useRef(true);
     const board = new Array(64).fill(0);
@@ -224,16 +226,20 @@ const GameAnalysisPage = () => {
         const historyUci = toolbox.convertHistorySanToLan(toolbox.convertPgnToHistory(pgn), startingFen);
         //const historyUci = toolbox.convertHistorySanToLan(game.history(), startingFen);
         const timestampStart = performance.now();
-        engine.current.launchGameAnalysis(historyUci, depth, setAnalysisProgress, startingFen).then((results: EvalResult[]) => {
+        engine.current.launchGameAnalysis(historyUci, depth, setAnalysisProgress, startingFen).then((results: AnalysisResult) => {
             console.log(`Durée de l'analyse: ${(performance.now() - timestampStart)/1000}s`);
             //console.log("White accuracy: " + getWhiteAccuracy(results));
-            setWhiteAccuracy(getWhiteAccuracy(results));
-            setBlackAccuracy(getBlackAccuracy(results));
-            setChartHistoryData(analysisResultsToHistoryData(results));
+            setWhiteAccuracy(getWhiteAccuracy(results.results));
+            setBlackAccuracy(getBlackAccuracy(results.results));
+            setWhiteMovesQuality(results.white);
+            setBlackMovesQuality(results.black);
+            console.log(results.white);
+            console.log(results.black);
+            setChartHistoryData(analysisResultsToHistoryData(results.results));
             setShowChartHistory(true);
-            analysisResultsRef.current = results;
-            formatAnalyseResults(pgn, results);
-            mapAnalyseResults(results);
+            analysisResultsRef.current = results.results;
+            formatAnalyseResults(pgn, results.results);
+            mapAnalyseResults(results.results);
         });
     }
 
@@ -570,12 +576,48 @@ const GameAnalysisPage = () => {
                         </div>
                     </div>
                 </div>
-                <div className="  w-full h-fit flex justify-around items-center" >
-                    <div className=" bg-slate-50 text-black text-xl font-medium h-10 w-20 flex justify-center items-center m-5 rounded" >
-                        {whiteAccuracy}%
+                <div className="  w-full h-fit flex justify-around items-center pb-2" >
+                    <div className=" w-1/2 h-full flex flex-col justify-start items-center pt-2 gap-2">
+                        <div className=" bg-slate-50 text-black text-xl font-medium h-10 w-20 flex justify-center items-center m-5 rounded" >
+                            {whiteAccuracy}%
+                        </div>
+                        <div className=" flex flex-row justify-center items-center text-white gap-2">
+                            <div className=" flex justify-center items-center rounded-full font-bold bg-cyan-400 w-6 h-6" >!!</div>
+                            {whiteMovesQuality.get('!!')}
+                        </div>
+                        <div className=" flex flex-row justify-center items-center text-white gap-2">
+                            <div className=" flex justify-center items-center rounded-full font-bold bg-yellow-500 w-6 h-6" >?!</div>
+                            {whiteMovesQuality.get('?!')}
+                        </div>
+                        <div className=" flex flex-row justify-center items-center text-white gap-2">
+                            <div className=" flex justify-center items-center rounded-full font-bold bg-orange-500 w-6 h-6" >?</div>
+                            {whiteMovesQuality.get('?')}
+                        </div>
+                        <div className=" flex flex-row justify-center items-center text-white gap-2">
+                            <div className=" flex justify-center items-center rounded-full font-bold bg-red-600 w-6 h-6" >??</div>
+                            {whiteMovesQuality.get('??')}
+                        </div>
                     </div>
-                    <div className=" bg-slate-950 text-white text-xl font-medium h-10 w-20 flex justify-center items-center m-5 rounded" >
-                        {blackAccuracy}%
+                    <div className=" w-1/2 h-full flex flex-col justify-start items-center pt-2 gap-2">
+                        <div className=" bg-slate-950 text-white text-xl font-medium h-10 w-20 flex justify-center items-center m-5 rounded" >
+                            {blackAccuracy}%
+                        </div>
+                        <div className=" flex flex-row justify-center items-center text-white gap-2">
+                            <div className=" flex justify-center items-center rounded-full font-bold bg-cyan-400 w-6 h-6" >!!</div>
+                            {blackMovesQuality.get('!!')}
+                        </div>
+                        <div className=" flex flex-row justify-center items-center text-white gap-2">
+                            <div className=" flex justify-center items-center rounded-full font-bold bg-yellow-500 w-6 h-6" >?!</div>
+                            {blackMovesQuality.get('?!')}
+                        </div>
+                        <div className=" flex flex-row justify-center items-center text-white gap-2">
+                            <div className=" flex justify-center items-center rounded-full font-bold bg-orange-500 w-6 h-6" >?</div>
+                            {blackMovesQuality.get('?')}
+                        </div>
+                        <div className=" flex flex-row justify-center items-center text-white gap-2">
+                            <div className=" flex justify-center items-center rounded-full font-bold bg-red-600 w-6 h-6" >??</div>
+                            {blackMovesQuality.get('??')}
+                        </div>
                     </div>
                 </div>
                 {formatedResultsComponent}
