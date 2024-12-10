@@ -579,67 +579,67 @@ const GameAnalysisPage = () => {
                 <div className="  w-full h-fit flex flex-col justify-around items-center md:overflow-y-auto">
                     <div className="  w-full h-fit flex justify-around items-center pb-2" >
                         <div className=" w-1/2 h-full flex flex-col justify-start items-center pt-2 gap-2">
-                            <div className=" bg-slate-50 text-black text-xl font-medium h-10 w-20 flex justify-center items-center m-5 rounded" >
+                            <div className=" bg-slate-50 text-black text-xl font-medium h-10 w-20 flex justify-center items-center m-5 rounded" title="Score de précision des blancs" >
                                 {whiteAccuracy}%
                             </div>
-                            <div className=" flex flex-row justify-center items-center text-white gap-2">
-                                <div className=" flex justify-center items-center rounded-full font-bold bg-cyan-400 w-6 h-6" >!!</div>
+                            <div className=" w-16 flex flex-row justify-start items-center text-white gap-2" title="Coup brillant (le meilleur coup est un sacrifice de qualité)">
+                                <div className=" flex justify-center items-center rounded-full font-bold bg-cyan-400 w-6 h-6">!!</div>
                                 {whiteMovesQuality.get('!!')}
                             </div>
-                            <div className=" flex flex-row justify-center items-center text-white gap-2">
-                                <div className=" flex justify-center items-center rounded-full font-bold bg-amber-700 w-6 h-6" >T</div>
-                                {whiteMovesQuality.get('T')}
-                            </div>
-                            <div className=" flex flex-row justify-center items-center text-white gap-2">
+                            <div className=" w-16 flex flex-row justify-start items-center text-white gap-2" title="Meilleur coup">
                                 <div className=" flex justify-center items-center rounded-full font-bold bg-green-400 w-6 h-6" >★</div>
                                 {whiteMovesQuality.get('*')}
                             </div>
-                            <div className=" flex flex-row justify-center items-center text-white gap-2">
+                            <div className=" w-16 flex flex-row justify-start items-center text-white gap-2" title="Coup correct">
                                 <div className=" flex justify-center items-center rounded-full font-bold bg-green-600 w-6 h-6" >✔</div>
                                 {whiteMovesQuality.get('')}
                             </div>
-                            <div className=" flex flex-row justify-center items-center text-white gap-2">
+                            <div className=" w-16 flex flex-row justify-start items-center text-white gap-2" title="Coup théorique">
+                                <div className=" flex justify-center items-center rounded-full font-bold text-sm bg-amber-700 w-6 h-6" >🕮</div>
+                                {whiteMovesQuality.get('T')}
+                            </div>
+                            <div className=" w-16 flex flex-row justify-start items-center text-white gap-2" title="Imprécision">
                                 <div className=" flex justify-center items-center rounded-full font-bold bg-yellow-500 w-6 h-6" >?!</div>
                                 {whiteMovesQuality.get('?!')}
                             </div>
-                            <div className=" flex flex-row justify-center items-center text-white gap-2">
+                            <div className=" w-16 flex flex-row justify-start items-center text-white gap-2" title="Erreur">
                                 <div className=" flex justify-center items-center rounded-full font-bold bg-orange-500 w-6 h-6" >?</div>
                                 {whiteMovesQuality.get('?')}
                             </div>
-                            <div className=" flex flex-row justify-center items-center text-white gap-2">
+                            <div className=" w-16 flex flex-row justify-start items-center text-white gap-2" title="Gaffe">
                                 <div className=" flex justify-center items-center rounded-full font-bold bg-red-600 w-6 h-6" >??</div>
                                 {whiteMovesQuality.get('??')}
                             </div>
                         </div>
                         <div className=" w-1/2 h-full flex flex-col justify-start items-center pt-2 gap-2">
-                            <div className=" bg-slate-950 text-white text-xl font-medium h-10 w-20 flex justify-center items-center m-5 rounded" >
+                            <div className=" bg-slate-950 text-white text-xl font-medium h-10 w-20 flex justify-center items-center m-5 rounded" title="Score de précision des noirs">
                                 {blackAccuracy}%
                             </div>
-                            <div className=" flex flex-row justify-center items-center text-white gap-2">
+                            <div className=" w-16 flex flex-row justify-start items-center text-white gap-2" title="Coup brillant (le meilleur coup est un sacrifice de qualité)">
                                 <div className=" flex justify-center items-center rounded-full font-bold bg-cyan-400 w-6 h-6" >!!</div>
                                 {blackMovesQuality.get('!!')}
                             </div>
-                            <div className=" flex flex-row justify-center items-center text-white gap-2">
-                                <div className=" flex justify-center items-center rounded-full font-bold bg-amber-700 w-6 h-6" >T</div>
-                                {blackMovesQuality.get('T')}
-                            </div>
-                            <div className=" flex flex-row justify-center items-center text-white gap-2">
+                            <div className=" w-16 flex flex-row justify-start items-center text-white gap-2" title="Meilleur coup">
                                 <div className=" flex justify-center items-center rounded-full font-bold bg-green-400 w-6 h-6" >★</div>
                                 {blackMovesQuality.get('*')}
                             </div>
-                            <div className=" flex flex-row justify-center items-center text-white gap-2">
+                            <div className=" w-16 flex flex-row justify-start items-center text-white gap-2" title="Coup correct">
                                 <div className=" flex justify-center items-center rounded-full font-bold bg-green-600 w-6 h-6" >✔</div>
                                 {blackMovesQuality.get('')}
                             </div>
-                            <div className=" flex flex-row justify-center items-center text-white gap-2">
+                            <div className=" w-16 flex flex-row justify-start items-center text-white gap-2" title="Coup théorique">
+                                <div className=" flex justify-center items-center rounded-full font-bold text-sm bg-amber-700 w-6 h-6" >🕮</div>
+                                {blackMovesQuality.get('T')}
+                            </div>
+                            <div className=" w-16 flex flex-row justify-start items-center text-white gap-2" title="Imprécision">
                                 <div className=" flex justify-center items-center rounded-full font-bold bg-yellow-500 w-6 h-6" >?!</div>
                                 {blackMovesQuality.get('?!')}
                             </div>
-                            <div className=" flex flex-row justify-center items-center text-white gap-2">
+                            <div className=" w-16 flex flex-row justify-start items-center text-white gap-2" title="Erreur">
                                 <div className=" flex justify-center items-center rounded-full font-bold bg-orange-500 w-6 h-6" >?</div>
                                 {blackMovesQuality.get('?')}
                             </div>
-                            <div className=" flex flex-row justify-center items-center text-white gap-2">
+                            <div className=" w-16 flex flex-row justify-start items-center text-white gap-2" title="Gaffe">
                                 <div className=" flex justify-center items-center rounded-full font-bold bg-red-600 w-6 h-6" >??</div>
                                 {blackMovesQuality.get('??')}
                             </div>
