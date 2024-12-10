@@ -524,23 +524,28 @@ class Engine {
         if(Math.sign(evalBefore) === 1 && moveEval.playerColor === 'w' && evalAfter > 10) blunderAccuracy = Math.max(0.85, blunderAccuracy);
         if(Math.sign(evalBefore) === -1 && moveEval.playerColor === 'b' && evalAfter < -10) blunderAccuracy = Math.max(0.85, blunderAccuracy);
 
+        if(moveEval.movePlayed === moveEval.bestMove) moveEval.quality = '*';
+
         // Empêche d'afficher des coups comme étant des erreurs si stockfish avait sous-estimé l'avantage de la position
-        if(moveEval.playerColor === 'w' && evalAfter > evalBefore) {
+        if(moveEval.playerColor === 'w' && evalAfter >= evalBefore) {
             scoreAccuracy = 1;
             scoreAbsoluteDiff = 0;
             moveEval.accuracy = 1;
             blunderAccuracy = 1;
+            moveEval.quality = '*';
         }
-        if(moveEval.playerColor === 'b' && evalAfter < evalBefore) {
+        if(moveEval.playerColor === 'b' && evalAfter <= evalBefore) {
             scoreAccuracy = 1;
             scoreAbsoluteDiff = 0;
             moveEval.accuracy = 1;
             blunderAccuracy = 1;
+            moveEval.quality = '*';
         }
 
         if(isBookMove && scoreAbsoluteDiff < 1) {
             moveEval.accuracy = 1;
             moveEval.isTheory = true;
+            moveEval.quality = 'T';
             return moveEval;
         }
         moveEval.isTheory = false;
@@ -599,16 +604,22 @@ class Engine {
         console.log('Start Game Anaysis');
         let results = [];
         let whiteMovesQuality = new Map([
-            ['!!', 0],
-            ['?!', 0],
-            ['?', 0],
-            ['??', 0],
+            ['', 0], // Correct move
+            ['T', 0], // Theory move
+            ['*', 0], // Best move
+            ['!!', 0], // Brillant move
+            ['?!', 0], // Inaccuracy
+            ['?', 0], // Mistake
+            ['??', 0], //Blunder
         ]);
         let blackMovesQuality = new Map([
-            ['!!', 0],
-            ['?!', 0],
-            ['?', 0],
-            ['??', 0],
+            ['', 0], // Correct move
+            ['T', 0], // Theory move
+            ['*', 0], // Best move
+            ['!!', 0], // Brillant move
+            ['?!', 0], // Inaccuracy
+            ['?', 0], // Mistake
+            ['??', 0], //Blunder
         ]);
         let movesSetArray = movesList_lan.map((move, i) => {
             return movesList_lan.slice(0, i+1).join(' ');

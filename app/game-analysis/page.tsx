@@ -527,10 +527,10 @@ const GameAnalysisPage = () => {
       }
 
     const formatedResultsComponent = formatedResults.length > 0 ?
-        <div className="  w-full h-full overflow-y-auto flex flex-row flex-wrap justify-start items-start gap-2" >
+        <div className="  w-full h-full flex flex-row flex-wrap justify-start items-start gap-2" >
             {
                 formatedResults.map((result: EvalResultFormated, i: number) => {
-                    const bestMoveSpan = (result.quality !== '' && result.quality !== '!!') ? 
+                    const bestMoveSpan = (result.quality !== '' && !result.quality.match(/!!|T|\*/gm)) ? 
                         <span>
                             {result.movePlayed + result.quality} <span onClick={(e) => {
                                     e.stopPropagation()
@@ -559,73 +559,99 @@ const GameAnalysisPage = () => {
     const chartHistoryComponent = showChartHistory ?
         <div className=" flex justify-center items-center w-full h-full" >
             <div className=" relative flex flex-col justify-start items-center w-11/12 h-full pt-5" >
-                <div className=" relative flex justify-center items-center w-full h-fit" >
+                <div className=" relative flex justify-center items-center w-full md:w-3/4  h-fit" >
                     <AnalysisChart historyData={chartHistoryData} className=" " />
                     <div className=" absolute w-full h-full pr-1 pl-4 pt-3 pb-7" >
                         <div className=" w-full h-full flex">
                             {
                                 analysisResultsRef.current.map((result, i) => {
                                     if(i === analysisResultsRef.current.length - 1){
-                                        if(i === currentIndex) return <div key={i} className=" h-full border-l-2 border-cyan-400"/>
+                                        if(i === currentIndex) return <div key={i} className=" h-full border-l-2 -translate-x-0.5 border-cyan-400"/>
                                         return null;
                                     }
-                                    if(i === currentIndex) return <div key={i} className=" h-full flex-grow border-l-2 border-cyan-400"/>
+                                    if(i === currentIndex) return <div key={i} className=" h-full flex-grow border-l-2 -translate-x-0.5 border-cyan-400"/>
                                     return <div key={i} className=" h-full flex-grow border-l border-black opacity-0"/>
                                 })
                             }
                         </div>
                     </div>
                 </div>
-                <div className="  w-full h-fit flex justify-around items-center pb-2" >
-                    <div className=" w-1/2 h-full flex flex-col justify-start items-center pt-2 gap-2">
-                        <div className=" bg-slate-50 text-black text-xl font-medium h-10 w-20 flex justify-center items-center m-5 rounded" >
-                            {whiteAccuracy}%
+                <div className="  w-full h-fit flex flex-col justify-around items-center md:overflow-y-auto">
+                    <div className="  w-full h-fit flex justify-around items-center pb-2" >
+                        <div className=" w-1/2 h-full flex flex-col justify-start items-center pt-2 gap-2">
+                            <div className=" bg-slate-50 text-black text-xl font-medium h-10 w-20 flex justify-center items-center m-5 rounded" >
+                                {whiteAccuracy}%
+                            </div>
+                            <div className=" flex flex-row justify-center items-center text-white gap-2">
+                                <div className=" flex justify-center items-center rounded-full font-bold bg-cyan-400 w-6 h-6" >!!</div>
+                                {whiteMovesQuality.get('!!')}
+                            </div>
+                            <div className=" flex flex-row justify-center items-center text-white gap-2">
+                                <div className=" flex justify-center items-center rounded-full font-bold bg-amber-700 w-6 h-6" >T</div>
+                                {whiteMovesQuality.get('T')}
+                            </div>
+                            <div className=" flex flex-row justify-center items-center text-white gap-2">
+                                <div className=" flex justify-center items-center rounded-full font-bold bg-green-400 w-6 h-6" >★</div>
+                                {whiteMovesQuality.get('*')}
+                            </div>
+                            <div className=" flex flex-row justify-center items-center text-white gap-2">
+                                <div className=" flex justify-center items-center rounded-full font-bold bg-green-600 w-6 h-6" >✔</div>
+                                {whiteMovesQuality.get('')}
+                            </div>
+                            <div className=" flex flex-row justify-center items-center text-white gap-2">
+                                <div className=" flex justify-center items-center rounded-full font-bold bg-yellow-500 w-6 h-6" >?!</div>
+                                {whiteMovesQuality.get('?!')}
+                            </div>
+                            <div className=" flex flex-row justify-center items-center text-white gap-2">
+                                <div className=" flex justify-center items-center rounded-full font-bold bg-orange-500 w-6 h-6" >?</div>
+                                {whiteMovesQuality.get('?')}
+                            </div>
+                            <div className=" flex flex-row justify-center items-center text-white gap-2">
+                                <div className=" flex justify-center items-center rounded-full font-bold bg-red-600 w-6 h-6" >??</div>
+                                {whiteMovesQuality.get('??')}
+                            </div>
                         </div>
-                        <div className=" flex flex-row justify-center items-center text-white gap-2">
-                            <div className=" flex justify-center items-center rounded-full font-bold bg-cyan-400 w-6 h-6" >!!</div>
-                            {whiteMovesQuality.get('!!')}
-                        </div>
-                        <div className=" flex flex-row justify-center items-center text-white gap-2">
-                            <div className=" flex justify-center items-center rounded-full font-bold bg-yellow-500 w-6 h-6" >?!</div>
-                            {whiteMovesQuality.get('?!')}
-                        </div>
-                        <div className=" flex flex-row justify-center items-center text-white gap-2">
-                            <div className=" flex justify-center items-center rounded-full font-bold bg-orange-500 w-6 h-6" >?</div>
-                            {whiteMovesQuality.get('?')}
-                        </div>
-                        <div className=" flex flex-row justify-center items-center text-white gap-2">
-                            <div className=" flex justify-center items-center rounded-full font-bold bg-red-600 w-6 h-6" >??</div>
-                            {whiteMovesQuality.get('??')}
+                        <div className=" w-1/2 h-full flex flex-col justify-start items-center pt-2 gap-2">
+                            <div className=" bg-slate-950 text-white text-xl font-medium h-10 w-20 flex justify-center items-center m-5 rounded" >
+                                {blackAccuracy}%
+                            </div>
+                            <div className=" flex flex-row justify-center items-center text-white gap-2">
+                                <div className=" flex justify-center items-center rounded-full font-bold bg-cyan-400 w-6 h-6" >!!</div>
+                                {blackMovesQuality.get('!!')}
+                            </div>
+                            <div className=" flex flex-row justify-center items-center text-white gap-2">
+                                <div className=" flex justify-center items-center rounded-full font-bold bg-amber-700 w-6 h-6" >T</div>
+                                {blackMovesQuality.get('T')}
+                            </div>
+                            <div className=" flex flex-row justify-center items-center text-white gap-2">
+                                <div className=" flex justify-center items-center rounded-full font-bold bg-green-400 w-6 h-6" >★</div>
+                                {blackMovesQuality.get('*')}
+                            </div>
+                            <div className=" flex flex-row justify-center items-center text-white gap-2">
+                                <div className=" flex justify-center items-center rounded-full font-bold bg-green-600 w-6 h-6" >✔</div>
+                                {blackMovesQuality.get('')}
+                            </div>
+                            <div className=" flex flex-row justify-center items-center text-white gap-2">
+                                <div className=" flex justify-center items-center rounded-full font-bold bg-yellow-500 w-6 h-6" >?!</div>
+                                {blackMovesQuality.get('?!')}
+                            </div>
+                            <div className=" flex flex-row justify-center items-center text-white gap-2">
+                                <div className=" flex justify-center items-center rounded-full font-bold bg-orange-500 w-6 h-6" >?</div>
+                                {blackMovesQuality.get('?')}
+                            </div>
+                            <div className=" flex flex-row justify-center items-center text-white gap-2">
+                                <div className=" flex justify-center items-center rounded-full font-bold bg-red-600 w-6 h-6" >??</div>
+                                {blackMovesQuality.get('??')}
+                            </div>
                         </div>
                     </div>
-                    <div className=" w-1/2 h-full flex flex-col justify-start items-center pt-2 gap-2">
-                        <div className=" bg-slate-950 text-white text-xl font-medium h-10 w-20 flex justify-center items-center m-5 rounded" >
-                            {blackAccuracy}%
-                        </div>
-                        <div className=" flex flex-row justify-center items-center text-white gap-2">
-                            <div className=" flex justify-center items-center rounded-full font-bold bg-cyan-400 w-6 h-6" >!!</div>
-                            {blackMovesQuality.get('!!')}
-                        </div>
-                        <div className=" flex flex-row justify-center items-center text-white gap-2">
-                            <div className=" flex justify-center items-center rounded-full font-bold bg-yellow-500 w-6 h-6" >?!</div>
-                            {blackMovesQuality.get('?!')}
-                        </div>
-                        <div className=" flex flex-row justify-center items-center text-white gap-2">
-                            <div className=" flex justify-center items-center rounded-full font-bold bg-orange-500 w-6 h-6" >?</div>
-                            {blackMovesQuality.get('?')}
-                        </div>
-                        <div className=" flex flex-row justify-center items-center text-white gap-2">
-                            <div className=" flex justify-center items-center rounded-full font-bold bg-red-600 w-6 h-6" >??</div>
-                            {blackMovesQuality.get('??')}
-                        </div>
-                    </div>
+                    {formatedResultsComponent}
                 </div>
-                {formatedResultsComponent}
                 <div className="flex justify-center items-center w-full mb-5" >
                     <div onClick={() => navigator.clipboard.writeText(pgn)} className=' h-[50px] w-[50px] flex flex-col justify-start items-start cursor-pointer text-white hover:text-cyan-400'>
                         <FaRegCopy size={30} />
                     </div>
-                    </div>
+                </div>
             </div>
         </div>
     :
@@ -777,7 +803,7 @@ const GameAnalysisPage = () => {
         </div>
     
     return (
-        <div className="flex flex-col md:flex-row justify-start md:justify-stretch items-center md:items-start bg-slate-800 h-[95vh] w-full overflow-auto" >
+        <div className="flex flex-col md:flex-row justify-start md:justify-stretch items-center md:items-start bg-slate-800 h-[95vh] w-full overflow-y-auto md:overflow-y-clip" >
             {gameContainer}
             {chartHistoryContainer}
         </div>
