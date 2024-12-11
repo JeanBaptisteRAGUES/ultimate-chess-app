@@ -29,13 +29,29 @@ const SelectAnalysis = () => {
             </div>
         </div>
 
+    const cleanPgn = (pgn: string) => {
+        let newPgn = pgn;
+        newPgn = newPgn.replaceAll(/\[.*\]/gm, '');
+        newPgn = newPgn.replaceAll(/\(.*\)/gm, '');
+        newPgn = newPgn.replaceAll('. ', '.');
+        newPgn = newPgn.replaceAll(/\$\d*/gm, '');
+        newPgn = newPgn.replaceAll(/\d*\.\.\./gm, '');
+        newPgn = newPgn.replaceAll(/\r?\n|\r/g, ' ');
+        newPgn = newPgn.replaceAll(/1-0|0-1|1\/2-1\/2|½-½/gm, '');
+        newPgn = newPgn.replaceAll('  ', ' ');
+        newPgn = newPgn.trim();
+        console.log(JSON.stringify(pgn));
+        console.log(JSON.stringify(newPgn));
+        setPgn(newPgn);
+    }
+
     const gamePgnComponent =
         <div className=' w-3/4 md:w-2/3 h-52 md:h-60 flex flex-row justify-center items-center flex-wrap mt-5 gap-5 border border-cyan-300' >
             <textarea
                 className=' w-full h-52 md:h-60 bg-transparent text-cyan-200'
                 placeholder='Coller le pgn de la partie à analyser..'
                 value={pgn}
-                onChange={(e) => setPgn(e.target.value)}
+                onChange={(e) => cleanPgn(e.target.value)}
             />
         </div>
 
