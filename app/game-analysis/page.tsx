@@ -530,8 +530,8 @@ const GameAnalysisPage = () => {
         <div className="  w-full h-full flex flex-row flex-wrap justify-start items-start gap-2" >
             {
                 formatedResults.map((result: EvalResultFormated, i: number) => {
-                    const bestMoveSpan = (result.quality !== '' && !result.quality.match(/!!|T|\*/gm)) ? 
-                        <span>
+                    //const bestMoveSpan = (result.quality !== '' && !result.quality.match(/!!|T|\*/gm)) ? 
+                        {/* <span>
                             {result.movePlayed + result.quality} <span onClick={(e) => {
                                     e.stopPropagation()
                                     showMovePosition(result.bestMove, i, false)
@@ -541,13 +541,17 @@ const GameAnalysisPage = () => {
                     :
                         <span>
                             {result.movePlayed + (result.quality === '!!' ? ' (brillant !!)' : '')}
+                        </span> */}
+                    const bestMoveSpan =
+                        <span>
+                            {result.movePlayed + (result.quality === '!!' ? ' (brillant !!)' : '')}
                         </span>
         
                     // TODO: Prendre en compte les coups théoriques
                     if(result.isTheory) return <span onClick={() => showMovePosition(result.movePlayed, i, true)} key={i} className=" text-amber-700 cursor-pointer select-none" style={{backgroundColor: currentIndex === i ? "rgba(34, 211, 238, 0.3)" : "rgba(0,0,0,0)" }} >{bestMoveSpan}</span>;
                     if(result.quality === '??') return <span onClick={() => showMovePosition(result.movePlayed, i, true)} key={i} className=" text-red-600 cursor-pointer select-none" style={{backgroundColor: currentIndex === i ? "rgba(34, 211, 238, 0.3)" : "rgba(0,0,0,0)" }} >{bestMoveSpan}</span>;
                     if(result.quality === '?') return <span onClick={() => showMovePosition(result.movePlayed, i, true)} key={i} className=" text-orange-500 cursor-pointer select-none" style={{backgroundColor: currentIndex === i ? "rgba(34, 211, 238, 0.3)" : "rgba(0,0,0,0)" }} >{bestMoveSpan}</span>;
-                    if(result.quality === '?!') return <span onClick={() => showMovePosition(result.movePlayed, i, true)} key={i} className=" text-yellow-400 cursor-pointer select-none" style={{backgroundColor: currentIndex === i ? "rgba(34, 211, 238, 0.3)" : "rgba(0,0,0,0)" }} >{bestMoveSpan}</span>;
+                    if(result.quality === '?!') return <span onClick={() => showMovePosition(result.movePlayed, i, true)} key={i} className=" text-white cursor-pointer select-none" style={{backgroundColor: currentIndex === i ? "rgba(34, 211, 238, 0.3)" : "rgba(0,0,0,0)" }} >{bestMoveSpan}</span>;
                     if(result.quality === '!!') return <span onClick={() => showMovePosition(result.movePlayed, i, true)} key={i} className=" text-cyan-400 brightness-110 cursor-pointer select-none" style={{backgroundColor: currentIndex === i ? "rgba(43, 255, 255, 0.3)" : "rgba(0,0,0,0)" }} >{bestMoveSpan}</span>;
                     return <span onClick={() => showMovePosition(result.movePlayed, i, true)} key={i} className=" text-white cursor-pointer select-none" style={{backgroundColor: currentIndex === i ? "rgba(34, 211, 238, 0.3)" : "rgba(0,0,0,0)" }} >{bestMoveSpan}</span>;
                 })

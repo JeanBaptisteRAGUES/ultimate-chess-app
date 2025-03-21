@@ -223,6 +223,17 @@ class GameToolBox {
     }
 
     /**
+     * Retourne tous les coups possibles dans la position donnnée.
+     * @param fen (string)
+     * @returns moves (String[]) 
+     */
+    getPositionMoves(fen: string): String[] {
+        this.game.load(fen);
+
+        return this.game.moves();
+    }
+
+    /**
      * Indique si une case est défendue par un pion ou une autre pièce
      * @param fen 
      * @param pieceCase 

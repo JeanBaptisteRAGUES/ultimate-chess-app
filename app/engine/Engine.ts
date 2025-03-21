@@ -563,14 +563,17 @@ class Engine {
         console.log('Marked as book move: ' + isBookMove); */
 
         const isBrillant = (scoreAbsoluteDiff: number, moveEval: EvalResult, movesSet: string[]) => {
+            const fen = this.toolbox.convertHistoryToFen(movesSet.slice(0, -1));
             console.log(`Test si ${moveEval.movePlayed} est un coup brillant:`)
             console.log(`scoreAbsoluteDiff: ${scoreAbsoluteDiff}`);
             console.log(`moveEval.bestMove: ${moveEval.bestMove}`);
             console.log(`moveEval.movePlayed: ${moveEval.movePlayed}`);
             console.log(movesSet.slice(0, -1));
-            console.log(`fen: ${this.toolbox.convertHistoryToFen(movesSet.slice(0, -1))}`);
+            console.log(`fen: ${fen}`);
+            console.log(this.toolbox.getPositionMoves(fen));
             console.log(`Exchange Value: ${this.toolbox.getExchangeValue(this.toolbox.convertHistoryToFen(movesSet.slice(0, -1)), moveEval.movePlayed)}`);
             if(scoreAbsoluteDiff > 0.15 && moveEval.bestMove !== moveEval.movePlayed) return false;
+            if(this.toolbox.getPositionMoves(fen).length < 2) return false; // Si seul coup possible, ce n'est pas un coup brillant
             //if(this.toolbox.getExchangeValue(this.toolbox.convertHistoryToFen(movesSet.slice(0, -1)), moveEval.movePlayed) > -2) return false;
             const capturesChainValue = this.toolbox.getCapturesChainValue(this.toolbox.convertHistoryToFen(movesSet.slice(0, -1)), moveEval.movePlayed);
             console.log(`${moveEval.movePlayed} est peut être un coup brillant ? (${capturesChainValue} <= -2) ?`);
