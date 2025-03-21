@@ -40,8 +40,6 @@ const SelectAnalysis = () => {
         newPgn = newPgn.replaceAll(/1-0|0-1|1\/2-1\/2|½-½/gm, '');
         newPgn = newPgn.replaceAll('  ', ' ');
         newPgn = newPgn.trim();
-        console.log(JSON.stringify(pgn));
-        console.log(JSON.stringify(newPgn));
         setPgn(newPgn);
     }
 

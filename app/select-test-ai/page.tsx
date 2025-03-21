@@ -289,6 +289,18 @@ const SelectTestAI = () => {
                     />
                 </span>
             </div>
+            <div onClick={() => {setBehaviour('knights-dance')}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'knights-dance' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <span className=' w-full h-full flex justify-center items-center rounded' >
+                    <Image
+                        src={botsInfo.get('knights-dance')?.image || human_pp}
+                        alt="Picture of the author"
+                        width={150}
+                        height={150}
+                        // blurDataURL="data:..." automatically provided
+                        placeholder="blur" // Optional blur-up while loading
+                    />
+                </span>
+            </div>
             <div onClick={() => {setBehaviour('indian-king')}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'indian-king' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center rounded' >
                     <Image

@@ -375,6 +375,18 @@ const SelectBotVsBotPage = () => {
                     />
                 </span>
             </div>
+            <div onClick={() => setBot1_Behaviour('knights-dance')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: bot1_Behaviour === 'knights-dance' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                <span className=' w-full h-full flex justify-center items-center rounded' >
+                    <Image
+                        src={botsInfo.get('knights-dance')?.image || stockfishOnly_pp}
+                        alt="Picture of the author"
+                        width={150}
+                        height={150}
+                        // blurDataURL="data:..." automatically provided
+                        placeholder="blur" // Optional blur-up while loading
+                    />
+                </span>
+            </div>
             <div onClick={() => setBot1_Behaviour('indian-king')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: bot1_Behaviour === 'indian-king' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center rounded' >
                     <Image
@@ -671,6 +683,18 @@ const bot2_BehaviourComponent =
             <span className=' w-full h-full flex justify-center items-center rounded' >
                 <Image
                     src={botsInfo.get('cow-lover')?.image || stockfishOnly_pp}
+                    alt="Picture of the author"
+                    width={150}
+                    height={150}
+                    // blurDataURL="data:..." automatically provided
+                    placeholder="blur" // Optional blur-up while loading
+                />
+            </span>
+        </div>
+        <div onClick={() => setBot2_Behaviour('knights-dance')} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: bot2_Behaviour === 'knights-dance' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+            <span className=' w-full h-full flex justify-center items-center rounded' >
+                <Image
+                    src={botsInfo.get('knights-dance')?.image || stockfishOnly_pp}
                     alt="Picture of the author"
                     width={150}
                     height={150}

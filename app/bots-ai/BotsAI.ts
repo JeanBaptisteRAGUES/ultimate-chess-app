@@ -11,6 +11,7 @@ const humanNames = require('human-names');
 import indianKing_pp from "@/public/Bots_images/chess3d_indian-king.jpg";
 import cowLover_pp from "@/public/Bots_images/chess3d_cow-lover.jpg";
 import hippo_pp from "@/public/Bots_images/chess3d_hippo.jpg";
+import knightsDance_pp from "@/public/Bots_images/chess3d_knights-dance.jpg";
 import stockfishOnly_pp from "@/public/Bots_images/chess3d_stockfish-only.jpg";
 import human_pp from "@/public/Bots_images/chess3d_human.jpg";
 import pawnsPusher_pp from "@/public/Bots_images/chess3d_pawns-pusher.jpg";
@@ -98,7 +99,7 @@ export type BotDescription  = {
 }
 
 // TODO: 'strategy-stranger' | 'sacrifice-enjoyer' | 'min-max | 'botdanov' | 'sharp-player' | 'closed' | 'open' | 'hyper-aggressive'
-export type Behaviour = 'default' | 'homemade-engine' | 'stockfish-random' | 'stockfish-only' | 'human' | 'pawn-pusher' | 'fianchetto-sniper' | 'shy' | 'blundering' | 'drawish' | 'exchanges-lover' | 'exchanges-hater' | 'queen-player' | 'botez-gambit' | 'castle-destroyer' | 'chessable-master' | 'auto-didacte' | 'random-player' | 'semi-random' | 'copycat' | 'bongcloud' | 'gambit-fanatic' | 'cow-lover' | 'indian-king' | 'stonewall' | 'dragon' | 'caro-london';
+export type Behaviour = 'default' | 'homemade-engine' | 'stockfish-random' | 'stockfish-only' | 'human' | 'pawn-pusher' | 'fianchetto-sniper' | 'shy' | 'blundering' | 'drawish' | 'exchanges-lover' | 'exchanges-hater' | 'queen-player' | 'botez-gambit' | 'castle-destroyer' | 'chessable-master' | 'auto-didacte' | 'random-player' | 'semi-random' | 'copycat' | 'bongcloud' | 'gambit-fanatic' | 'cow-lover' | 'indian-king' | 'stonewall' | 'dragon' | 'caro-london' | 'knights-dance';
 
 type DefaultBotParams = {
     randMoveChance: number, 
@@ -125,6 +126,7 @@ export const botsInfo = new Map<Behaviour, BotDescription>([
     ['chessable-master', {name: 'Jenna', description: "Jenna est une femme très studieuse. Elle collectionne les cours Chessable sur les ouvertures des plus grands maîtres d'échecs ! Malheureusement, une fois sortie de la théorie elle aura un peu plus de mal à trouver les bons coups.", image: chessableMaster_pp}],
     ['copycat', {name: 'Mr. Mime', description: "Mr. Mime a une technique simple pour ne pas s'embêter à apprendre les coups dans l'ouverture: il jouera de façon symétrique jusqu'à pousser l'adversaire à l'erreur.", image: copycat_pp}],
     ['cow-lover', {name: 'Marguerite', description: "Marguerite est la première vache au monde a avoir appris à jouer aux échecs. Elle jouera la Cow opening que ce soit avec les blancs ou avec les noirs.", image: cowLover_pp}],
+    ['knights-dance', {name: 'Tango', description: "Tango aime jouer ses cavaliers dans l'ouverture. Il aime VRAIMENT jouer ses cavaliers dans l'ouverture !", image: knightsDance_pp}],
     ['dragon', {name: 'Pyro', description: "Pyro aime prendre le centre avec un pion de l'aile et placer son fou en fianchetto pour qu'il puisse cracher ses flammes tel un dragon !", image: dragon_pp}],
     ['drawish', {name: 'François', description: "François est un homme ennuyant, avec un boulot ennuyant et une femme qui le trompe. Il compte bien vous entrainer dans sa vie insipide en jouant des positions les plus égales possibles.", image: drawish_pp}],
     ['stonewall', {name: 'Robert', description: "Robert le golem aime construire un mur de pion impénétrable et solide comme la roche. C'est donc tout naturellement qu'il joue l'ouverture stonewall avec les blancs comme avec les noirs.", image: stonewall_pp}],
@@ -4860,6 +4862,64 @@ class BotsAI {
         return humanMove;
     }
 
+    async #knightsDanceLogic(game: Chess): Promise<Move> {
+        let move: Move = {
+            notation: '',
+            type: -1,
+            moveInfos: `Le bot ${this.#username} a trouvé un coup dans son répertoire d'ouverture '${this.#behaviour}'.\n\n`,
+        };
+
+        if(game.history().length > 20) {
+            return move;
+        }
+        const knightCases: Square[] = ['b1', 'g1', 'a3', 'c3', 'f3', 'h3', 'b8', 'g8', 'a6', 'c6', 'f6', 'h6'];
+
+        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, 20, 50, false);
+
+        stockfishMoves = stockfishMoves.map((evalRes) => {
+            const moveDestination = this.#toolbox.getMoveDestination(evalRes.bestMove);
+            const moveOrigin = this.#toolbox.getMoveOrigin(evalRes.bestMove);
+            if(!moveDestination || !moveOrigin){
+                evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox)).toString();
+                return evalRes;
+            }
+            let randBonus = 1;
+
+            if(this.#toolbox.getMovePiece(evalRes.bestMove, game.fen()).type === 'n' && knightCases.includes(moveDestination)) {
+                evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox) + randBonus).toString();
+                return evalRes;
+            }
+            evalRes.eval = (evalMove(evalRes, this.#botColor, this.#toolbox)).toString();
+            return evalRes;
+        });
+
+        stockfishMoves.sort(compareEval);
+
+        
+        
+
+        move.notation = stockfishMoves[0].bestMove;
+        move.type = 2;
+
+        return move;
+    }
+
+    /**
+     * Joue la danse des cavaliers.
+     */
+    async #makeKnightsDanceMove(game: Chess, blunderMult: number): Promise<Move> {
+        //console.log('Bot AI: KNights Dance');
+
+        const gimmickMove = await this.#knightsDanceLogic(game);
+        if(gimmickMove.type >= 0) {
+            return gimmickMove;
+        }
+
+        const humanMove = await this.#humanMoveLogic(game, true, true, blunderMult);
+        humanMove.moveInfos = `Le bot ${this.#username} ne trouve pas de coup dans son répertoire d'ouverture '${this.#behaviour}'.\n\n` + humanMove.moveInfos;
+        return humanMove;
+    }
+
     /**
      * Joue très bien les ouvertures, mais assez mal le reste de la partie.
      */
@@ -5903,6 +5963,10 @@ class BotsAI {
             
             case 'cow-lover':
                 move = await this.#makeCowLoverMove(game, blunderMult);
+                break;
+
+            case 'knights-dance':
+                move = await this.#makeKnightsDanceMove(game, blunderMult);
                 break;
 
             case 'random-player':
