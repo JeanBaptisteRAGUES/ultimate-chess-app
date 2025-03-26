@@ -638,8 +638,16 @@ class BotsAI {
         // On modifie la fen pour que l'adversaire puisse virtuellement jouer deux fois d'affilé
         //console.log(`Game Fen: ${game.fen()}`);
         const testFen = game.fen().includes(' b ') ? game.fen().replace(' b ', ' w ') : game.fen().replace(' w ', ' b ');
-        //console.log(`Test Fen: ${testFen}`);
+        console.log(`Test Fen: ${testFen}`);
+        if(!this.#toolbox.isFenValid(testFen)) {
+            return {
+                danger: false,
+                dangerCases: [],
+                dangerousMoveInfos: `Is Last Move Dangerous: Le bot n'a pas réussi à analyser la position -> false`,
+            };
+        }
         gameTest.load(testFen);
+        console.log('ok_1');
 
         const pieceMoves = gameTest.moves({square: lastMove.to, verbose: true});
         
@@ -680,6 +688,8 @@ class BotsAI {
                 }
             }
         });
+
+        console.log('ok_2');
     
         //console.log(`Is last move \x1B[34m(${lastMove.san})\x1B[0m dangerous: \x1B[31m` + danger);
 
@@ -725,6 +735,8 @@ class BotsAI {
                 }
             }
         });
+
+        console.log('ok_3');
 
         const ignoreDiscoveryAttackChances = Math.max(1, 50 - Math.pow(this.#defaultBotParams.elo - 1500, 1/1.6))*blunderMult;
         let ignoreDiscoveryAttack = Math.random()*100;
@@ -2077,6 +2089,7 @@ class BotsAI {
 
         const humanMove = await this.#humanMoveLogic(game, true, true, blunderMult);
         if(humanMove.type >= 0) {
+            //console.log(`humanMove: ${humanMove.notation}`);
             return humanMove;
         }
 
@@ -2084,6 +2097,7 @@ class BotsAI {
 
         const homemadeEngineMove = await this.#homemadeEngine.findBestMove(game.fen());
         if(homemadeEngineMove.type >= 0) {
+            //console.log(`homemadeEngineMove: ${homemadeEngineMove.notation}`);
             return homemadeEngineMove;
         }
 
@@ -2096,6 +2110,7 @@ class BotsAI {
         if(defaultMove.type >= 0) {
             return defaultMove;
         } */
+        //console.log(`randomMove: ${move.notation}`);
 
         return move;
     }

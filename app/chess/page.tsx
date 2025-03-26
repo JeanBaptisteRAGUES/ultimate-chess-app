@@ -262,13 +262,20 @@ const ChessPage = () => {
       console.log(`Bot current ID (${botAI.current?.getID()}) VS Request ID (${botID})`);
       if(game.pgn().includes('#') || !gameActive.current || botAI.current?.getID() !== botID) return;
       if(game.pgn().includes('#') || !gameActive.current) return;
-      const move: Move | undefined = await botAI.current?.makeMove(game, botTimestamp);
+      let move: Move | undefined = await botAI.current?.makeMove(game, botTimestamp);
+      /* console.log(`Move: ${move.notation}`);
+      console.log(`fen: ${game.fen()}`);
+      console.log(`${move.notation} est valide: ${toolbox.isMoveValid(game.fen(), move.notation)}`); */
 
-      if(move && move.type >= 0){
+      if(move && move.type >= 0 && toolbox.isMoveValid(game.fen(), move.notation)){
         gameMove(move.notation, move.type);
         return;
       } 
       console.log("Erreur lors de la génération d'un coup par l'ordinateur");
+      move.notation = game.moves()[0];
+      move.type = 4;
+      gameMove(move.notation, move.type);
+      return;
     }
 
     /**

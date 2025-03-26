@@ -735,7 +735,24 @@ class GameToolBox {
 
     isMoveValid(fen: string, move: string): boolean {
         this.game.load(fen);
-        return this.game.moves({verbose: true}).findIndex((legalMove) => legalMove.lan === move) >= 0;
+        //return this.game.moves({verbose: true}).findIndex((legalMove) => legalMove.lan === move) >= 0;
+        try {
+          this.game.move(move);
+          return true;
+        } catch (error) {
+          console.log(error);
+          return false;
+        }
+    }
+
+    isFenValid(fen: string): boolean {
+      try {
+        this.game.load(fen);
+        return true;
+      } catch (error) {
+        console.log(error);
+        return false;
+      }
     }
 
 

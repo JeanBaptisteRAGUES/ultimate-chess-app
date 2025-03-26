@@ -549,16 +549,22 @@ const SpeedrunPage = () => {
       //console.log('Play computer move (playComputerMove(botID: number))');
       //console.log(game.fen());
       //console.log(game.moves());
-      const move: Move | undefined = await botAI.current?.makeMove(game, botTimestamp);
+      let move: Move | undefined = await botAI.current?.makeMove(game, botTimestamp);
 
-      if(move && move.type >= 0){
-        //console.log(`Bot move: ${move.notation} - Game active: ${gameActive.current}`);
-        //console.log(move.moveInfos);
+      /* console.log(`Move: ${move.notation}`);
+      console.log(`fen: ${game.fen()}`);
+      console.log(`${move.notation} est valide: ${toolbox.isMoveValid(game.fen(), move.notation)}`); */
+
+      if(move && move.type >= 0 && toolbox.isMoveValid(game.fen(), move.notation)){
         gameMove(move.notation, move.type);
         setMoveInfos(move?.moveInfos || '');
         return;
       } 
       console.log("Erreur lors de la génération d'un coup par l'ordinateur");
+      move.notation = game.moves()[0];
+      move.type = 4;
+      gameMove(move.notation, move.type);
+      return;
     }
 
     /**
