@@ -11,6 +11,7 @@ import { Arrow, Piece, Square } from "react-chessboard/dist/chessboard/types";
 import EvalAndWinrate from "../components/EvalAndWinrate";
 import { useSearchParams } from "next/navigation";
 import { FaRegCopy } from "react-icons/fa6";
+import { FaBookOpen } from 'react-icons/fa6';
 
 type EvalResultFormated = {
     playerColor: Color,
@@ -599,7 +600,7 @@ const GameAnalysisPage = () => {
                                 {whiteMovesQuality.get('')}
                             </div>
                             <div className=" w-16 flex flex-row justify-start items-center text-white gap-2" title="Coup théorique">
-                                <div className=" flex justify-center items-center rounded-full font-bold text-sm bg-amber-700 w-6 h-6" >🕮</div>
+                                <div className=" flex justify-center items-center rounded-full font-bold text-sm bg-amber-700 w-6 h-6" ><FaBookOpen size={15} /></div>
                                 {whiteMovesQuality.get('T')}
                             </div>
                             <div className=" w-16 flex flex-row justify-start items-center text-white gap-2" title="Imprécision">
@@ -632,7 +633,7 @@ const GameAnalysisPage = () => {
                                 {blackMovesQuality.get('')}
                             </div>
                             <div className=" w-16 flex flex-row justify-start items-center text-white gap-2" title="Coup théorique">
-                                <div className=" flex justify-center items-center rounded-full font-bold text-sm bg-amber-700 w-6 h-6" >🕮</div>
+                                <div className=" flex justify-center items-center rounded-full font-bold text-sm bg-amber-700 w-6 h-6" ><FaBookOpen size={15} /></div>
                                 {blackMovesQuality.get('T')}
                             </div>
                             <div className=" w-16 flex flex-row justify-start items-center text-white gap-2" title="Imprécision">
