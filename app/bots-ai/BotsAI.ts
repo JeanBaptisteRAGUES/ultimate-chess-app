@@ -5066,6 +5066,39 @@ class BotsAI {
         return move;
     }
 
+    async #castleDestroyerLogic_v2(game: Chess): Promise<Move> {
+        let move: Move = {
+            notation: '',
+            type: -1,
+            moveInfos: `Le bot ${this.#username} a trouvé un coup dans son répertoire d'ouverture '${this.#behaviour}'.\n\n`,
+        };
+
+        if((this.#defaultBotParams.elo <= 800 && game.history().length > 24) || (this.#defaultBotParams.elo <= 1500 && game.history().length > 30) || (this.#defaultBotParams.elo <= 1800 && game.history().length > 36) || (game.history().length > 40)) {
+            return move;
+        }
+
+        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, Math.max(10, this.#defaultBotParams.skillValue), 50, false);
+        const opponentKingColor: Color = this.#botColor === 'w' ? 'b' : 'w';
+        const kingsideCastleFiles = ['f', 'g', 'h'];
+        const queensideCastleFiles = ['a', 'b', 'c', 'd'];
+
+        const kingsideCastleMoves = ['e1g1', 'e8g8'];
+        const queensideCastleMoves = ['e1c1', 'e8c8'];
+        const castleMoves = kingsideCastleMoves.concat(queensideCastleMoves);
+
+        let opponentCastledKingside = kingsideCastleFiles.includes(this.#toolbox.getKingSquare(game.fen(), opponentKingColor).charAt(0));
+        let opponentCastledQueenside = queensideCastleFiles.includes(this.#toolbox.getKingSquare(game.fen(), opponentKingColor).charAt(0));
+        let opponentHasCastled = opponentCastledKingside || opponentCastledQueenside;
+        let botHasCastled = this.#toolbox.getKingSquare(game.fen(), this.#botColor).charAt(0) !== 'e';
+        console.log("L'adversaire a fait un petit roque: " + opponentCastledKingside);
+        console.log("L'adversaire a fait un grand roque: " + opponentCastledQueenside);
+
+        // Valorise les coups de développement qui attaquent les pions devant le roi adverse
+        // Valorise les captures/sacrifices sur les pions devant le roi adverse
+
+        return move;
+    }
+
     /**
      * Attend que l'adversaire soit roqué pour roquer du côté opposé puis lui envoyer une marée de pions sur son roque.
      */
