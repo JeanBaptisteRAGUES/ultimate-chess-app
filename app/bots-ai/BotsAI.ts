@@ -99,7 +99,7 @@ export type BotDescription  = {
 }
 
 // TODO: 'strategy-stranger' | 'sacrifice-enjoyer' | 'min-max | 'botdanov' | 'sharp-player' | 'closed' | 'open' | 'hyper-aggressive'
-export type Behaviour = 'default' | 'homemade-engine' | 'stockfish-random' | 'stockfish-only' | 'human' | 'pawn-pusher' | 'fianchetto-sniper' | 'shy' | 'blundering' | 'drawish' | 'exchanges-lover' | 'exchanges-hater' | 'queen-player' | 'botez-gambit' | 'castle-destroyer' | 'chessable-master' | 'auto-didacte' | 'random-player' | 'semi-random' | 'copycat' | 'bongcloud' | 'gambit-fanatic' | 'cow-lover' | 'indian-king' | 'stonewall' | 'dragon' | 'caro-london' | 'knights-dance';
+export type Behaviour = 'default' | 'homemade-engine' | 'stockfish-random' | 'stockfish-only' | 'human' | 'pawn-pusher' | 'fianchetto-sniper' | 'shy' | 'blundering' | 'drawish' | 'exchanges-lover' | 'exchanges-hater' | 'queen-player' | 'botez-gambit' | 'castle-destroyer' | 'chessable-master' | 'auto-didacte' | 'random-player' | 'semi-random' | 'copycat' | 'bongcloud' | 'gambit-fanatic' | 'cow-lover' | 'indian-king' | 'stonewall' | 'dragon' | 'caro-london' | 'knights-dance' | 'naive-player';
 
 type DefaultBotParams = {
     randMoveChance: number, 
@@ -124,6 +124,7 @@ export const botsInfo = new Map<Behaviour, BotDescription>([
     ['caro-london', {name: 'James', description: "James aime les ouvertures solides quite à renoncer à challenger son adversaire. Il joue le système de Londres avec les blancs et la caro-kann ou la slav avec les noirs.", image: caroLondon_pp}],
     ['castle-destroyer', {name: 'Ragnar', description: "Ragnar aime la bagarre et n'est pas là pour conséder la nulle ! Il n'hésitera pas à envoyer des marées de pions sur le roque adverse voir à sacrifier une pièce pour attaquer votre roi, même si le sacrifice est douteux !", image: castleDestroyer_pp}],
     ['chessable-master', {name: 'Jenna', description: "Jenna est une femme très studieuse. Elle collectionne les cours Chessable sur les ouvertures des plus grands maîtres d'échecs ! Malheureusement, une fois sortie de la théorie elle aura un peu plus de mal à trouver les bons coups.", image: chessableMaster_pp}],
+    ['naive-player', {name: 'Theo', description: "Theo se fait souvent avoir lorsqu'on lui tend des pièges dans l'ouverture.", image: speedrun_male01}],
     ['copycat', {name: 'Mr. Mime', description: "Mr. Mime a une technique simple pour ne pas s'embêter à apprendre les coups dans l'ouverture: il jouera de façon symétrique jusqu'à pousser l'adversaire à l'erreur.", image: copycat_pp}],
     ['cow-lover', {name: 'Marguerite', description: "Marguerite est la première vache au monde a avoir appris à jouer aux échecs. Elle jouera la Cow opening que ce soit avec les blancs ou avec les noirs.", image: cowLover_pp}],
     ['knights-dance', {name: 'Tango', description: "Tango aime jouer ses cavaliers dans l'ouverture. Il aime VRAIMENT jouer ses cavaliers dans l'ouverture !", image: knightsDance_pp}],
@@ -4972,6 +4973,629 @@ class BotsAI {
         return humanMove;
     }
 
+    #naivePlayerOpenings(game: Chess): Move {
+        let move: Move = {
+            notation: '',
+            type: -1,
+        };
+
+        const formatedPGN = game.pgn().replaceAll(/\.\s/g, '.');
+        let rand = Math.random()*100;
+        console.log(`PGN: ${formatedPGN}`);
+
+        if(game.history().length === 0) {
+            move.notation = 'd2d4';
+            move.type = 2;
+            return move;
+        }
+
+        // London System (White)
+        if(formatedPGN === '1.d4 d5') {
+            move.notation = 'c1f4';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.d4 d5 2.Bf4 h5') {
+            move.notation = 'e2e3';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.d4 d5 2.Bf4 h5 3.e3 e5') {
+            move.notation = 'f4e5';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.d4 d5 2.Bf4 h5 3.e3 e5 4.Bxe5 f6') {
+            move.notation = 'e5g3';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.d4 d5 2.Bf4 h5 3.e3 e5 4.Bxe5 f6 5.Bg3 h4') {
+            move.notation = 'g3f4';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.d4 d5 2.Bf4 h5 3.e3 e5 4.Bxe5 f6 5.Bg3 h4 6.Bf4 g5') {
+            move.notation = 'f4g5';
+            move.type = 2;
+            return move;
+        }
+
+        // Indian Defense (White)
+        if(formatedPGN === '1.d4 Nf6') {
+            move.notation = 'c1f4';
+            move.type = 2;
+            return move;
+        }
+
+        // Benoni Style (White)
+        if(formatedPGN === '1.d4 Nf6 2.Bf4 c5') {
+            move.notation = 'g1f3';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.d4 Nf6 2.Bf4 c5 3.Nf3 cxd4') {
+            move.notation = 'f3d4';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.d4 Nf6 2.Bf4 c5 3.Nf3 cxd4 4.Nxd4 e5') {
+            move.notation = 'f4e5';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.d4 Nf6 2.Bf4 c5 3.Nf3 cxd4 4.Nxd4 e5 5.Bxe5 Qa5+') {
+            move.notation = 'b1c3';
+            move.type = 2;
+            return move;
+        }
+
+        // King's Indian (White)
+        if(formatedPGN === '1.d4 Nf6 2.Bf4 g6') {
+            move.notation = 'e2e3';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.d4 Nf6 2.Bf4 g6 3.e3 Bg7') {
+            move.notation = 'g1f3';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.d4 Nf6 2.Bf4 g6 3.e3 Bg7 4.Nf3 O-O') {
+            move.notation = 'f1d3';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.d4 Nf6 2.Bf4 g6 3.e3 Bg7 4.Nf3 O-O 5.Bd3 d6') {
+            move.notation = 'e1h1';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.d4 Nf6 2.Bf4 g6 3.e3 Bg7 4.Nf3 O-O 5.Bd3 d6 6.O-O Nbd7') {
+            move.notation = 'b1d2';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.d4 Nf6 2.Bf4 g6 3.e3 Bg7 4.Nf3 O-O 5.Bd3 d6 6.O-O Nbd7 7.Nbd2 Re8') {
+            move.notation = 'c2c3';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.d4 Nf6 2.Bf4 g6 3.e3 Bg7 4.Nf3 O-O 5.Bd3 d6 6.O-O Nbd7 7.Nbd2 Re8 8.c3 e5') {
+            move.notation = 'd4e5';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.d4 Nf6 2.Bf4 g6 3.e3 Bg7 4.Nf3 O-O 5.Bd3 d6 6.O-O Nbd7 7.Nbd2 Re8 8.c3 e5 9.dxe5 dxe5') {
+            move.notation = 'f4g3';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.d4 Nf6 2.Bf4 g6 3.e3 Bg7 4.Nf3 O-O 5.Bd3 d6 6.O-O Re8') {
+            move.notation = 'b1d2';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.d4 Nf6 2.Bf4 g6 3.e3 Bg7 4.Nf3 O-O 5.Bd3 d6 6.O-O Re8 7.Nbd2 Nbd7') {
+            move.notation = 'c2c3';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.d4 Nf6 2.Bf4 g6 3.e3 Bg7 4.Nf3 O-O 5.Bd3 d6 6.O-O Re8 7.Nbd2 Nbd7 8.c3 e5') {
+            move.notation = 'd4e5';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.d4 Nf6 2.Bf4 g6 3.e3 Bg7 4.Nf3 O-O 5.Bd3 d6 6.O-O Re8 7.Nbd2 Nbd7 8.c3 e5 9.dxe5 dxe5') {
+            move.notation = 'f4g3';
+            move.type = 2;
+            return move;
+        }
+
+        // 1.e4 (Black)
+        if(formatedPGN === '1.e4') {
+            move.notation = 'e7e5';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.Nf3') {
+            if(rand <= 55) {
+                move.notation = 'd7d6';
+                move.type = 2;
+                return move;
+            }
+            move.notation = 'b8c6';
+            move.type = 2;
+            return move;
+        }
+
+        // Philidor
+        if(formatedPGN === '1.e4 e5 2.Nf3 d6 3.d4') {
+            move.notation = 'c8g4';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.Nf3 d6 3.d4 Bg4 4.dxe5') {
+            move.notation = 'g4f3';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.Nf3 d6 3.d4 Bg4 4.dxe5 Bxf3 5.Qxf3') {
+            move.notation = 'd6e5';
+            move.type = 2;
+            return move;
+        }
+
+        // Italian
+        if(formatedPGN === '1.e4 e5 2.Nf3 Nc6 3.Bc4') {
+            move.notation = 'g8f6';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.Nf3 Nc6 3.Bc4 Nf6 4.Ng5') {
+            move.notation = 'd7d5';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.Nf3 Nc6 3.Bc4 Nf6 4.Ng5 d5 5.exd5') {
+            move.notation = 'f6d5';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.Nf3 Nc6 3.Bc4 Nf6 4.Ng5 d5 5.exd5 Nxd5 6.Nxf7') {
+            move.notation = 'e8f7';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.Nf3 Nc6 3.Bc4 Nf6 4.Ng5 d5 5.exd5 Nxd5 6.d4') {
+            move.notation = 'e5d4';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.Nf3 Nc6 3.Bc4 Nf6 4.Ng5 d5 5.exd5 Nxd5 6.d4 exd4 7.O-O') {
+            move.notation = 'f8e7';
+            move.type = 2;
+            return move;
+        }
+
+        // Spanish
+        if(formatedPGN === '1.e4 e5 2.Nf3 Nc6 3.Bb5') {
+            move.notation = 'g8f6';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.Nf3 Nc6 3.Bb5 Nf6 4.O-O') {
+            move.notation = 'f6e4';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.Nf3 Nc6 3.Bb5 Nf6 4.O-O Nxe4 5.d4') {
+            move.notation = 'e5d4';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.Nf3 Nc6 3.Bb5 Nf6 4.O-O Nxe4 5.d4 exd4 6.Re1') {
+            move.notation = 'd7d5';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.Nf3 Nc6 3.Bb5 Nf6 4.O-O Nxe4 5.d4 exd4 6.Re1 d5 7.Nxd4') {
+            if(this.#defaultBotParams.elo < 1000) {
+                move.notation = 'f8e7';
+                move.type = 2;
+                return move;
+            }
+            move.notation = 'c8d7';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.Nf3 Nc6 3.Bb5 Nf6 4.d3') {
+            move.notation = 'f8c5';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.Nf3 Nc6 3.Bb5 Nf6 4.d3 Bc5 5.c3') {
+            move.notation = 'a7a6';
+            move.type = 2;
+            return move;
+        }
+
+        // Scotch Game
+        if(formatedPGN === '1.e4 e5 2.Nf3 Nc6 3.d4') {
+            move.notation = 'e5d4';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Nxd4') {
+            move.notation = 'c6d4';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Nxd4 Nxd4 5.Qxd4') {
+            move.notation = 'g8f6';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Nxd4 Nxd4 5.Qxd4 Nf6 6.e5') {
+            move.notation = 'd8e7';
+            move.type = 2;
+            return move;
+        }
+
+        // Scotch Gambit
+        if(formatedPGN === '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Bc4') {
+            move.notation = 'g8f6';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Bc4 Nf6 5.e5') {
+            move.notation = 'f6g4';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Bc4 Nf6 5.e5 Ng4 6.O-O') {
+            move.notation = 'g4e5';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Bc4 Nf6 5.e5 Ng4 6.O-O Ngxe5 7.Nxe5') {
+            move.notation = 'c6e5';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Bc4 Nf6 5.e5 Ng4 6.O-O Ngxe5 7.Nxe5 Nxe5 8.Re1') {
+            move.notation = 'd7d6';
+            move.type = 2;
+            return move;
+        }
+
+        // Vienna Game
+        if(formatedPGN === '1.e4 e5 2.Nc3') {
+            move.notation = 'g8f6';
+            move.type = 2;
+            return move;
+        }
+
+        // Vienna Gambit
+        if(formatedPGN === '1.e4 e5 2.Nc3 Nf6 3.f4') {
+            if(rand <= 30) {
+                move.notation = 'b8c6';
+                move.type = 2;
+                return move;
+            }
+            move.notation = 'e5f4';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.Nc3 Nf6 3.f4 exf4 4.e5') {
+            move.notation = 'd8e7';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.Nc3 Nf6 3.f4 exf4 4.e5 Qe7 5.Qe2') {
+            move.notation = 'f6g8';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.Nc3 Nf6 3.f4 exf4 4.e5 Qe7 5.Qe2 Ng8 6.Nf3') {
+            move.notation = 'd7d6';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.Nc3 Nf6 3.f4 exf4 4.e5 Qe7 5.Qe2 Ng8 6.d4') {
+            move.notation = 'd7d6';
+            move.type = 2;
+            return move;
+        }
+
+        // King's Gambit
+        if(formatedPGN === '1.e4 e5 2.f4 exf4 3.Nf3 g5 4.h4 f6 5.Nxg5 fxg5') {
+            move.notation = 'd7d6';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.f4') {
+            move.notation = 'e5f4';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.f4 exf4 3.Nf3') {
+            move.notation = 'g7g5';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.f4 exf4 3.Nf3 g5 4.h4') {
+            move.notation = 'f7f6';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.f4 exf4 3.Nf3 g5 4.h4 f6 5.Nxg5') {
+            move.notation = 'f6g5';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.f4 exf4 3.Nf3 g5 4.Bc4') {
+            move.notation = 'g5g4';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.f4 exf4 3.Nf3 g5 4.Bc4 g4 5.O-O') {
+            move.notation = 'g4f3';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.f4 exf4 3.Nf3 g5 4.Bc4 g4 5.O-O gxf3 6.Qxf3') {
+            move.notation = 'f8h6';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.f4 exf4 3.Nf3 g5 4.Bc4 g4 5.O-O gxf3 6.Qxf3 Bh6 7.d4') {
+            move.notation = 'd8f6';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.f4 exf4 3.Nf3 g5 4.Bc4 g4 5.O-O gxf3 6.Qxf3 Bh6 7.d4 Qf6 8.e5') {
+            move.notation = 'f6g5';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.f4 exf4 3.Nf3 g5 4.Bc4 g4 5.O-O gxf3 6.Qxf3 Bh6 7.d4 Qf6 8.e5 Qg5 9.Nc3') {
+            move.notation = 'b8c3';
+            move.type = 2;
+            return move;
+        }
+
+        // Danish Gambit
+        if(formatedPGN === '1.e4 e5 2.d4') {
+            move.notation = 'e5d4';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.d4 exd4 3.c3') {
+            move.notation = 'd4c3';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.d4 exd4 3.c3 dxc3 4.Bc4') {
+            move.notation = 'c3b2';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.d4 exd4 3.c3 dxc3 4.Bc4 cxb2 5.Bxb2') {
+            move.notation = 'f8b4';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.d4 exd4 3.c3 dxc3 4.Bc4 cxb2 5.Bxb2 Bb4+ 6.Nc3') {
+            move.notation = 'b4c3';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.d4 exd4 3.c3 dxc3 4.Bc4 cxb2 5.Bxb2 Bb4+ 6.Nc3 Bxc3+ 7.Bxc3') {
+            move.notation = 'g8f6';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.d4 exd4 3.c3 dxc3 4.Bc4 cxb2 5.Bxb2 Bb4+ 6.Nc3 Bxc3+ 7.Bxc3 Nf6 8.e5') {
+            move.notation = 'f6e4';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.d4 exd4 3.c3 dxc3 4.Nxc3') {
+            move.notation = 'f8b4';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.d4 exd4 3.c3 dxc3 4.Nxc3 Bb4 5.Bc4') {
+            move.notation = 'g8f6';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.e4 e5 2.d4 exd4 3.c3 dxc3 4.Nxc3 Bb4 5.Bc4 Nf6 6.e5') {
+            move.notation = 'f6e4';
+            move.type = 2;
+            return move;
+        }
+
+        // 1.d4 (Black)
+        if(formatedPGN === '1.d4') {
+            move.notation = 'd7d5';
+            move.type = 2;
+            return move;
+        }
+
+        // Queen's Gambit
+        if(formatedPGN === '1.d4 d5 2.c4') {
+            move.notation = 'd5c4';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.d4 d5 2.c4 dxc4 3.e3') {
+            move.notation = 'b7b5';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.d4 d5 2.c4 dxc4 3.e3 b5 4.a4') {
+            move.notation = 'c7c6';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.d4 d5 2.c4 dxc4 3.e3 b5 4.a4 c6 5.axb5') {
+            move.notation = 'c6b5';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.d4 d5 2.c4 dxc4 3.e4') {
+            move.notation = 'b7b5';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.d4 d5 2.c4 dxc4 3.e4 b5 4.a4') {
+            move.notation = 'a7a6';
+            move.type = 2;
+            return move;
+        }
+
+        // Jobava London
+        if(formatedPGN === '1.d4 d5 2.Bf4') {
+            move.notation = 'g8f6';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.d4 d5 2.Bf4 Nf6 3.Nc3') {
+            move.notation = 'b8c6';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.d4 d5 2.Bf4 Nf6 3.Nc3 Nc6 4.Nb5') {
+            move.notation = 'e7e5';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.d4 d5 2.Bf4 Nf6 3.Nc3 Nc6 4.Nb5 e5 5.Bxe5') {
+            move.notation = 'c6e5';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.d4 d5 2.Bf4 Nf6 3.Nc3 Nc6 4.Nb5 e5 5.Bxe5 Nxe5 6.dxe5') {
+            move.notation = 'f6e4';
+            move.type = 2;
+            return move;
+        }
+
+        if(formatedPGN === '1.d4 d5 2.Bf4 Nf6 3.Nc3 Nc6 4.Nb5 e5 5.Bxe5 Nxe5 6.dxe5 Ne4 7.Qxd5') {
+            move.notation = 'd8d5';
+            move.type = 2;
+            return move;
+        }
+
+        return move;
+    }
+
+    async #naivePlayerLogic(game: Chess): Promise<Move> {
+        let move: Move = {
+            notation: '',
+            type: -1,
+            moveInfos: `Le bot ${this.#username} a trouvé un coup dans son répertoire d'ouverture '${this.#behaviour}'.\n\n`,
+        };
+
+        let openingMove = this.#naivePlayerOpenings(game);
+        if(openingMove.type >= 0) {
+            return openingMove;
+        }
+
+        return move;
+    }
+
+    /**
+     * Aime sacrifier sa dame le plus rapidement possible !!!
+     */
+    async #makeNaivePlayerMove(game: Chess, blunderMult: number): Promise<Move> {
+        //console.log('Bot AI: Botez Gambit');
+
+        const gimmickMove = await this.#naivePlayerLogic(game);
+        if(gimmickMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return gimmickMove;
+        }
+
+        const humanMove = await this.#humanMoveLogic(game, true, true, blunderMult);
+        humanMove.moveInfos = `Le bot ${this.#username} ne trouve pas de coup dans son répertoire d'ouverture '${this.#behaviour}'.\n\n` + humanMove.moveInfos;
+        return humanMove;
+    }
+
     async #castleDestroyerLogic(game: Chess): Promise<Move> {
         let move: Move = {
             notation: '',
@@ -6033,6 +6657,10 @@ class BotsAI {
             case 'auto-didacte':
                 initDefaultBotParams(1800, '3+0');
                 move = await this.#makeAutoDidacteMove(game, blunderMult);
+                break;
+
+            case 'naive-player':
+                move = await this.#makeNaivePlayerMove(game, blunderMult);
                 break;
 
             case 'castle-destroyer':

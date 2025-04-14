@@ -68,7 +68,7 @@ const SelectBot = () => {
             </div>
         </div>
 
-    const botsBehavioursComponent =
+    /* const botsBehavioursComponent =
         <div className='flex flex-row justify-center items-center flex-wrap w-full mt-5 px-2 gap-5' >
             <div onClick={() => {setBehaviour('human')}} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === 'human' ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
                 <span className=' w-full h-full flex justify-center items-center rounded' >
@@ -382,7 +382,29 @@ const SelectBot = () => {
                     />
                 </span>
             </div>
-        </div>
+        </div> */
+    
+    const botsBehavioursComponent = 
+            <div className='flex flex-row justify-around items-center flex-wrap w-full mt-2 px-2 gap-2' >
+                {
+                    [...botsInfo.keys()].map(botBehaviour => {
+                        return ( 
+                            <div key={botBehaviour} onClick={() => setBehaviour(botBehaviour)} className=' h-[110px] w-[110px] flex flex-col justify-start items-center cursor-pointer rounded border-4' style={{borderColor: behaviour === botBehaviour ? "rgb(34, 211, 238)" : "rgb(5, 5, 5)" }}  >
+                                <span className=' w-full h-full flex justify-center items-center rounded' >
+                                    <Image
+                                        src={botsInfo.get(botBehaviour)?.image || human_pp}
+                                        alt="Picture of the author"
+                                        width={150}
+                                        height={150}
+                                        // blurDataURL="data:..." automatically provided
+                                        placeholder="blur" // Optional blur-up while loading
+                                    />
+                                </span>
+                            </div>
+                        )
+                    })
+                }
+            </div>
 
 /*     ['1+0', {startingTime: 60, increment: 0}],
     ['3+0', {startingTime: 180, increment: 0}],
