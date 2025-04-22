@@ -185,7 +185,9 @@ const speedrun_opponents = new Map<string, StaticImageData>([
     ['female18', speedrun_female18],
     ['female19', speedrun_female19],
     ['female20', speedrun_female20],
-])
+]);
+
+//const STOCKFISH_TIMEOUT = new Promise<Move>((res) => setTimeout(() => res({notation: '', type: -1, moveInfos: 'Temps écoulé !'}), 10000));
 
 function getLevelFromElo(elo: number) {
     if(elo < 800) return 'Beginner';
@@ -455,7 +457,8 @@ async function makeStockfishMove(botParams: DefaultBotParams, game: Chess, engin
         type: -1
     }
 
-    const stockfishRes = await engine.findBestMove(game.fen(), botParams.depth, botParams.skillValue);
+    //const stockfishRes = await engine.findBestMove(game.fen(), botParams.depth, botParams.skillValue);
+    const stockfishRes = await engine.findBestMove_v3(game.fen(), botParams.depth, botParams.skillValue);
     stockfishMove.notation = stockfishRes;
     stockfishMove.type = 2;
     stockfishMove.moveInfos = `Make Stockfish Move: ${stockfishRes} est le coup choisi par Stockfish 16 pour une profondeur de ${botParams.depth} et une force de ${botParams.skillValue}.\n\n`;
@@ -1942,7 +1945,7 @@ class BotsAI {
 
     // TODO: isLastMoveDangerous ? Si oui -> plus le bot est faible, plus il aura envie de bouger la pièce
     async #humanMoveLogic(game: Chess, useDatabase: Boolean, useRandom: Boolean, blunderMult: number): Promise<Move> {
-        //console.log('human logic: 0');
+        console.log('human logic: humanMoveLogic_start');
         //console.log(`blunderMult: ${blunderMult}`);
         let moveInfos = blunderMult > 1 ? 
             `Le bot ${this.#username} a ${Math.round((blunderMult-1)*100)}% de risque en plus de faire des erreurs par manque de temps.\n\n`
@@ -1959,28 +1962,39 @@ class BotsAI {
             //console.log(`startingFen: ${startingFen}`);
             /* console.log(`startingFen_2: ${startingFen_2}`);
             console.log(`startingFen_3: ${startingFen_3}`); */
+            console.log('%c human logic: makeLichessMove_start', "color:orange; font-size:14px;");
             const lichessMove = await makeLichessMove(movesList, this.#defaultBotParams.elo, startingFen, this.#toolbox);
             moveInfos += lichessMove.moveInfos;
+            console.log('%c human logic: makeLichessMove_ok', "color:green; font-size:14px;");
             if(lichessMove.type >= 0){
                 //console.log(`${this.#botColor} make Lichess move`);
                 lichessMove.moveInfos = moveInfos;
+                console.log('%c human logic: humanMoveLogic_ok', "color:green; font-size:14px;");
                 return lichessMove;
             } 
             //console.log('No more moves in the Lichess Database for ' + this.#botColor);
         }else{
             moveInfos += `Le bot ne se sert pas de la BDD de Lichess pour trouver des coups dans l'ouverture.\n\n`;
+            console.log('%c human logic: notUseDatabase_ok', "color:green; font-size:14px;");
         }
         //console.log('human logic: 1');
+        
 
-        const isNearCheckmateRes = await this.#isNearCheckmate(this.#defaultBotParams.playForcedMate, game) 
+        console.log('%c human logic: isNearCheckmate_start', "color:orange; font-size:14px;");
+        const isNearCheckmateRes = await this.#isNearCheckmate(this.#defaultBotParams.playForcedMate, game);
+        console.log('%c human logic: isNearCheckmate_ok', "color:green; font-size:14px;"); 
         if(isNearCheckmateRes) {
             const checkmateMove = await this.#makeForcedCheckmate(game);
             checkmateMove.moveInfos = moveInfos + checkmateMove.moveInfos;
+            console.log('human logic: makeForcedCheckmate_ok');
+            console.log('%c human logic: humanMoveLogic_ok', "color:green; font-size:14px;");
             return checkmateMove;
         }else{
             moveInfos += `Make Forced Checkmate: Le bot ne voit pas de mat en ${this.#defaultBotParams.playForcedMate} ou moins. \n\n`;
+            console.log('%c human logic: notNearCheckmate_ok', "color:green; font-size:14px;");
         }
         //console.log('human logic: 2');
+        
 
 
         //this.#engine.stop();
@@ -1991,27 +2005,34 @@ class BotsAI {
         //console.log(`Sans erreurs humaines, les 3 meilleurs coups de Stockfish sont: ${stockfishBestMoves[0]?.bestMove}, ${stockfishBestMoves[1]?.bestMove}, ${stockfishBestMoves[2]?.bestMove}`);
         //console.log(newGame.ascii());
         
+        console.log('%c human logic: isLastMoveDangerous_start', "color:orange; font-size:14px;");
         const {danger, dangerCases, dangerousMoveInfos} = this.#isLastMoveDangerous(game, blunderMult);
         moveInfos += dangerousMoveInfos;
+        console.log('%c human logic: isLastMoveDangerous_ok', "color:green; font-size:14px;");
 
         //console.log("Le dernier coup est dangereux: " + danger);
 
+        console.log('%c human logic: makeForcedExchange_start', "color:orange; font-size:14px;");
         const forcedExchangeMove = this.#makeForcedExchange(game, blunderMult);
         moveInfos += forcedExchangeMove.moveInfos;
+        console.log('%c human logic: makeForcedExchange_ok', "color:green; font-size:14px;");
         if(forcedExchangeMove.type >= 0){
             this.#lastRandomMove = this.#lastRandomMove-1;
             forcedExchangeMove.moveInfos = moveInfos;
+            console.log('%c human logic: humanMoveLogic_ok', "color:green; font-size:14px;");
             return forcedExchangeMove;
         }
         //console.log('human logic: 3');
     
         if(danger) {
-            //moveInfos += `Le dernier coup est considéré comme dangereux par le bot (security level: ${this.#defaultBotParams.securityLvl})\n`;
+            console.log('%c human logic: makeHumanThreatReaction_start', "color:orange; font-size:14px;");
             const reactingThreatMove = await this.#makeHumanThreatReaction(game, dangerCases, blunderMult);
             moveInfos += reactingThreatMove.moveInfos;
+            console.log('%c human logic: makeHumanThreatReaction_ok', "color:green; font-size:14px;");
 
             if(reactingThreatMove.type >= 0 ){
                 reactingThreatMove.moveInfos = moveInfos;
+                console.log('%c human logic: humanMoveLogic_ok', "color:green; font-size:14px;");
                 return reactingThreatMove;
             }
             //moveInfos += `Make Human Threat Reaction: Malgrès le danger, le bot n'a pas réagi dans la précipitation à la menace.\n\n`;
@@ -2019,6 +2040,7 @@ class BotsAI {
             //console.log('human logic: 5');
         }else{
             moveInfos += `Make Human Threat Reaction: Il n'y a pas de danger d'après le bot (sécurity level: ${this.#defaultBotParams.securityLvl}), donc pas de raison de réagir dans la précipitation.\n\n`;
+            console.log('%c human logic: noDanger_ok', "color:green; font-size:14px;");
         }
         
         /* const tunelVisionMove = await this.#makeTunelVisionMove(game);
@@ -2033,46 +2055,60 @@ class BotsAI {
 
         if(useRandom && !danger && isRandomMovePlayable(this.#defaultBotParams, this.#botLevel, this.#lastRandomMove, blunderMult)) {
             this.#lastRandomMove = this.#defaultBotParams.randMoveInterval;
+            console.log('%c human logic: makeRandomMove_start', "color:orange; font-size:14px;");
             const randomMove =  this.#makeRandomMove(this.#defaultBotParams.filterLevel, this.#defaultBotParams.securityLvl, game, this.#botColor);
             randomMove.moveInfos = moveInfos + randomMove.moveInfos;
+            console.log('%c human logic: makeRandomMove_ok', "color:green; font-size:14px;");
+            console.log('%c human logic: humanMoveLogic_ok', "color:green; font-size:14px;");
             return randomMove;
         }
         else{
             moveInfos += `Make Random Move: Le bot ne va pas jouer de coup aléatoire (use random: ${useRandom}, danger: ${danger}, last random move: ${this.#lastRandomMove}, random move interval: ${this.#defaultBotParams.randMoveInterval}).\n\n`;
+            console.log('%c human logic: noRandomMove_ok', "color:green; font-size:14px;");
         }
         //console.log('human logic: 7');
 
         if(!danger) {
+            console.log('%c human logic: ignoreOpponentMove_start', "color:orange; font-size:14px;");
             const noOpponentMove = await this.#ignoreOpponentMove(game, blunderMult);
             moveInfos += noOpponentMove.moveInfos;
+            console.log('%c human logic: ignoreOpponentMove_ok', "color:green; font-size:14px;");
 
             if(noOpponentMove.type === 5) {
                 this.#lastRandomMove = this.#lastRandomMove-1;
-                noOpponentMove.moveInfos = moveInfos; 
+                noOpponentMove.moveInfos = moveInfos;
+                console.log('%c human logic: humanMoveLogic_ok', "color:green; font-size:14px;"); 
                 return noOpponentMove;
             }
         } else{
             moveInfos += `Le bot ${this.#username} considère le dernier coup comme dangereux donc il ne peut pas l'ignorer.\n\n`;
+            console.log('%c human logic: danger_ok', "color:green; font-size:14px;");
         }
         
         //console.log('human logic: 8');
 
         // TODO: Faire en sorte que les débutant favorisent les coups vers l'avant et les échecs
+        console.log('%c human logic: makeTunelVisionMove_start', "color:orange; font-size:14px;");
         const tunelVisionMove = await this.#makeTunelVisionMove(game, blunderMult);
         moveInfos += tunelVisionMove.moveInfos;
+        console.log('%c human logic: makeTunelVisionMove_ok', "color:green; font-size:14px;");
 
         if(tunelVisionMove.type > 0) {
             //console.log(`Human move (${tunelVisionMove.type}): ${this.#toolbox.convertMoveLanToSan(game.fen(), tunelVisionMove.notation)}`);
             this.#lastRandomMove = this.#lastRandomMove-1;
             tunelVisionMove.moveInfos = moveInfos;
+            console.log('%c human logic: humanMoveLogic_ok', "color:green; font-size:14px;");
             return tunelVisionMove;
         } 
         //console.log('human logic: 9');
 
+        console.log('%c human logic: makeStockfishMove_start', "color:orange; font-size:14px;");
         const stockfishMove = await makeStockfishMove(this.#defaultBotParams, game, this.#engine);
         this.#lastRandomMove = this.#lastRandomMove-1;
         moveInfos += stockfishMove.moveInfos;
         stockfishMove.moveInfos = moveInfos; 
+        console.log('%c human logic: makeStockfishMove_ok', "color:green; font-size:14px;");
+        console.log('%c human logic: humanMoveLogic_ok', "color:green; font-size:14px;");
         //console.log('human logic: 10');
         //console.log(stockfishMove);
 
@@ -2087,6 +2123,17 @@ class BotsAI {
             type: -1,
             moveInfos: 'Aucune information'
         };
+
+        setTimeout(() => {
+            if(move.type < 0) {
+                console.log('%c La fonction #makeHumanMove a sûrement rencontré un problème', 'color:red; font-size:16px;');
+                move = this.#makeRandomMove(2, 2, game, this.#botColor);
+                move.moveInfos += `%c Ni Stockfish, ni la méthode min-max n'ont pu générer de coup, le bot fait donc un coup aléatoire ! (${move.notation})`, 'color:blue; font-size:16px;';
+                return move;
+            }else{
+                console.log('%c La fonction #makeHumanMove a trouvé un coup', 'color:green; font-size:16px;');
+            }
+        }, 7000);
 
         const humanMove = await this.#humanMoveLogic(game, true, true, blunderMult);
         if(humanMove.type >= 0) {
@@ -2106,13 +2153,6 @@ class BotsAI {
 
         move = this.#makeRandomMove(2, 2, game, this.#botColor);
         move.moveInfos += `Ni Stockfish, ni la méthode min-max n'ont pu générer de coup, le bot fait donc un coup aléatoire ! (${move.notation})`;
-
-        /* const defaultMove = await this.#defaultMoveLogic(game, false, false);
-        if(defaultMove.type >= 0) {
-            return defaultMove;
-        } */
-        //console.log(`randomMove: ${move.notation}`);
-
         return move;
     }
 
@@ -5591,9 +5631,35 @@ class BotsAI {
             return gimmickMove;
         }
 
-        const humanMove = await this.#humanMoveLogic(game, true, true, blunderMult);
-        humanMove.moveInfos = `Le bot ${this.#username} ne trouve pas de coup dans son répertoire d'ouverture '${this.#behaviour}'.\n\n` + humanMove.moveInfos;
-        return humanMove;
+        let humanMove: Move = {
+            notation: '',
+            type: -1,
+            moveInfos: `Le bot ${this.#username} n'a trouvé aucun un coup dans son répertoire d'ouverture '${this.#behaviour}'.\n\n`,
+        };
+
+        /* setTimeout(() => {
+            if(humanMove.type < 0) {
+                humanMove = this.#makeRandomMove(2, 2, game, this.#botColor);
+                console.log(`%c La fonction #makeNaivePlayerMove a sûrement rencontré un problème et le bot joue le coup random '${humanMove.notation}'`, 'color:red; font-size:16px;');
+                humanMove.moveInfos += `%c Ni Stockfish, ni la méthode min-max n'ont pu générer de coup, le bot fait donc un coup aléatoire ! (${humanMove.notation})`, 'color:blue; font-size:16px;';
+                return humanMove;
+            }else{
+                console.log('%c La fonction #makeNaivePlayerMove a trouvé un coup', 'color:green; font-size:16px;');
+                return humanMove;
+            }
+        }, 2000); */
+
+        const STOCKFISH_TIMEOUT = new Promise<Move>((res) => setTimeout(() => res({notation: '', type: -1, moveInfos: 'Temps écoulé !'}), 10000));
+        //humanMove = await this.#humanMoveLogic(game, true, true, blunderMult);
+        let result = await Promise.race([STOCKFISH_TIMEOUT, this.#humanMoveLogic(game, true, true, blunderMult)]);
+
+        if(result.type < 0) {
+            result = await this.#makeHomemadeEngineMove(game, blunderMult);
+            console.log(`%c Stockfish a dû rencontrer un problème -> (${result.notation})`, 'color:red; font-size:16px;');
+        }
+
+        result.moveInfos = `Le bot ${this.#username} ne trouve pas de coup dans son répertoire d'ouverture '${this.#behaviour}'.\n\n` + humanMove.moveInfos;
+        return result;
     }
 
     async #castleDestroyerLogic(game: Chess): Promise<Move> {

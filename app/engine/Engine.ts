@@ -75,6 +75,7 @@ function getBestLineFromData(data: string) {
 }
 
 function findBestMove_v2(fen: string, depth: number, skillValue: number): Promise<string> {
+    console.log('%c Engine_fbm_v2_start', 'color:blue; font-size: 14px;');
     return new Promise((resolve, reject) => {
         stockfish.postMessage(`position fen ${fen}`);
         stockfish.postMessage(`setoption name Skill Level value ${skillValue}`);
@@ -86,8 +87,10 @@ function findBestMove_v2(fen: string, depth: number, skillValue: number): Promis
             if((event.data.match(bestMoveRegex)) !== null){
                 const newBestMove = event.data.match(bestMoveRegex)[1];
                 if(newBestMove !== null){
+                    console.log('%c Engine_fbm_v2_ok', 'color:green; font-size: 14px;');
                     resolve(newBestMove);
                 } else{
+                    console.log('%c Engine_fbm_v2_error', 'color:red; font-size: 14px;');
                     reject(null);
                 }
             }
@@ -216,6 +219,7 @@ class Engine {
 
     
     findBestMove(fen: string, depth: number, skillValue: number): Promise<string> {
+        console.log('%c Engine_fbm_start', 'color:blue; font-size:14px;');
         return new Promise((resolve, reject) => {
             stockfish.postMessage(`position fen ${fen}`);
             stockfish.postMessage(`setoption name Skill Level value ${skillValue}`);
@@ -227,6 +231,7 @@ class Engine {
                 if((event.data.match(bestMoveRegex)) !== null){
                     const newBestMove = event.data.match(bestMoveRegex)[1];
                     if(newBestMove !== null){
+                        console.log('%c Engine_fbm_ok', 'color:green; font-size:14px;');
                         resolve(newBestMove);
                     } else{
                         reject(null);
