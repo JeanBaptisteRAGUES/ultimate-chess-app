@@ -580,7 +580,7 @@ class Engine {
             if(scoreAbsoluteDiff > 0.15 && moveEval.bestMove !== moveEval.movePlayed) return false;
             if(this.toolbox.getPositionMoves(fen).length < 2) return false; // Si seul coup possible, ce n'est pas un coup brillant
             //if(this.toolbox.getExchangeValue(this.toolbox.convertHistoryToFen(movesSet.slice(0, -1)), moveEval.movePlayed) > -2) return false;
-            const capturesChainValue = this.toolbox.getCapturesChainValue(this.toolbox.convertHistoryToFen(movesSet.slice(0, -1)), moveEval.movePlayed);
+            const capturesChainValue = this.toolbox.getCapturesChainValue(fen, moveEval.movePlayed);
             console.log(`${moveEval.movePlayed} est peut être un coup brillant ? (${capturesChainValue} <= -2) ?`);
             if(capturesChainValue > -2) return false;
             console.log(`%c ${moveEval.movePlayed} est un coup brillant !`, 'color:cyan; font-size:12px;');

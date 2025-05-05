@@ -99,7 +99,7 @@ export type BotDescription  = {
 }
 
 // TODO: 'strategy-stranger' | 'sacrifice-enjoyer' | 'min-max | 'botdanov' | 'sharp-player' | 'closed' | 'open' | 'hyper-aggressive'
-export type Behaviour = 'default' | 'homemade-engine' | 'stockfish-random' | 'stockfish-only' | 'human' | 'pawn-pusher' | 'fianchetto-sniper' | 'shy' | 'blundering' | 'drawish' | 'exchanges-lover' | 'exchanges-hater' | 'queen-player' | 'botez-gambit' | 'castle-destroyer' | 'chessable-master' | 'auto-didacte' | 'random-player' | 'semi-random' | 'copycat' | 'bongcloud' | 'gambit-fanatic' | 'cow-lover' | 'indian-king' | 'stonewall' | 'dragon' | 'caro-london' | 'knights-dance' | 'naive-player';
+export type Behaviour = 'default' | 'homemade-engine' | 'stockfish-random' | 'stockfish-only' | 'human' | 'pawn-pusher' | 'fianchetto-sniper' | 'shy' | 'blundering' | 'drawish' | 'exchanges-lover' | 'exchanges-hater' | 'queen-player' | 'botez-gambit' | 'castle-destroyer' | 'chessable-master' | 'auto-didacte' | 'random-player' | 'semi-random' | 'copycat' | 'bongcloud' | 'gambit-fanatic' | 'sacrifice-fanatic' | 'cow-lover' | 'indian-king' | 'stonewall' | 'dragon' | 'caro-london' | 'knights-dance' | 'naive-player';
 
 type DefaultBotParams = {
     randMoveChance: number, 
@@ -137,6 +137,7 @@ export const botsInfo = new Map<Behaviour, BotDescription>([
     ['queen-player', {name: 'Martin', description: "Martin sait que la Dame est la pièce la plus forte. C'est donc pour ça qu'il essaiera de la jouer le plus tôt possible dans l'ouverture.", image: queenPlayer_pp}],
     ['pawn-pusher', {name: 'Lucas', description: "Lucas sait que les pions valent moins que les pièces. C'est pour ça qu'il aime les envoyer au combat tout en laissant ses pièces à l'abris dans son camp.", image: pawnsPusher_pp}],
     ['gambit-fanatic', {name: 'Joker', description: "Joker aime sortir ses adversaires des sentiers battus et les entrainer dans les profondeurs obscures de la foret. Il ne vous laissera aucun répis et vous donnera du fil à retordre dès l'ouverture avec des gambits agressifs !", image: gambitFanatic_pp}],
+    ['sacrifice-fanatic', {name: 'Brian', description: "Brian aime jouer des coups brillants en sacrifiant ses pièces afin d'obtenir un avantage positionnel.", image: speedrun_male13}],
     ['fianchetto-sniper', {name: 'Hippo', description: "Ne vous fiez pas à l'apparente tranquilité de l'hippopotame, il peut se réveler être un animal très dangereux et agressif. Il en va de même pour l'ouverture Hippopotamus !", image: hippo_pp}],
     ['exchanges-hater', {name: 'Emmeline', description: "Emmeline est de nature pacifiste et évitera le plus possible les échanges de pièces", image: exchangesHater_pp}],
     ['exchanges-lover', {name: 'Jason', description: "Jason aime l'action et cherchera le plus possible à capturer les pièces adverses.", image: exchangesLover_pp}],
@@ -4144,6 +4145,27 @@ class BotsAI {
                 move.type = 2;
                 return move;
 
+            // King's Gambit, Muzio Gambit
+            case '1.e4 e5 2.f4 exf4':
+                move.notation = 'g1f3';
+                move.type = 2;
+                return move;
+            
+            case '1.e4 e5 2.f4 exf4 3.Nf3 g5':
+                move.notation = 'f1c4';
+                move.type = 2;
+                return move; 
+
+            case '1.e4 e5 2.f4 exf4 3.Nf3 g5 4.Bc4 g4':
+                move.notation = 'e1g1';
+                move.type = 2;
+                return move; 
+
+            case '1.e4 e5 2.f4 exf4 3.Nf3 g5 4.Bc4 g4 5.O-O gxf3':
+                move.notation = 'd1f3';
+                move.type = 2;
+                return move;
+
             // Danish Gambit
             case '1.e4 e5 2.d4 exd4':
                 move.notation = 'c2c3';
@@ -5620,7 +5642,7 @@ class BotsAI {
     }
 
     /**
-     * Aime sacrifier sa dame le plus rapidement possible !!!
+     * Se prend facilement les pièges d'ouverture !!!
      */
     async #makeNaivePlayerMove(game: Chess, blunderMult: number): Promise<Move> {
         //console.log('Bot AI: Botez Gambit');
@@ -5649,7 +5671,83 @@ class BotsAI {
             }
         }, 2000); */
 
-        const STOCKFISH_TIMEOUT = new Promise<Move>((res) => setTimeout(() => res({notation: '', type: -1, moveInfos: 'Temps écoulé !'}), 10000));
+        const STOCKFISH_TIMEOUT = new Promise<Move>((res) => setTimeout(() => res({notation: '', type: -1, moveInfos: 'Temps écoulé !'}), 15000));
+        //humanMove = await this.#humanMoveLogic(game, true, true, blunderMult);
+        let result = await Promise.race([STOCKFISH_TIMEOUT, this.#humanMoveLogic(game, true, true, blunderMult)]);
+
+        if(result.type < 0) {
+            result = await this.#makeHomemadeEngineMove(game, blunderMult);
+            console.log(`%c Stockfish a dû rencontrer un problème -> (${result.notation})`, 'color:red; font-size:16px;');
+        }
+
+        result.moveInfos = `Le bot ${this.#username} ne trouve pas de coup dans son répertoire d'ouverture '${this.#behaviour}'.\n\n` + humanMove.moveInfos;
+        return result;
+    }
+
+    async #sacrificeFanaticLogic(game: Chess): Promise<Move> {
+        let move: Move = {
+            notation: '',
+            type: -1,
+            moveInfos: ``,
+        };
+
+        let positionEval = await this.#engine.evalPositionFromFen(game.fen(), 12);
+        let positionEvalNumber = positionEval.eval.includes('#') ? this.#engine.mateToNumber(positionEval.eval) : eval(positionEval.eval);
+        let scoreAbsoluteDiff = 100;
+
+        const isBrillant = (fen: string, movePlayed: string, scoreAbsoluteDiff: number, tolerance: number) => {
+            if(scoreAbsoluteDiff > tolerance) return false;
+            if(this.#toolbox.getPositionMoves(fen).length < 2) return false; // Si seul coup possible, ce n'est pas un coup brillant
+            const capturesChainValue = this.#toolbox.getCapturesChainValue(fen, movePlayed);
+            if(capturesChainValue > -2) return false;
+            //console.log(`%c ${movePlayed} est un coup brillant !`, 'color:cyan; font-size:12px;');
+            return true;
+        }
+
+        let stockfishMoves: EvalResultSimplified[] = await this.#engine.findBestMoves(game.fen(), 10, 20, 40, false);
+        console.log('Find brillant move');
+        stockfishMoves.forEach((sfm) => {
+            let sfmEval: number = sfm.eval.includes('#') ? this.#engine.mateToNumber(sfm.eval) : eval(sfm.eval);
+            if(this.#botColor === 'b') sfmEval *= -1;
+            let newScoreAbsoluteDiff = Math.abs(positionEvalNumber - sfmEval);
+            let sfmBrillant: boolean = isBrillant(game.fen(), sfm.bestMove, newScoreAbsoluteDiff, 1.3);
+            let isCapture: boolean = this.#toolbox.isCapture(game.fen(), sfm.bestMove);
+
+            if(sfmBrillant) {
+                console.log(`%c ${sfm.bestMove} -> Position_eval: ${positionEvalNumber}, Move_eval: ${sfmEval}, Score_abs_diff: ${newScoreAbsoluteDiff}, Is_brillant: ${sfmBrillant}, Is_capture: ${isCapture}`, 'color:cyan; font-size:12px;');
+            }else{
+                console.log(`%c ${sfm.bestMove} -> Position_eval: ${positionEvalNumber}, Move_eval: ${sfmEval}, Score_abs_diff: ${newScoreAbsoluteDiff}, Is_brillant: ${sfmBrillant}, Is_capture: ${isCapture}`, 'color:black; font-size:12px;');
+            }
+
+            if(sfmBrillant && isCapture && newScoreAbsoluteDiff < scoreAbsoluteDiff) {
+                scoreAbsoluteDiff = newScoreAbsoluteDiff;
+                move.notation = sfm.bestMove;
+                move.type = 5;
+            }
+        })
+
+        return move;
+    }
+
+    /**
+     * Aime sacrifier sa dame le plus rapidement possible !!!
+     */
+    async #makeSacrificeFanaticMove(game: Chess, blunderMult: number): Promise<Move> {
+        //console.log('Bot AI: Botez Gambit');
+
+        const gimmickMove = await this.#sacrificeFanaticLogic(game);
+        if(gimmickMove.type >= 0) {
+            this.#lastRandomMove = this.#lastRandomMove-1;
+            return gimmickMove;
+        }
+
+        let humanMove: Move = {
+            notation: '',
+            type: -1,
+            moveInfos: `Le bot ${this.#username} n'a trouvé aucun sacrifice intéressant.\n\n`,
+        };
+
+        const STOCKFISH_TIMEOUT = new Promise<Move>((res) => setTimeout(() => res({notation: '', type: -1, moveInfos: 'Temps écoulé !'}), 15000));
         //humanMove = await this.#humanMoveLogic(game, true, true, blunderMult);
         let result = await Promise.race([STOCKFISH_TIMEOUT, this.#humanMoveLogic(game, true, true, blunderMult)]);
 
@@ -6681,6 +6779,10 @@ class BotsAI {
 
             case "gambit-fanatic":
                 move = await this.#makeGambitFanaticMove(game, blunderMult);
+                break; //makeSacrificeFanaticMove
+
+            case "sacrifice-fanatic":
+                move = await this.#makeSacrificeFanaticMove(game, blunderMult);
                 break;
             
             case "copycat":
